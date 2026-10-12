@@ -12,6 +12,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- SDK OFICIAL MERCADO PAGO (Para Modal Iframe na loja) -->
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
 
     <script>
         tailwind.config = {
@@ -128,7 +131,7 @@
             </div>
         </header>
 
-        <!-- Filtros por Marca / Categoria -->
+        <!-- Filtros por Marca -->
         <div class="bg-white border-b border-stone-200 py-3 sm:py-4">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center space-x-2 overflow-x-auto hide-scrollbar py-1">
@@ -211,9 +214,13 @@
                         <span>Subtotal:</span>
                         <span id="cartDrawerSubtotal" class="font-serif text-lg text-fabi-600">R$ 0,00</span>
                     </div>
-                    <button onclick="checkoutStoreOrder()" id="btnStoreCheckout" disabled class="w-full py-3.5 bg-stone-900 hover:bg-stone-800 disabled:opacity-40 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition shadow-md">
-                        Finalizar Pedido (Mercado Pago)
-                    </button>
+
+                    <!-- Botão e Container para Renderizar o Checkout Modal do Mercado Pago -->
+                    <div id="mpModalContainer" class="w-full">
+                        <button onclick="checkoutStoreOrder()" id="btnStoreCheckout" disabled class="w-full py-3.5 bg-stone-900 hover:bg-stone-800 disabled:opacity-40 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition shadow-md">
+                            Finalizar Pedido (Mercado Pago)
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -410,6 +417,9 @@
     <script>
         const API_URL = 'https://fragrancias-fabi-api.onrender.com/api';
         
+        // Inicializa SDK do Mercado Pago
+        const mp = new MercadoPago('APP_USR-7282577442110345-101214-79a8ded9c7030683db1a9faa1460ef92-1447000501', { locale: 'pt-BR' });
+
         // Credenciais do Administrador
         const ADMIN_USER = 'admin';
         const ADMIN_PASS = 'fabi2026';
@@ -606,7 +616,7 @@
             if (DB.carrinhoStore.length === 0) {
                 container.innerHTML = `<p class="text-xs text-stone-400 text-center py-10">Sua sacola está vazia.</p>`;
                 subtotalEl.innerText = "R$ 0,00";
-                btnCheckout.disabled = true;
+                if (btnCheckout) btnCheckout.disabled = true;
                 return;
             }
 
@@ -628,7 +638,7 @@
             }).join('');
 
             subtotalEl.innerText = `R$ ${subtotal.toFixed(2).replace('.', ',')}`;
-            btnCheckout.disabled = false;
+            if (btnCheckout) btnCheckout.disabled = false;
         }
 
         function removeFromStoreCart(index) {
@@ -636,6 +646,7 @@
             renderCartDrawer();
         }
 
+        // CHECKOUT COM MODAL SOBREPOSTO (SEM SAIR DO SITE)
         async function checkoutStoreOrder() {
             if (DB.carrinhoStore.length === 0) return;
 
@@ -651,7 +662,7 @@
             }
 
             const btnCheckout = document.getElementById('btnStoreCheckout');
-            btnCheckout.innerText = 'PROCESSANDO...';
+            btnCheckout.innerText = 'ABRINDO PAGAMENTO...';
             btnCheckout.disabled = true;
 
             const enderecoCompleto = `${rua}, Nº ${numero} - ${bairro}, ${cidade} - CEP: ${cep}`;
@@ -687,10 +698,19 @@
 
                 const dataCheckout = await resCheckout.json();
 
-                if (resCheckout.ok && dataCheckout.init_point) {
-                    DB.carrinhoStore = [];
-                    renderCartDrawer();
-                    toggleCartDrawer(false);
+                if (resCheckout.ok && dataCheckout.id) {
+                    // ABRIR O CHECKOUT MODAL DENTRO DO PRÓPRIO SITE
+                    mp.checkout({
+                        preference: {
+                            id: dataCheckout.id
+                        },
+                        render: {
+                            container: '#mpModalContainer',
+                            label: 'PAGAR COM MERCADO PAGO',
+                        },
+                        autoOpen: true // Abre automaticamente em modal sobreposto
+                    });
+                } else if (dataCheckout.init_point) {
                     window.location.href = dataCheckout.init_point;
                 } else {
                     alert('Erro ao redirecionar para o pagamento.');
