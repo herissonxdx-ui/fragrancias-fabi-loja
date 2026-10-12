@@ -232,14 +232,42 @@
         </div>
     </div>
 
-    <!-- MODAL DE CADASTRO E LOGIN DE CLIENTES COM VERIFICAÇÃO DE E-MAIL REAL -->
+    <!-- MODAL DE CADASTRO E LOGIN DE CLIENTES COM VERIFICAÇÃO DE E-MAIL REAL E MEUS PEDIDOS -->
     <div id="customerAuthModal" class="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <div class="flex justify-between items-center border-b border-stone-100 pb-3">
                 <h3 class="font-serif font-bold text-stone-900 text-base flex items-center gap-2">
                     <i class="fa-solid fa-user text-fabi-500"></i> Conta do Cliente
                 </h3>
                 <button onclick="closeCustomerAuthModal()" class="text-stone-400 hover:text-stone-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <!-- SE O CLIENTE JÁ ESTIVER LOGADO (EXIBE PERFIL E MEUS PEDIDOS) -->
+            <div id="customerLoggedInView" class="space-y-4 hidden">
+                <div class="p-3 bg-stone-50 rounded-xl border border-stone-200 text-xs">
+                    <p class="font-bold text-stone-900 text-sm" id="loggedInUserName">Nome do Cliente</p>
+                    <p class="text-stone-500" id="loggedInUserEmail">email@exemplo.com</p>
+                </div>
+
+                <div class="flex border-b border-stone-200 text-xs font-bold">
+                    <button onclick="switchCustomerPanelTab('profile')" id="tabClientProfile" class="w-1/2 py-2 text-fabi-600 border-b-2 border-fabi-500">Meus Dados</button>
+                    <button onclick="switchCustomerPanelTab('orders'); carregarHistoricoPedidosCliente();" id="tabClientOrders" class="w-1/2 py-2 text-stone-400">Meus Pedidos</button>
+                </div>
+
+                <!-- ABA DADOS -->
+                <div id="clientPanelProfile" class="space-y-3 pt-2">
+                    <p class="text-xs text-stone-600">Sua conta está ativa e conectada com sucesso na Fragrâncias Fabi.</p>
+                    <button onclick="fazerLogoutCliente()" class="w-full py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-lg text-xs uppercase tracking-wider transition border border-rose-200">
+                        Sair da Conta
+                    </button>
+                </div>
+
+                <!-- ABA MEUS PEDIDOS -->
+                <div id="clientPanelOrders" class="space-y-3 pt-2 hidden max-h-64 overflow-y-auto pr-1">
+                    <div id="listaMeusPedidosContainer">
+                        <p class="text-xs text-stone-400 text-center py-4">A carregar pedidos...</p>
+                    </div>
+                </div>
             </div>
 
             <!-- ETAPA 1: CRIAÇÃO DE CONTA OU LOGIN -->
@@ -642,22 +670,93 @@
             }
         };
 
-        // --- AUTENTICAÇÃO DE CLIENTES COM ENVIO DE E-MAIL REAL ---
+        // --- AUTENTICAÇÃO DE CLIENTES COM VERIFICAÇÃO DE E-MAIL REAL E MEUS PEDIDOS ---
         function openCustomerAuthModal() {
+            const step1 = document.getElementById('custAuthStep1');
+            const step2 = document.getElementById('custAuthStep2');
+            const loggedView = document.getElementById('customerLoggedInView');
+
             if (loggedCustomer) {
-                if (confirm(`Conectado como ${loggedCustomer.nome} (${loggedCustomer.email}). Deseja sair da sua conta?`)) {
-                    loggedCustomer = null;
-                    localStorage.removeItem('fabi_logged_customer');
-                    updateCustomerHeaderUI();
-                }
-                return;
+                document.getElementById('loggedInUserName').innerText = loggedCustomer.nome;
+                document.getElementById('loggedInUserEmail').innerText = loggedCustomer.email;
+                
+                step1.classList.add('hidden');
+                step2.classList.add('hidden');
+                loggedView.classList.remove('hidden');
+                switchCustomerPanelTab('profile');
+            } else {
+                loggedView.classList.add('hidden');
+                backToStep1();
             }
-            backToStep1();
             document.getElementById('customerAuthModal').classList.remove('hidden');
         }
 
         function closeCustomerAuthModal() {
             document.getElementById('customerAuthModal').classList.add('hidden');
+        }
+
+        function switchCustomerPanelTab(tab) {
+            const btnProfile = document.getElementById('tabClientProfile');
+            const btnOrders = document.getElementById('tabClientOrders');
+            const divProfile = document.getElementById('clientPanelProfile');
+            const divOrders = document.getElementById('clientPanelOrders');
+
+            if (tab === 'profile') {
+                btnProfile.className = "w-1/2 py-2 text-fabi-600 border-b-2 border-fabi-500";
+                btnOrders.className = "w-1/2 py-2 text-stone-400";
+                divProfile.classList.remove('hidden');
+                divOrders.classList.add('hidden');
+            } else {
+                btnOrders.className = "w-1/2 py-2 text-fabi-600 border-b-2 border-fabi-500";
+                btnProfile.className = "w-1/2 py-2 text-stone-400";
+                divOrders.classList.remove('hidden');
+                divProfile.classList.add('hidden');
+            }
+        }
+
+        async function carregarHistoricoPedidosCliente() {
+            const container = document.getElementById('listaMeusPedidosContainer');
+            if (!loggedCustomer || !loggedCustomer.email) {
+                container.innerHTML = `<p class="text-xs text-stone-400 text-center py-4">Sessão expirada.</p>`;
+                return;
+            }
+
+            container.innerHTML = `<p class="text-xs text-stone-400 text-center py-4"><i class="fa-solid fa-circle-notch animate-spin"></i> A carregar seus pedidos...</p>`;
+
+            try {
+                const res = await fetch(`${API_URL}/vendas/cliente/${loggedCustomer.email}`);
+                if (res.ok) {
+                    const pedidos = await res.json();
+                    if (!pedidos || pedidos.length === 0) {
+                        container.innerHTML = `<p class="text-xs text-stone-500 text-center py-6">Você ainda não realizou nenhum pedido na nossa loja.</p>`;
+                        return;
+                    }
+
+                    container.innerHTML = pedidos.map(p => `
+                        <div class="p-3 bg-stone-50 border border-stone-200 rounded-xl space-y-1 mb-2">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-xs text-stone-900">Pedido #${p.id}</span>
+                                <span class="text-[10px] text-stone-400">${new Date(p.created_at).toLocaleDateString('pt-BR')}</span>
+                            </div>
+                            <p class="text-[11px] text-stone-600">Pagamento: <strong>${p.metodo_pagamento}</strong></p>
+                            <p class="text-[11px] text-stone-600">Endereço: ${p.endereco_entrega || p.endereco || 'Loja Física'}</p>
+                            <p class="text-xs font-bold text-fabi-600 text-right">R$ ${parseFloat(p.total).toFixed(2).replace('.', ',')}</p>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = `<p class="text-xs text-rose-500 text-center py-4">Erro ao buscar histórico de pedidos.</p>`;
+                }
+            } catch (err) {
+                container.innerHTML = `<p class="text-xs text-rose-500 text-center py-4">Falha ao conectar com o servidor.</p>`;
+            }
+        }
+
+        function fazerLogoutCliente() {
+            loggedCustomer = null;
+            localStorage.removeItem('fabi_logged_customer');
+            updateCustomerHeaderUI();
+            closeCustomerAuthModal();
+            alert('Você saiu da sua conta.');
         }
 
         function switchCustomerTab(tab) {
@@ -1060,6 +1159,7 @@
 
             const enderecoCompleto = `${rua}, Nº ${numero} - ${bairro}, ${cidade} - CEP: ${cep}`;
             const subtotalTotal = DB.carrinhoStore.reduce((acc, i) => acc + (i.preco_unitario * i.quantidade), 0);
+            const emailClienteLogado = loggedCustomer ? loggedCustomer.email : 'cliente@fragranciasfabi.com.br';
 
             const novaVenda = {
                 origem: 'LOJA_VIRTUAL',
@@ -1076,6 +1176,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
+                        email_cliente: emailClienteLogado,
                         origem: 'E-COMMERCE',
                         metodo_pagamento: 'MERCADO_PAGO',
                         itens: DB.carrinhoStore,
@@ -1088,7 +1189,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         itens: DB.carrinhoStore,
-                        emailCliente: loggedCustomer ? loggedCustomer.email : 'cliente@fragranciasfabi.com.br'
+                        emailCliente: emailClienteLogado
                     })
                 });
 
@@ -1434,6 +1535,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
+                        email_cliente: loggedCustomer ? loggedCustomer.email : null,
                         origem: 'LOJA_FISICA',
                         metodo_pagamento: metodo,
                         itens: DB.carrinhoPdv
