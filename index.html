@@ -325,6 +325,17 @@
     <div id="view-pdv" class="flex-1 flex flex-col hidden bg-stone-900 text-stone-100 p-4 sm:p-6 overflow-y-auto">
         <div class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 space-y-4">
+                <!-- CAMPO DA CHAVE PIX NO PDV -->
+                <div class="bg-stone-800 border border-teal-500/40 p-3.5 rounded-2xl flex items-center space-x-3 shadow-xl">
+                    <div class="p-2.5 bg-teal-500/20 text-teal-400 rounded-xl">
+                        <i class="fa-brands fa-pix text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <label class="text-[10px] uppercase font-bold text-teal-400 tracking-wider block">Chave PIX Cadastrada no Mercado Pago</label>
+                        <input type="text" id="pdvPixKeyInput" onchange="savePixKeyLocally()" placeholder="E-mail, CPF/CNPJ ou Chave Aleatória" class="w-full bg-stone-950 border border-stone-700 rounded-xl p-2 text-xs font-mono text-teal-300 focus:outline-none focus:border-teal-500 mt-0.5">
+                    </div>
+                </div>
+
                 <div class="bg-stone-800 border border-stone-700 p-4 sm:p-5 rounded-2xl flex items-center space-x-4 shadow-xl">
                     <div class="p-3 bg-fabi-500/20 border border-fabi-500/40 text-fabi-400 rounded-xl">
                         <i class="fa-solid fa-barcode text-2xl sm:text-3xl"></i>
@@ -512,6 +523,11 @@
             fetchPerfumesFromApi();
             fetchVendasFromApi();
 
+            // Carrega chave PIX salva
+            const savedKey = localStorage.getItem('fabi_pix_key') || '';
+            const pixInput = document.getElementById('pdvPixKeyInput');
+            if (pixInput && savedKey) pixInput.value = savedKey;
+
             if (isAdminAuthenticated) {
                 document.getElementById('adminTopBar').classList.remove('hidden');
                 document.getElementById('adminTopBar').classList.add('flex');
@@ -521,6 +537,11 @@
                 setMode(lastMode);
             }
         };
+
+        function savePixKeyLocally() {
+            const val = document.getElementById('pdvPixKeyInput').value.trim();
+            localStorage.setItem('fabi_pix_key', val);
+        }
 
         function toggleMobileNav() {
             document.getElementById('mobileNav').classList.toggle('hidden');
@@ -989,353 +1010,4 @@
             const troco = recebido - total;
 
             if (troco >= 0) {
-                display.className = "p-3 bg-emerald-950/80 border border-emerald-500/50 rounded-lg text-center font-bold text-sm text-emerald-400";
-                display.innerText = `Troco a Devolver: R$ ${troco.toFixed(2)}`;
-            } else {
-                display.className = "p-3 bg-rose-950/80 border border-rose-500/50 rounded-lg text-center font-bold text-sm text-rose-400";
-                display.innerText = `Faltam: R$ ${Math.abs(troco).toFixed(2)}`;
-            }
-        }
-
-        function confirmCashPdvSale() {
-            const total = DB.carrinhoPdv.reduce((acc, i) => acc + ((i.preco_unitario || i.preco) * i.quantidade), 0);
-            const recebido = parseFloat(document.getElementById('pdvCashReceivedInput').value) || 0;
-
-            if (recebido < total) {
-                alert("O valor entregue pelo cliente é menor do que o total da compra.");
-                return;
-            }
-
-            const troco = recebido - total;
-            closePdvCashModal();
-            finishPdvSale('DINHEIRO', troco);
-        }
-
-        // --- GERAÇÃO DE PIX DIRETO (PIX TRANSPARENTE / EMV) ---
-        async function openPdvPixModal() {
-            if (DB.carrinhoPdv.length === 0) return;
-            
-            const subtotalTotal = DB.carrinhoPdv.reduce((acc, i) => acc + ((i.preco_unitario || i.preco) * i.quantidade), 0);
-            
-            document.getElementById('pdvPixTotalText').innerText = `R$ ${subtotalTotal.toFixed(2).replace('.', ',')}`;
-            document.getElementById('pdvPixStatusText').innerHTML = `<i class="fa-solid fa-circle-notch animate-spin text-teal-400"></i> Gerando cobrança PIX no Mercado Pago...`;
-            document.getElementById('pdvPixQrContainer').innerHTML = `<i class="fa-solid fa-circle-notch animate-spin text-teal-500 text-3xl"></i>`;
-            document.getElementById('pdvPixModal').classList.remove('hidden');
-
-            const itensFormatados = DB.carrinhoPdv.map(item => ({
-                id: String(item.id || item.perfume_id || '1'),
-                title: `${item.marca} - ${item.nome}`,
-                quantity: parseInt(item.quantidade),
-                unit_price: parseFloat(item.preco_unitario || item.preco)
-            }));
-
-            try {
-                // Tenta chamar endpoint de PIX Direto se existir ou envia payload especificando a forma de pagamento PIX
-                let res = await fetch(`${API_URL}/pagamento/pix`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        transaction_amount: subtotalTotal,
-                        description: "Venda PDV Balcão - Fragrâncias Fabi",
-                        payment_method_id: "pix",
-                        payer: { email: "pdv@fragranciasfabi.com.br" },
-                        itens: itensFormatados
-                    })
-                });
-
-                // Se não existir /pagamento/pix, faz fallback para /pagamento/checkout enviando a solicitação do PIX transparente
-                if (!res.ok) {
-                    res = await fetch(`${API_URL}/pagamento/checkout`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            transaction_amount: subtotalTotal,
-                            metodo_pagamento: "pix",
-                            payment_method_id: "pix",
-                            itens: itensFormatados,
-                            emailCliente: "pdv@fragranciasfabi.com.br"
-                        })
-                    });
-                }
-
-                const data = await res.json();
-
-                // Extrai o Código EMV do PIX (qr_code) ou a Imagem em Base64 do QR Code oficial do Mercado Pago
-                const pixCopyPaste = data.qr_code || 
-                                     data.point_of_interaction?.transaction_data?.qr_code || 
-                                     data.pix_code;
-                                     
-                const base64Image = data.qr_code_base64 || 
-                                    data.point_of_interaction?.transaction_data?.qr_code_base64;
-
-                currentPaymentId = data.id || data.payment_id;
-
-                if (pixCopyPaste) {
-                    currentPixPayloadGlobal = pixCopyPaste;
-                    
-                    // Se tiver imagem base64 vinda direto do Mercado Pago usa ela, senão gera o QR Code com o texto PIX EMV puro
-                    let finalQrImgSrc = base64Image ? `data:image/png;base64,${base64Image}` : `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(pixCopyPaste)}`;
-
-                    document.getElementById('pdvPixQrContainer').innerHTML = `
-                        <img src="${finalQrImgSrc}" alt="QR Code Pix" class="w-52 h-52 mx-auto rounded-lg shadow-sm border border-stone-200">
-                    `;
-                    document.getElementById('pdvPixStatusText').innerHTML = `<i class="fa-solid fa-circle-notch animate-spin text-teal-400"></i> Aguardando leitura do PIX pelo banco do cliente...`;
-
-                    if (currentPaymentId) {
-                        startPixPolling(currentPaymentId);
-                    }
-                } else {
-                    throw new Error("Não foi possível obter o código PIX retornado.");
-                }
-            } catch (err) {
-                console.error("Erro na geração do PIX:", err);
-                document.getElementById('pdvPixStatusText').innerText = "Erro ao gerar PIX automático. Use a confirmação manual se necessário:";
-                document.getElementById('pdvPixQrContainer').innerHTML = `<p class="text-xs text-rose-500 font-bold p-4">Não foi possível conectar ao Mercado Pago para gerar a chave nativa do PIX.</p>`;
-            }
-        }
-
-        // CHECAGEM AUTOMÁTICA DE STATUS NO MERCADO PAGO A CADA 3 SEGUNDOS
-        function startPixPolling(paymentId) {
-            stopPixPolling();
-
-            pixPollingInterval = setInterval(async () => {
-                try {
-                    const res = await fetch(`${API_URL}/pagamento/status/${paymentId}`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data.status === 'approved' || data.status === 'aprovado') {
-                            stopPixPolling();
-                            showSuccessCheckmark();
-                        }
-                    }
-                } catch (e) {
-                    console.log("Verificando status do pagamento...");
-                }
-            }, 3000);
-        }
-
-        function stopPixPolling() {
-            if (pixPollingInterval) {
-                clearInterval(pixPollingInterval);
-                pixPollingInterval = null;
-            }
-        }
-
-        // SINAL DE CERTO (CHECKMARK VERDE) E CONCLUSÃO DO PEDIDO
-        function showSuccessCheckmark() {
-            const container = document.getElementById('pdvPixQrContainer');
-            const statusText = document.getElementById('pdvPixStatusText');
-
-            statusText.innerHTML = `<span class="text-emerald-400 font-bold uppercase tracking-wider"><i class="fa-solid fa-circle-check"></i> Pagamento Aprovado!</span>`;
-
-            container.innerHTML = `
-                <div class="py-6 flex flex-col items-center justify-center animate-pop-in">
-                    <div class="w-24 h-24 bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-lg mb-3">
-                        <i class="fa-solid fa-check text-5xl"></i>
-                    </div>
-                    <p class="font-bold text-stone-800 text-base">Pagamento Confirmado!</p>
-                    <p class="text-xs text-stone-500">Dando baixa no estoque...</p>
-                </div>
-            `;
-
-            setTimeout(() => {
-                closePdvPixModal();
-                finishPdvSale('PIX (CONFIRMADO AUTOMÁTICO)');
-            }, 2200);
-        }
-
-        function confirmPixPdvSaleManually() {
-            stopPixPolling();
-            showSuccessCheckmark();
-        }
-
-        function copyPixPayload() {
-            if (currentPixPayloadGlobal) {
-                navigator.clipboard.writeText(currentPixPayloadGlobal);
-                const btn = document.getElementById('btnCopyPix');
-                btn.innerHTML = `<i class="fa-solid fa-check text-emerald-400"></i> Código PIX Copiado!`;
-                setTimeout(() => {
-                    btn.innerHTML = `<i class="fa-solid fa-copy"></i> Copiar Código PIX Copia e Cola`;
-                }, 2500);
-            }
-        }
-
-        function closePdvPixModal() {
-            stopPixPolling();
-            document.getElementById('pdvPixModal').classList.add('hidden');
-        }
-
-        // --- GRAVAÇÃO DA VENDA E ABASTECIMENTO DE ESTOQUE ---
-        async function finishPdvSale(metodo, trocoDevolvido = 0) {
-            if (DB.carrinhoPdv.length === 0) return;
-
-            const subtotalTotal = DB.carrinhoPdv.reduce((acc, i) => acc + ((i.preco_unitario || i.preco) * i.quantidade), 0);
-
-            // Abater estoque localmente de imediato
-            DB.carrinhoPdv.forEach(item => {
-                const prod = DB.perfumes.find(p => p.id === (item.perfume_id || item.id));
-                if (prod) prod.estoque = Math.max(0, prod.estoque - item.quantidade);
-            });
-            localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
-
-            const novaVenda = {
-                origem: 'LOJA_FISICA',
-                metodo_pagamento: metodo + (trocoDevolvido > 0 ? ` (Troco: R$ ${trocoDevolvido.toFixed(2)})` : ''),
-                endereco: 'Venda Presencial (Balcão)',
-                total: subtotalTotal
-            };
-
-            DB.vendas.push(novaVenda);
-            localStorage.setItem('fabi_vendas_salvas', JSON.stringify(DB.vendas));
-
-            try {
-                await fetch(`${API_URL}/vendas`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        origem: 'LOJA_FISICA',
-                        metodo_pagamento: metodo,
-                        itens: DB.carrinhoPdv
-                    })
-                });
-            } catch (err) {
-                console.log('Venda salva em backup local.');
-            }
-
-            clearPdvCart();
-            renderAdminInventory();
-            renderStoreGrid();
-            renderPdvQuickGrid();
-            renderSalesLog();
-        }
-
-        // --- EXIBIR E EDITAR ESTOQUE COM SALVAMENTO PERMANENTE ---
-        function renderAdminInventory() {
-            const tbody = document.getElementById('adminInventoryTable');
-            tbody.innerHTML = DB.perfumes.map(p => `
-                <tr class="hover:bg-stone-50">
-                    <td class="p-3 font-bold text-stone-800">${p.nome}</td>
-                    <td class="p-3 font-semibold text-fabi-600">${p.marca}</td>
-                    <td class="p-3 font-mono text-stone-500">${p.codigo_barras}</td>
-                    <td class="p-3 text-right font-bold">R$ ${p.preco.toFixed(2).replace('.', ',')}</td>
-                    <td class="p-3 text-center">
-                        <span class="px-2 py-0.5 rounded font-bold ${p.estoque <= 5 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-800'}">
-                            ${p.estoque} un
-                        </span>
-                    </td>
-                    <td class="p-3 text-center">
-                        <div class="flex items-center justify-center space-x-1">
-                            <button onclick="changeStock(${p.id}, -1)" class="w-7 h-7 bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold rounded-lg transition border border-rose-200" title="Diminuir 1 un">-</button>
-                            <button onclick="changeStock(${p.id}, 1)" class="w-7 h-7 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-bold rounded-lg transition border border-emerald-200" title="Adicionar 1 un">+</button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        // SALVA AS ALTERAÇÕES DE QUANTIDADE (+ OU -) PERMANENTEMENTE
-        async function changeStock(id, delta) {
-            const perfume = DB.perfumes.find(p => p.id === id);
-            if (!perfume) return;
-
-            const novoEstoque = perfume.estoque + delta;
-            if (novoEstoque < 0) {
-                alert("O estoque não pode ser menor que zero.");
-                return;
-            }
-
-            // 1. Salva imediatamente no LocalStorage
-            perfume.estoque = novoEstoque;
-            localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
-
-            // Atualiza todas as telas
-            renderAdminInventory();
-            renderStoreGrid();
-            renderPdvQuickGrid();
-
-            // 2. Envia a atualização para a API
-            try {
-                await fetch(`${API_URL}/perfumes/${id}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ estoque_atual: novoEstoque })
-                });
-            } catch (err) {
-                console.log('Alteração de estoque salva no banco local.');
-            }
-        }
-
-        function renderSalesLog() {
-            const tbody = document.getElementById('adminSalesTable');
-            if (!tbody) return;
-            if (DB.vendas.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-stone-400">Nenhum pedido registrado nesta sessão.</td></tr>`;
-                return;
-            }
-            tbody.innerHTML = DB.vendas.map(v => `
-                <tr class="hover:bg-stone-50">
-                    <td class="p-3 font-bold ${v.origem === 'LOJA_VIRTUAL' ? 'text-blue-600' : 'text-emerald-600'}">${v.origem === 'LOJA_VIRTUAL' ? 'Site (E-Commerce)' : 'Loja Física (PDV)'}</td>
-                    <td class="p-3 font-semibold">${v.metodo_pagamento}</td>
-                    <td class="p-3 font-medium text-stone-800">${v.endereco}</td>
-                    <td class="p-3 text-right font-bold">R$ ${v.total.toFixed(2).replace('.', ',')}</td>
-                </tr>
-            `).join('');
-        }
-
-        function openNewProductModal() {
-            document.getElementById('newProductModal').classList.remove('hidden');
-        }
-
-        function closeNewProductModal() {
-            document.getElementById('newProductModal').classList.add('hidden');
-        }
-
-        async function handleCreateProduct(e) {
-            e.preventDefault();
-            
-            const name = document.getElementById('newProdName').value;
-            const brand = document.getElementById('newProdBrand').value;
-            const price = parseFloat(document.getElementById('newProdPrice').value);
-            const stock = parseInt(document.getElementById('newProdStock').value);
-            const barcode = document.getElementById('newProdBarcode').value;
-            const image = document.getElementById('newProdImage').value || "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400";
-
-            const novoPerfume = {
-                id: DB.perfumes.length + 1,
-                nome: name,
-                marca: brand,
-                preco: price,
-                estoque: stock,
-                codigo_barras: barcode,
-                imagem: image
-            };
-
-            DB.perfumes.push(novoPerfume);
-            localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
-
-            try {
-                await fetch(`${API_URL}/perfumes`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        nome: name,
-                        marca: brand,
-                        preco: price,
-                        estoque_atual: stock,
-                        codigo_barras: barcode,
-                        imagem_url: image
-                    })
-                });
-            } catch (err) {
-                console.log("Salvo localmente com sucesso.");
-            }
-
-            closeNewProductModal();
-            renderAdminInventory();
-            renderStoreGrid();
-            renderPdvQuickGrid();
-            alert("Perfume cadastrado e salvo com sucesso!");
-        }
-    </script>
-</body>
-</html>
+                display.className = "p-3 bg-emerald-950/80 border border-emerald-50
