@@ -1011,7 +1011,7 @@
             finishPdvSale('DINHEIRO', troco);
         }
 
-        // --- GERAÇÃO DE PIX USANDO O MESMO FORMATO EXATO DA LOJA VIRTUAL ---
+        // --- GERAÇÃO DE PIX DIRETO (PIX TRANSPARENTE / EMV) ---
         async function openPdvPixModal() {
             if (DB.carrinhoPdv.length === 0) return;
             
@@ -1022,61 +1022,75 @@
             document.getElementById('pdvPixQrContainer').innerHTML = `<i class="fa-solid fa-circle-notch animate-spin text-teal-500 text-3xl"></i>`;
             document.getElementById('pdvPixModal').classList.remove('hidden');
 
-            // Formata o carrinho exatamente igual ao E-commerce
-            const itensECommerceFormat = DB.carrinhoPdv.map(item => ({
-                perfume_id: item.id || item.perfume_id,
-                id: item.id || item.perfume_id,
-                marca: item.marca,
-                nome: item.nome,
-                preco_unitario: item.preco_unitario || item.preco,
-                preco: item.preco_unitario || item.preco,
-                quantidade: item.quantidade,
-                imagem: item.imagem || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400'
+            const itensFormatados = DB.carrinhoPdv.map(item => ({
+                id: String(item.id || item.perfume_id || '1'),
+                title: `${item.marca} - ${item.nome}`,
+                quantity: parseInt(item.quantidade),
+                unit_price: parseFloat(item.preco_unitario || item.preco)
             }));
 
             try {
-                // Envia para o mesmo endpoint que a loja virtual utiliza
-                const res = await fetch(`${API_URL}/pagamento/checkout`, {
+                // Tenta chamar endpoint de PIX Direto se existir ou envia payload especificando a forma de pagamento PIX
+                let res = await fetch(`${API_URL}/pagamento/pix`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        itens: itensECommerceFormat,
-                        emailCliente: 'pdv@fragranciasfabi.com.br'
+                        transaction_amount: subtotalTotal,
+                        description: "Venda PDV Balcão - Fragrâncias Fabi",
+                        payment_method_id: "pix",
+                        payer: { email: "pdv@fragranciasfabi.com.br" },
+                        itens: itensFormatados
                     })
                 });
 
+                // Se não existir /pagamento/pix, faz fallback para /pagamento/checkout enviando a solicitação do PIX transparente
+                if (!res.ok) {
+                    res = await fetch(`${API_URL}/pagamento/checkout`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            transaction_amount: subtotalTotal,
+                            metodo_pagamento: "pix",
+                            payment_method_id: "pix",
+                            itens: itensFormatados,
+                            emailCliente: "pdv@fragranciasfabi.com.br"
+                        })
+                    });
+                }
+
                 const data = await res.json();
 
-                const pixCode = data.qr_code || data.point_of_interaction?.transaction_data?.qr_code || data.pix_code;
+                // Extrai o Código EMV do PIX (qr_code) ou a Imagem em Base64 do QR Code oficial do Mercado Pago
+                const pixCopyPaste = data.qr_code || 
+                                     data.point_of_interaction?.transaction_data?.qr_code || 
+                                     data.pix_code;
+                                     
+                const base64Image = data.qr_code_base64 || 
+                                    data.point_of_interaction?.transaction_data?.qr_code_base64;
+
                 currentPaymentId = data.id || data.payment_id;
 
-                if (res.ok && pixCode) {
-                    currentPixPayloadGlobal = pixCode;
-                    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(pixCode)}`;
+                if (pixCopyPaste) {
+                    currentPixPayloadGlobal = pixCopyPaste;
+                    
+                    // Se tiver imagem base64 vinda direto do Mercado Pago usa ela, senão gera o QR Code com o texto PIX EMV puro
+                    let finalQrImgSrc = base64Image ? `data:image/png;base64,${base64Image}` : `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(pixCopyPaste)}`;
 
                     document.getElementById('pdvPixQrContainer').innerHTML = `
-                        <img src="${qrCodeUrl}" alt="QR Code Pix" class="w-52 h-52 mx-auto rounded-lg shadow-sm border border-stone-200">
+                        <img src="${finalQrImgSrc}" alt="QR Code Pix" class="w-52 h-52 mx-auto rounded-lg shadow-sm border border-stone-200">
                     `;
-                    document.getElementById('pdvPixStatusText').innerHTML = `<i class="fa-solid fa-circle-notch animate-spin text-teal-400"></i> Aguardando confirmação do pagamento...`;
+                    document.getElementById('pdvPixStatusText').innerHTML = `<i class="fa-solid fa-circle-notch animate-spin text-teal-400"></i> Aguardando leitura do PIX pelo banco do cliente...`;
 
                     if (currentPaymentId) {
                         startPixPolling(currentPaymentId);
                     }
-                } else if (data.init_point || data.sandbox_init_point) {
-                    const fallbackUrl = data.init_point || data.sandbox_init_point;
-                    currentPixPayloadGlobal = fallbackUrl;
-                    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(fallbackUrl)}`;
-                    
-                    document.getElementById('pdvPixQrContainer').innerHTML = `
-                        <img src="${qrCodeUrl}" alt="QR Code Pix" class="w-52 h-52 mx-auto rounded-lg shadow-sm border border-stone-200">
-                    `;
-                    document.getElementById('pdvPixStatusText').innerText = "Aponte o celular do banco para pagar:";
                 } else {
-                    document.getElementById('pdvPixStatusText').innerText = "Confirme manualmente após receber o valor:";
+                    throw new Error("Não foi possível obter o código PIX retornado.");
                 }
             } catch (err) {
-                console.error("Erro na integração do PIX:", err);
-                document.getElementById('pdvPixStatusText').innerText = "Erro ao conectar. Confirme o pagamento manualmente abaixo:";
+                console.error("Erro na geração do PIX:", err);
+                document.getElementById('pdvPixStatusText').innerText = "Erro ao gerar PIX automático. Use a confirmação manual se necessário:";
+                document.getElementById('pdvPixQrContainer').innerHTML = `<p class="text-xs text-rose-500 font-bold p-4">Não foi possível conectar ao Mercado Pago para gerar a chave nativa do PIX.</p>`;
             }
         }
 
@@ -1095,7 +1109,7 @@
                         }
                     }
                 } catch (e) {
-                    console.log("Verificando status...");
+                    console.log("Verificando status do pagamento...");
                 }
             }, 3000);
         }
