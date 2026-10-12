@@ -47,129 +47,151 @@
 </head>
 <body class="h-full flex flex-col font-sans bg-stone-50 text-stone-800 antialiased selection:bg-fabi-500 selection:text-white">
 
-    <!-- BARRA SUPERIOR DE SISTEMA UNIFICADO -->
-    <div class="bg-stone-900 text-stone-300 px-4 py-2 text-xs flex flex-wrap justify-between items-center border-b border-stone-800 z-50 sticky top-0">
-        <div class="flex items-center space-x-2">
+    <!-- BARRA EXCLUSIVA DO GESTOR (Apenas visível após Login de Administrador) -->
+    <div id="adminTopBar" class="hidden bg-stone-900 text-stone-300 px-4 py-2.5 text-xs flex-wrap justify-between items-center border-b border-stone-800 z-50 sticky top-0 shadow-md">
+        <div class="flex items-center space-x-2 my-1">
             <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span class="font-bold text-white uppercase tracking-wider text-[11px]">FRAGRÂNCIAS FABI — ATELIÊ EXCLUSIVO</span>
+            <span class="font-bold text-white uppercase tracking-wider text-[11px]">SISTEMA DE GESTÃO ATIVO</span>
         </div>
-        <div class="flex items-center space-x-1 sm:space-x-2 mt-1 sm:mt-0">
-            <button onclick="setMode('ecommerce')" id="btn-mode-ecommerce" class="px-3 py-1.5 rounded-full font-semibold transition bg-fabi-500 text-white shadow-sm text-[11px] flex items-center gap-1.5">
+        <div class="flex items-center space-x-1 sm:space-x-2 my-1 overflow-x-auto">
+            <button onclick="setMode('ecommerce')" id="btn-mode-ecommerce" class="px-3 py-1.5 rounded-full font-semibold transition bg-fabi-500 text-white shadow-sm text-[11px] flex items-center gap-1.5 shrink-0">
                 <i class="fa-solid fa-store"></i> <span>Loja Virtual</span>
             </button>
-            <button onclick="requestAdminAccess('pdv')" id="btn-mode-pdv" class="px-3 py-1.5 rounded-full font-semibold transition hover:bg-stone-800 text-stone-300 text-[11px] flex items-center gap-1.5">
-                <i class="fa-solid fa-lock text-[10px] text-fabi-500"></i> <i class="fa-solid fa-cash-register"></i> <span>PDV Balcão</span>
+            <button onclick="setMode('pdv')" id="btn-mode-pdv" class="px-3 py-1.5 rounded-full font-semibold transition hover:bg-stone-800 text-stone-300 text-[11px] flex items-center gap-1.5 shrink-0">
+                <i class="fa-solid fa-cash-register"></i> <span>PDV Balcão</span>
             </button>
-            <button onclick="requestAdminAccess('admin')" id="btn-mode-admin" class="px-3 py-1.5 rounded-full font-semibold transition hover:bg-stone-800 text-stone-300 text-[11px] flex items-center gap-1.5">
-                <i class="fa-solid fa-lock text-[10px] text-fabi-500"></i> <i class="fa-solid fa-chart-pie"></i> <span>Painel Admin & Estoque</span>
+            <button onclick="setMode('admin')" id="btn-mode-admin" class="px-3 py-1.5 rounded-full font-semibold transition hover:bg-stone-800 text-stone-300 text-[11px] flex items-center gap-1.5 shrink-0">
+                <i class="fa-solid fa-chart-pie"></i> <span>Painel Admin & Estoque</span>
+            </button>
+            <button onclick="logoutAdmin()" class="px-3 py-1.5 rounded-full font-semibold transition bg-rose-900/80 hover:bg-rose-800 text-rose-200 text-[11px] flex items-center gap-1.5 ml-2 shrink-0">
+                <i class="fa-solid fa-right-from-bracket"></i> <span>Sair</span>
             </button>
         </div>
     </div>
 
     <!-- 1. VISÃO LOJA VIRTUAL (E-COMMERCE PÚBLICO) -->
     <div id="view-ecommerce" class="flex-1 flex flex-col overflow-y-auto">
-        <div class="bg-stone-950 text-stone-300 py-2 text-center text-xs font-medium tracking-widest uppercase border-b border-stone-800">
-            Frete cortesia nas compras acima de R$199 para todo o Brasil • Produtos 100% Originais
+        <div class="bg-stone-950 text-stone-300 py-2 text-center text-[10px] sm:text-xs font-medium tracking-widest uppercase border-b border-stone-800 px-2">
+            Frete cortesia nas compras acima de R$199 para todo o Brasil • 100% Originais
         </div>
 
+        <!-- Cabeçalho Principal Responsivo -->
         <header class="bg-white border-b border-stone-200 sticky top-0 z-40 shadow-xs">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between h-20">
-                    <div class="flex-shrink-0 cursor-pointer" onclick="filterBrand('ALL')">
-                        <h1 class="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-stone-900">
+                <div class="flex items-center justify-between h-16 sm:h-20">
+                    
+                    <!-- Botão Menu Mobile -->
+                    <button onclick="toggleMobileNav()" class="lg:hidden text-stone-800 p-2 focus:outline-none">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+
+                    <!-- Logotipo -->
+                    <div class="flex-shrink-0 cursor-pointer text-center lg:text-left" onclick="filterBrand('ALL')">
+                        <h1 class="font-serif text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-stone-900">
                             FRAGRÂNCIAS <span class="italic text-fabi-500 font-normal">FABI</span>
                         </h1>
                     </div>
 
-                    <nav class="hidden lg:flex space-x-8 text-xs font-semibold text-stone-700 uppercase tracking-wider">
+                    <!-- Menu Navegação Desktop -->
+                    <nav class="hidden lg:flex space-x-6 xl:space-x-8 text-xs font-semibold text-stone-700 uppercase tracking-wider">
                         <a href="#" onclick="event.preventDefault(); filterBrand('ALL')" class="hover:text-fabi-500 transition">Novidades</a>
                         <a href="#" onclick="event.preventDefault(); filterBrand('Nicho')" class="hover:text-fabi-500 transition">Nicho</a>
                         <a href="#" onclick="event.preventDefault(); filterBrand('ALL')" class="text-fabi-600 font-bold border-b-2 border-fabi-500 pb-1">Fragrâncias</a>
                         <a href="#" onclick="event.preventDefault()" class="hover:text-fabi-500 transition">Skin Care</a>
                         <a href="#" onclick="event.preventDefault()" class="hover:text-fabi-500 transition">Maquiagem</a>
-                        <a href="#" onclick="event.preventDefault()" class="hover:text-fabi-500 transition">Marcas</a>
                     </nav>
 
-                    <div class="flex items-center space-x-5">
-                        <button onclick="toggleCartDrawer(true)" class="relative flex items-center bg-stone-900 text-white px-4 py-2 rounded-lg hover:bg-stone-800 transition">
-                            <i class="fa-solid fa-bag-shopping text-base mr-2"></i>
-                            <span class="text-xs font-bold uppercase tracking-wider">Sacola</span>
-                            <span id="cartCountBadge" class="ml-2 bg-fabi-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">0</span>
+                    <!-- Ações: Login Gestor & Sacola -->
+                    <div class="flex items-center space-x-3 sm:space-x-4">
+                        <button id="managerLoginBtn" onclick="openLoginModal()" class="text-stone-600 hover:text-fabi-600 text-xs font-semibold flex items-center gap-1.5 transition px-2 py-1 rounded-md hover:bg-stone-100">
+                            <i class="fa-solid fa-user-lock text-sm"></i>
+                            <span class="hidden md:inline">Área do Gestor</span>
+                        </button>
+
+                        <button onclick="toggleCartDrawer(true)" class="relative flex items-center bg-stone-900 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-stone-800 transition">
+                            <i class="fa-solid fa-bag-shopping text-sm sm:text-base mr-1.5 sm:mr-2"></i>
+                            <span class="text-xs font-bold uppercase tracking-wider hidden sm:inline">Sacola</span>
+                            <span id="cartCountBadge" class="bg-fabi-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1 sm:ml-2">0</span>
                         </button>
                     </div>
                 </div>
             </div>
+
+            <!-- Drawer Menu Mobile -->
+            <div id="mobileNav" class="hidden lg:hidden bg-white border-b border-stone-200 px-4 py-3 space-y-2 text-xs font-semibold uppercase tracking-wider border-t">
+                <a href="#" onclick="toggleMobileNav(); filterBrand('ALL');" class="block py-2 text-stone-800 hover:text-fabi-500">Novidades</a>
+                <a href="#" onclick="toggleMobileNav(); filterBrand('Nicho');" class="block py-2 text-stone-800 hover:text-fabi-500">Perfumes de Nicho</a>
+                <a href="#" onclick="toggleMobileNav(); filterBrand('ALL');" class="block py-2 text-fabi-600 font-bold">Todas as Fragrâncias</a>
+                <a href="#" onclick="toggleMobileNav(); openLoginModal();" class="block py-2 text-stone-500 border-t border-stone-100 pt-3">
+                    <i class="fa-solid fa-lock mr-1.5 text-fabi-500"></i> Login do Gestor
+                </a>
+            </div>
         </header>
 
-        <div class="bg-stone-100 border-b border-stone-200 py-2.5">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-[11px] text-stone-500">
-                <a href="#" class="hover:text-stone-800">Página Inicial</a>
-                <span class="mx-2">&gt;</span>
-                <span class="font-semibold text-stone-800 uppercase">fragrâncias</span>
-            </div>
-        </div>
-
-        <div class="bg-white border-b border-stone-200 py-4">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <!-- Filtros por Marca / Categoria -->
+        <div class="bg-white border-b border-stone-200 py-3 sm:py-4">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center space-x-2 overflow-x-auto hide-scrollbar py-1">
-                    <button onclick="filterBrand('ALL')" id="pill-ALL" class="brand-pill px-4 py-2 bg-stone-900 text-white text-xs font-bold rounded-md uppercase tracking-wider shrink-0 transition">Todos os filtros</button>
-                    <button onclick="filterBrand('Carolina Herrera')" id="pill-Carolina Herrera" class="brand-pill px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-md uppercase tracking-wider shrink-0 transition">Carolina Herrera</button>
-                    <button onclick="filterBrand('Paco Rabanne')" id="pill-Paco Rabanne" class="brand-pill px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-md uppercase tracking-wider shrink-0 transition">Paco Rabanne</button>
-                    <button onclick="filterBrand('Creed')" id="pill-Creed" class="brand-pill px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-md uppercase tracking-wider shrink-0 transition">Creed</button>
-                    <button onclick="filterBrand('Parfums De Marly')" id="pill-Parfums De Marly" class="brand-pill px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-md uppercase tracking-wider shrink-0 transition">Parfums De Marly</button>
-                    <button onclick="filterBrand('Dolce&Gabbana')" id="pill-Dolce&Gabbana" class="brand-pill px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-md uppercase tracking-wider shrink-0 transition">Dolce&Gabbana</button>
-                    <button onclick="filterBrand('Jean Paul Gaultier')" id="pill-Jean Paul Gaultier" class="brand-pill px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-md uppercase tracking-wider shrink-0 transition">Jean Paul Gaultier</button>
+                    <button onclick="filterBrand('ALL')" id="pill-ALL" class="brand-pill px-3.5 py-1.5 sm:px-4 sm:py-2 bg-stone-900 text-white text-[11px] sm:text-xs font-bold rounded-md uppercase tracking-wider shrink-0 transition">Todos os Filtros</button>
+                    <button onclick="filterBrand('Carolina Herrera')" id="pill-Carolina Herrera" class="brand-pill px-3.5 py-1.5 sm:px-4 sm:py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-[11px] sm:text-xs font-semibold rounded-md uppercase tracking-wider shrink-0 transition">Carolina Herrera</button>
+                    <button onclick="filterBrand('Paco Rabanne')" id="pill-Paco Rabanne" class="brand-pill px-3.5 py-1.5 sm:px-4 sm:py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-[11px] sm:text-xs font-semibold rounded-md uppercase tracking-wider shrink-0 transition">Paco Rabanne</button>
+                    <button onclick="filterBrand('Creed')" id="pill-Creed" class="brand-pill px-3.5 py-1.5 sm:px-4 sm:py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-[11px] sm:text-xs font-semibold rounded-md uppercase tracking-wider shrink-0 transition">Creed</button>
+                    <button onclick="filterBrand('Parfums De Marly')" id="pill-Parfums De Marly" class="brand-pill px-3.5 py-1.5 sm:px-4 sm:py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-[11px] sm:text-xs font-semibold rounded-md uppercase tracking-wider shrink-0 transition">Parfums De Marly</button>
+                    <button onclick="filterBrand('Dolce&Gabbana')" id="pill-Dolce&Gabbana" class="brand-pill px-3.5 py-1.5 sm:px-4 sm:py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-[11px] sm:text-xs font-semibold rounded-md uppercase tracking-wider shrink-0 transition">Dolce&Gabbana</button>
+                    <button onclick="filterBrand('Jean Paul Gaultier')" id="pill-Jean Paul Gaultier" class="brand-pill px-3.5 py-1.5 sm:px-4 sm:py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-[11px] sm:text-xs font-semibold rounded-md uppercase tracking-wider shrink-0 transition">Jean Paul Gaultier</button>
                 </div>
             </div>
         </div>
 
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
-            <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+        <!-- Grelha de Produtos Responsiva -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full">
+            <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"></div>
         </main>
 
-        <footer class="bg-stone-900 text-stone-400 border-t border-stone-800 mt-12 py-12">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8 text-xs">
+        <!-- Rodapé da Loja -->
+        <footer class="bg-stone-900 text-stone-400 border-t border-stone-800 mt-12 py-8 sm:py-12">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-xs">
                 <div>
-                    <h3 class="font-serif text-lg font-bold text-white mb-2">Fragrâncias Fabi</h3>
-                    <p class="text-stone-400 leading-relaxed">Ateliê exclusivo de perfumaria importada e cosméticos de luxo originais.</p>
+                    <h3 class="font-serif text-base sm:text-lg font-bold text-white mb-2">Fragrâncias Fabi</h3>
+                    <p class="text-stone-400 leading-relaxed">Ateliê exclusivo especializado em alta perfumaria importada e cosméticos de luxo originais.</p>
                 </div>
                 <div>
-                    <h4 class="font-bold text-white uppercase tracking-wider mb-3">Atendimento</h4>
+                    <h4 class="font-bold text-white uppercase tracking-wider mb-2 sm:mb-3">Atendimento</h4>
                     <p class="mb-1"><i class="fa-brands fa-whatsapp text-emerald-400 mr-1.5"></i> (11) 98888-7777</p>
                 </div>
                 <div>
-                    <h4 class="font-bold text-white uppercase tracking-wider mb-3">Pagamento Seguro</h4>
+                    <h4 class="font-bold text-white uppercase tracking-wider mb-2 sm:mb-3">Pagamento Seguro</h4>
                     <p class="text-stone-400">PIX Instantâneo e Cartão de Crédito em até 10x via Mercado Pago.</p>
                 </div>
                 <div>
-                    <h4 class="font-bold text-white uppercase tracking-wider mb-3">Garantia</h4>
-                    <p class="text-stone-400"><i class="fa-solid fa-shield-halved text-fabi-500 mr-1.5"></i> Produtos 100% Originais com Selo de Procedência.</p>
+                    <h4 class="font-bold text-white uppercase tracking-wider mb-2 sm:mb-3">Garantia</h4>
+                    <p class="text-stone-400"><i class="fa-solid fa-shield-halved text-fabi-500 mr-1.5"></i> Produtos 100% Originais.</p>
                 </div>
             </div>
         </footer>
     </div>
 
-    <!-- SACOLA LATERAL COM ENDEREÇO DE ENTREGA -->
+    <!-- SACOLA LATERAL RESPONSIVA COM FORMULÁRIO DE ENDEREÇO -->
     <div id="cartDrawer" class="fixed inset-0 z-50 overflow-hidden hidden">
         <div onclick="toggleCartDrawer(false)" class="absolute inset-0 bg-stone-900/60 backdrop-blur-xs transition-opacity"></div>
-        <div class="fixed inset-y-0 right-0 max-w-full flex pl-10">
+        <div class="fixed inset-y-0 right-0 max-w-full flex pl-6 sm:pl-10">
             <div class="w-screen max-w-md bg-white shadow-2xl flex flex-col justify-between">
-                <div class="p-6 border-b border-stone-200 flex items-center justify-between">
-                    <h2 class="font-serif text-lg font-bold text-stone-900 flex items-center">
+                <div class="p-4 sm:p-6 border-b border-stone-200 flex items-center justify-between">
+                    <h2 class="font-serif text-base sm:text-lg font-bold text-stone-900 flex items-center">
                         <i class="fa-solid fa-bag-shopping text-fabi-500 mr-2"></i> Sua Sacola
                     </h2>
                     <button onclick="toggleCartDrawer(false)" class="text-stone-400 hover:text-stone-600 p-2"><i class="fa-solid fa-xmark text-lg"></i></button>
                 </div>
 
-                <div id="cartDrawerItems" class="p-6 overflow-y-auto flex-1 divide-y divide-stone-100"></div>
+                <div id="cartDrawerItems" class="p-4 sm:p-6 overflow-y-auto flex-1 divide-y divide-stone-100"></div>
 
-                <!-- Formulário de Endereço de Entrega -->
-                <div class="px-6 py-4 bg-stone-100 border-t border-stone-200 space-y-2 text-xs">
+                <!-- Endereço de Entrega -->
+                <div class="px-4 sm:px-6 py-3 bg-stone-100 border-t border-stone-200 space-y-2 text-xs">
                     <h4 class="font-bold text-stone-800 uppercase tracking-wider text-[11px] mb-1">
                         <i class="fa-solid fa-truck-fast text-fabi-500 mr-1"></i> Endereço para Entrega
                     </h4>
                     <div class="grid grid-cols-3 gap-2">
-                        <input type="text" id="deliveryCep" placeholder="CEP (ex: 01000-000)" class="col-span-1 p-2 bg-white border border-stone-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                        <input type="text" id="deliveryCep" placeholder="CEP" class="col-span-1 p-2 bg-white border border-stone-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
                         <input type="text" id="deliveryCity" placeholder="Cidade / UF" class="col-span-2 p-2 bg-white border border-stone-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
                     </div>
                     <input type="text" id="deliveryStreet" placeholder="Rua / Avenida" class="w-full p-2 bg-white border border-stone-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
@@ -180,7 +202,7 @@
                     <input type="text" id="deliveryComplement" placeholder="Complemento (Apto, Bloco...)" class="w-full p-2 bg-white border border-stone-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
                 </div>
 
-                <div class="p-6 border-t border-stone-200 bg-stone-50 space-y-3">
+                <div class="p-4 sm:p-6 border-t border-stone-200 bg-stone-50 space-y-3">
                     <div class="flex justify-between text-xs text-stone-500">
                         <span>Frete:</span>
                         <span class="text-emerald-600 font-bold">CORTESIA</span>
@@ -197,89 +219,116 @@
         </div>
     </div>
 
-    <!-- 2. VISÃO FRENTE DE CAIXA (PDV BALCÃO — PROTEGIDO) -->
-    <div id="view-pdv" class="flex-1 flex flex-col hidden bg-stone-900 text-stone-100 p-6 overflow-y-auto">
+    <!-- MODAL DE LOGIN DO GESTOR -->
+    <div id="loginModal" class="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-stone-100 pb-3">
+                <h3 class="font-serif font-bold text-stone-900 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-user-shield text-fabi-500"></i> Autenticação do Gestor
+                </h3>
+                <button onclick="closeLoginModal()" class="text-stone-400 hover:text-stone-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="handleAdminLogin(event)" class="space-y-3">
+                <div>
+                    <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Usuário</label>
+                    <input type="text" id="loginUser" required placeholder="Ex: admin" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs text-stone-800 focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                </div>
+                <div>
+                    <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Senha</label>
+                    <input type="password" id="loginPass" required placeholder="••••••••" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs text-stone-800 focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                </div>
+                <div class="pt-2">
+                    <button type="submit" class="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition">
+                        Entrar no Painel de Controle
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. VISÃO FRENTE DE CAIXA (PDV BALCÃO — RESTRITO) -->
+    <div id="view-pdv" class="flex-1 flex flex-col hidden bg-stone-900 text-stone-100 p-4 sm:p-6 overflow-y-auto">
         <div class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 space-y-4">
-                <div class="bg-stone-800 border border-stone-700 p-5 rounded-2xl flex items-center space-x-4 shadow-xl">
+                <div class="bg-stone-800 border border-stone-700 p-4 sm:p-5 rounded-2xl flex items-center space-x-4 shadow-xl">
                     <div class="p-3 bg-fabi-500/20 border border-fabi-500/40 text-fabi-400 rounded-xl">
-                        <i class="fa-solid fa-barcode text-3xl"></i>
+                        <i class="fa-solid fa-barcode text-2xl sm:text-3xl"></i>
                     </div>
                     <div class="flex-1">
-                        <label class="text-[10px] uppercase font-bold text-fabi-400 tracking-wider block">Leitor de Código de Barras / Busca Balcão</label>
-                        <input type="text" id="pdvBarcodeBar" onkeydown="handlePdvBarcodeScan(event)" placeholder="Bipe o código de barras ou digite o nome e dê ENTER..." class="w-full bg-stone-950 border border-stone-700 rounded-xl p-3 text-sm font-mono text-fabi-300 focus:outline-none focus:border-fabi-500 mt-1">
+                        <label class="text-[10px] uppercase font-bold text-fabi-400 tracking-wider block">Leitor / Busca Balcão</label>
+                        <input type="text" id="pdvBarcodeBar" onkeydown="handlePdvBarcodeScan(event)" placeholder="Bipe o código ou digite o nome..." class="w-full bg-stone-950 border border-stone-700 rounded-xl p-2.5 sm:p-3 text-xs sm:text-sm font-mono text-fabi-300 focus:outline-none focus:border-fabi-500 mt-1">
                     </div>
                 </div>
 
-                <div class="bg-stone-800/80 border border-stone-700/80 rounded-2xl p-5 shadow-xl">
-                    <h3 class="font-serif text-stone-200 font-bold mb-4 text-sm flex items-center">
+                <div class="bg-stone-800/80 border border-stone-700/80 rounded-2xl p-4 sm:p-5 shadow-xl">
+                    <h3 class="font-serif text-stone-200 font-bold mb-3 text-xs sm:text-sm flex items-center">
                         <i class="fa-solid fa-grip mr-2 text-fabi-500"></i> Catálogo Rápido de Balcão
                     </h3>
-                    <div id="pdvQuickGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[460px] overflow-y-auto pr-1"></div>
+                    <div id="pdvQuickGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3 max-h-[380px] sm:max-h-[460px] overflow-y-auto pr-1"></div>
                 </div>
             </div>
 
-            <div class="bg-stone-800 border border-stone-700 rounded-2xl p-6 shadow-2xl flex flex-col justify-between h-[600px]">
+            <div class="bg-stone-800 border border-stone-700 rounded-2xl p-4 sm:p-6 shadow-2xl flex flex-col justify-between h-[520px] sm:h-[600px]">
                 <div>
                     <div class="flex justify-between items-center border-b border-stone-700 pb-3 mb-4">
                         <div>
-                            <h2 class="font-serif font-bold text-stone-100 text-base">Caixa #01 — Loja Física</h2>
-                            <p class="text-[10px] text-stone-400">Atendimento Presencial — Fragrâncias Fabi</p>
+                            <h2 class="font-serif font-bold text-stone-100 text-sm sm:text-base">Caixa #01 — Loja Física</h2>
+                            <p class="text-[10px] text-stone-400">Atendimento Presencial</p>
                         </div>
-                        <span class="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold rounded-full">Caixa Aberto</span>
+                        <span class="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold rounded-full">Aberto</span>
                     </div>
 
-                    <div id="pdvCartItems" class="space-y-2 overflow-y-auto h-[260px] pr-1 divide-y divide-stone-700/50"></div>
+                    <div id="pdvCartItems" class="space-y-2 overflow-y-auto h-[200px] sm:h-[260px] pr-1 divide-y divide-stone-700/50"></div>
                 </div>
 
-                <div class="border-t border-stone-700 pt-4 space-y-3 bg-stone-900/60 p-4 rounded-xl">
+                <div class="border-t border-stone-700 pt-3 sm:pt-4 space-y-2 sm:space-y-3 bg-stone-900/60 p-3 sm:p-4 rounded-xl">
                     <div class="flex justify-between text-xs text-stone-300">
                         <span>Subtotal:</span>
                         <span id="pdvSubtotal" class="font-mono">R$ 0,00</span>
                     </div>
-                    <div class="flex justify-between text-base font-bold text-fabi-400 border-t border-stone-800 pt-2">
+                    <div class="flex justify-between text-sm sm:text-base font-bold text-fabi-400 border-t border-stone-800 pt-2">
                         <span>TOTAL VENDA:</span>
-                        <span id="pdvTotal" class="font-serif text-xl">R$ 0,00</span>
+                        <span id="pdvTotal" class="font-serif text-lg sm:text-xl">R$ 0,00</span>
                     </div>
 
-                    <div class="grid grid-cols-3 gap-2 pt-2">
-                        <button onclick="finishPdvSale('DINHEIRO')" id="btnPdvCash" disabled class="py-3 bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition flex flex-col items-center gap-1">
+                    <div class="grid grid-cols-3 gap-2 pt-1">
+                        <button onclick="finishPdvSale('DINHEIRO')" id="btnPdvCash" disabled class="py-2.5 sm:py-3 bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 text-white font-bold text-[10px] sm:text-xs rounded-xl uppercase tracking-wider transition flex flex-col items-center gap-1">
                             <i class="fa-solid fa-money-bill-1"></i> Dinheiro
                         </button>
-                        <button onclick="finishPdvSale('PIX')" id="btnPdvPix" disabled class="py-3 bg-teal-700 hover:bg-teal-600 disabled:opacity-40 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition flex flex-col items-center gap-1">
+                        <button onclick="finishPdvSale('PIX')" id="btnPdvPix" disabled class="py-2.5 sm:py-3 bg-teal-700 hover:bg-teal-600 disabled:opacity-40 text-white font-bold text-[10px] sm:text-xs rounded-xl uppercase tracking-wider transition flex flex-col items-center gap-1">
                             <i class="fa-brands fa-pix"></i> PIX
                         </button>
-                        <button onclick="finishPdvSale('CARTAO')" id="btnPdvCard" disabled class="py-3 bg-fabi-600 hover:bg-fabi-500 disabled:opacity-40 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition flex flex-col items-center gap-1">
+                        <button onclick="finishPdvSale('CARTAO')" id="btnPdvCard" disabled class="py-2.5 sm:py-3 bg-fabi-600 hover:bg-fabi-500 disabled:opacity-40 text-white font-bold text-[10px] sm:text-xs rounded-xl uppercase tracking-wider transition flex flex-col items-center gap-1">
                             <i class="fa-solid fa-credit-card"></i> Cartão
                         </button>
                     </div>
-                    <button onclick="clearPdvCart()" class="w-full py-2 text-stone-400 hover:text-stone-200 text-[11px] font-semibold text-center transition">Limpar Itens do Caixa</button>
+                    <button onclick="clearPdvCart()" class="w-full py-1.5 text-stone-400 hover:text-stone-200 text-[10px] font-semibold text-center transition">Limpar Itens do Caixa</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 3. VISÃO PAINEL ADMIN & GESTÃO DE ESTOQUE (PROTEGIDO) -->
-    <div id="view-admin" class="flex-1 flex flex-col hidden bg-stone-100 p-6 overflow-y-auto">
+    <!-- 3. VISÃO PAINEL ADMIN & ESTOQUE (RESTRITO) -->
+    <div id="view-admin" class="flex-1 flex flex-col hidden bg-stone-100 p-4 sm:p-6 overflow-y-auto">
         <div class="max-w-7xl mx-auto w-full space-y-6">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 class="font-serif text-2xl font-bold text-stone-900">Painel de Gestão & Estoque Unificado</h1>
-                    <p class="text-xs text-stone-500">Sincronizado com o banco de dados PostgreSQL no Render.</p>
+                    <h1 class="font-serif text-xl sm:text-2xl font-bold text-stone-900">Painel de Gestão & Estoque Unificado</h1>
+                    <p class="text-xs text-stone-500">Sincronizado com a API no Render.</p>
                 </div>
-                <button onclick="openNewProductModal()" class="px-4 py-2.5 bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs rounded-lg uppercase tracking-wider transition shadow-sm flex items-center gap-2">
+                <button onclick="openNewProductModal()" class="w-full sm:w-auto px-4 py-2.5 bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs rounded-lg uppercase tracking-wider transition shadow-sm flex items-center justify-center gap-2">
                     <i class="fa-solid fa-plus text-fabi-500"></i> Cadastrar Novo Perfume
                 </button>
             </div>
 
             <!-- Tabela de Controle de Estoque -->
-            <div class="bg-white rounded-2xl border border-stone-200 shadow-xs p-6 space-y-4">
+            <div class="bg-white rounded-2xl border border-stone-200 shadow-xs p-4 sm:p-6 space-y-4">
                 <div class="flex justify-between items-center border-b border-stone-100 pb-3">
-                    <h3 class="font-serif text-lg font-bold text-stone-900">Controle de Estoque</h3>
+                    <h3 class="font-serif text-base sm:text-lg font-bold text-stone-900">Controle de Estoque</h3>
                     <span class="text-xs text-emerald-600 font-semibold"><i class="fa-solid fa-rotate mr-1"></i> Tempo Real</span>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs text-stone-700">
+                    <table class="w-full text-left text-xs text-stone-700 min-w-[500px]">
                         <thead class="bg-stone-50 uppercase text-[10px] text-stone-400 border-b border-stone-200">
                             <tr>
                                 <th class="p-3">Perfume</th>
@@ -294,11 +343,11 @@
                 </div>
             </div>
 
-            <!-- Relatório de Pedidos & Endereços de Entrega -->
-            <div class="bg-white rounded-2xl border border-stone-200 shadow-xs p-6 space-y-4">
-                <h3 class="font-serif text-lg font-bold text-stone-900">Relatório de Pedidos E-Commerce & Endereços</h3>
+            <!-- Relatório de Pedidos & Endereços -->
+            <div class="bg-white rounded-2xl border border-stone-200 shadow-xs p-4 sm:p-6 space-y-4">
+                <h3 class="font-serif text-base sm:text-lg font-bold text-stone-900">Relatório de Pedidos & Endereços</h3>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs text-stone-700">
+                    <table class="w-full text-left text-xs text-stone-700 min-w-[550px]">
                         <thead class="bg-stone-50 uppercase text-[10px] text-stone-400 border-b border-stone-200">
                             <tr>
                                 <th class="p-3">Origem</th>
@@ -314,7 +363,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE CADASTRO DE NOVO PRODUTO (EXCLUSIVO ADMIN) -->
+    <!-- MODAL DE CADASTRO DE PRODUTO -->
     <div id="newProductModal" class="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <div class="flex justify-between items-center border-b border-stone-100 pb-3">
@@ -350,17 +399,20 @@
                 </div>
                 <div class="pt-2">
                     <button type="submit" class="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition">
-                        Salvar Perfume no Banco de Dados
+                        Salvar Perfume
                     </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- SCRIPT DE NAVEGAÇÃO E AUTENTICAÇÃO SEGURA -->
+    <!-- SCRIPT DA APLICAÇÃO -->
     <script>
         const API_URL = 'https://fragrancias-fabi-api.onrender.com/api';
-        const ADMIN_PASS = 'fabi2026'; // Senha de acesso ao Painel Admin e PDV
+        
+        // Credenciais do Administrador
+        const ADMIN_USER = 'admin';
+        const ADMIN_PASS = 'fabi2026';
         let isAdminAuthenticated = false;
 
         const DB = {
@@ -375,21 +427,43 @@
             fetchPerfumesFromApi();
         };
 
-        // Solicitação de Senha para Abas Restritas
-        function requestAdminAccess(targetMode) {
-            if (isAdminAuthenticated) {
-                setMode(targetMode);
-                return;
-            }
+        function toggleMobileNav() {
+            document.getElementById('mobileNav').classList.toggle('hidden');
+        }
 
-            const inputPass = prompt("🔐 Área Restrita (Administração)\nDigite a senha de acesso:");
-            if (inputPass === ADMIN_PASS) {
+        function openLoginModal() {
+            document.getElementById('loginModal').classList.remove('hidden');
+        }
+
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.add('hidden');
+        }
+
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('loginUser').value.trim();
+            const p = document.getElementById('loginPass').value.trim();
+
+            if (u === ADMIN_USER && p === ADMIN_PASS) {
                 isAdminAuthenticated = true;
-                alert("Acesso autorizado!");
-                setMode(targetMode);
-            } else if (inputPass !== null) {
-                alert("Senha incorreta. Acesso negado.");
+                closeLoginModal();
+                document.getElementById('adminTopBar').classList.remove('hidden');
+                document.getElementById('adminTopBar').classList.add('flex');
+                document.getElementById('managerLoginBtn').innerHTML = `<i class="fa-solid fa-user-check text-emerald-500 text-sm"></i> <span class="hidden md:inline font-bold text-emerald-600">Gestor On</span>`;
+                alert("Login efetuado com sucesso! O painel do gestor foi ativado no topo.");
+                setMode('admin');
+            } else {
+                alert("Usuário ou senha incorretos.");
             }
+        }
+
+        function logoutAdmin() {
+            isAdminAuthenticated = false;
+            document.getElementById('adminTopBar').classList.add('hidden');
+            document.getElementById('adminTopBar').classList.remove('flex');
+            document.getElementById('managerLoginBtn').innerHTML = `<i class="fa-solid fa-user-lock text-sm"></i> <span class="hidden md:inline">Área do Gestor</span>`;
+            setMode('ecommerce');
+            alert("Sessão encerrada com sucesso.");
         }
 
         async function fetchPerfumesFromApi() {
@@ -410,7 +484,7 @@
                     }
                 }
             } catch (err) {
-                console.warn('Servidor inicializando...');
+                console.warn('Carregando catálogo padrão...');
             }
 
             if (DB.perfumes.length === 0) {
@@ -432,19 +506,19 @@
             document.getElementById('view-pdv').classList.add('hidden');
             document.getElementById('view-admin').classList.add('hidden');
 
-            document.getElementById('btn-mode-ecommerce').className = "px-3 py-1.5 rounded-full font-semibold transition hover:bg-stone-800 text-stone-300 text-[11px] flex items-center gap-1.5";
-            document.getElementById('btn-mode-pdv').className = "px-3 py-1.5 rounded-full font-semibold transition hover:bg-stone-800 text-stone-300 text-[11px] flex items-center gap-1.5";
-            document.getElementById('btn-mode-admin').className = "px-3 py-1.5 rounded-full font-semibold transition hover:bg-stone-800 text-stone-300 text-[11px] flex items-center gap-1.5";
+            document.getElementById('btn-mode-ecommerce').className = "px-3 py-1.5 rounded-full font-semibold transition hover:bg-stone-800 text-stone-300 text-[11px] flex items-center gap-1.5 shrink-0";
+            document.getElementById('btn-mode-pdv').className = "px-3 py-1.5 rounded-full font-semibold transition hover:bg-stone-800 text-stone-300 text-[11px] flex items-center gap-1.5 shrink-0";
+            document.getElementById('btn-mode-admin').className = "px-3 py-1.5 rounded-full font-semibold transition hover:bg-stone-800 text-stone-300 text-[11px] flex items-center gap-1.5 shrink-0";
 
             if (mode === 'ecommerce') {
                 document.getElementById('view-ecommerce').classList.remove('hidden');
-                document.getElementById('btn-mode-ecommerce').className = "px-3 py-1.5 rounded-full font-semibold transition bg-fabi-500 text-white shadow-sm text-[11px] flex items-center gap-1.5";
+                document.getElementById('btn-mode-ecommerce').className = "px-3 py-1.5 rounded-full font-semibold transition bg-fabi-500 text-white shadow-sm text-[11px] flex items-center gap-1.5 shrink-0";
             } else if (mode === 'pdv') {
                 document.getElementById('view-pdv').classList.remove('hidden');
-                document.getElementById('btn-mode-pdv').className = "px-3 py-1.5 rounded-full font-semibold transition bg-fabi-500 text-white shadow-sm text-[11px] flex items-center gap-1.5";
+                document.getElementById('btn-mode-pdv').className = "px-3 py-1.5 rounded-full font-semibold transition bg-fabi-500 text-white shadow-sm text-[11px] flex items-center gap-1.5 shrink-0";
             } else if (mode === 'admin') {
                 document.getElementById('view-admin').classList.remove('hidden');
-                document.getElementById('btn-mode-admin').className = "px-3 py-1.5 rounded-full font-semibold transition bg-fabi-500 text-white shadow-sm text-[11px] flex items-center gap-1.5";
+                document.getElementById('btn-mode-admin').className = "px-3 py-1.5 rounded-full font-semibold transition bg-fabi-500 text-white shadow-sm text-[11px] flex items-center gap-1.5 shrink-0";
                 renderSalesLog();
             }
         }
@@ -452,10 +526,10 @@
         function filterBrand(brand) {
             DB.activeBrandFilter = brand;
             document.querySelectorAll('.brand-pill').forEach(btn => {
-                btn.className = "brand-pill px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-md uppercase tracking-wider shrink-0 transition";
+                btn.className = "brand-pill px-3.5 py-1.5 sm:px-4 sm:py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-[11px] sm:text-xs font-semibold rounded-md uppercase tracking-wider shrink-0 transition";
             });
             const activeBtn = document.getElementById(`pill-${brand}`);
-            if (activeBtn) activeBtn.className = "brand-pill px-4 py-2 bg-stone-900 text-white text-xs font-bold rounded-md uppercase tracking-wider shrink-0 transition";
+            if (activeBtn) activeBtn.className = "brand-pill px-3.5 py-1.5 sm:px-4 sm:py-2 bg-stone-900 text-white text-[11px] sm:text-xs font-bold rounded-md uppercase tracking-wider shrink-0 transition";
             renderStoreGrid();
         }
 
@@ -470,22 +544,22 @@
                 return `
                     <div class="bg-white rounded-xl border border-stone-200 overflow-hidden flex flex-col justify-between group hover:shadow-xl transition duration-300">
                         <div>
-                            <div class="h-64 bg-stone-50 flex items-center justify-center p-6 relative overflow-hidden">
+                            <div class="h-48 sm:h-64 bg-stone-50 flex items-center justify-center p-4 sm:p-6 relative overflow-hidden">
                                 <img src="${p.imagem}" alt="${p.nome}" class="max-h-full max-w-full object-contain group-hover:scale-105 transition duration-300">
                             </div>
-                            <div class="p-4 space-y-1">
-                                <h3 class="font-bold text-xs uppercase text-stone-900 tracking-wider">${p.marca}</h3>
+                            <div class="p-3 sm:p-4 space-y-1">
+                                <h3 class="font-bold text-[11px] sm:text-xs uppercase text-stone-900 tracking-wider">${p.marca}</h3>
                                 <p class="text-xs text-stone-500 line-clamp-2 leading-relaxed">${p.nome}</p>
                             </div>
                         </div>
 
-                        <div class="p-4 pt-0 space-y-3">
+                        <div class="p-3 sm:p-4 pt-0 space-y-2 sm:space-y-3">
                             <div>
-                                <span class="text-base font-bold text-stone-900">R$ ${p.preco.toFixed(2).replace('.', ',')}</span>
-                                <p class="text-[10px] text-stone-400">ou 10x de R$ ${parcelValue} sem juros</p>
+                                <span class="text-sm sm:text-base font-bold text-stone-900">R$ ${p.preco.toFixed(2).replace('.', ',')}</span>
+                                <p class="text-[9px] sm:text-[10px] text-stone-400">ou 10x de R$ ${parcelValue} sem juros</p>
                             </div>
 
-                            <button onclick="addToStoreCart(${p.id})" ${p.estoque === 0 ? 'disabled' : ''} class="w-full py-2.5 bg-stone-900 hover:bg-stone-800 disabled:opacity-30 text-white font-bold text-xs uppercase tracking-wider rounded-lg transition flex items-center justify-center gap-1.5">
+                            <button onclick="addToStoreCart(${p.id})" ${p.estoque === 0 ? 'disabled' : ''} class="w-full py-2 sm:py-2.5 bg-stone-900 hover:bg-stone-800 disabled:opacity-30 text-white font-bold text-[10px] sm:text-xs uppercase tracking-wider rounded-lg transition flex items-center justify-center gap-1.5">
                                 <i class="fa-solid fa-bag-shopping"></i>
                                 <span>${p.estoque > 0 ? 'Adicionar à Sacola' : 'Esgotado'}</span>
                             </button>
@@ -541,10 +615,10 @@
                 const total = item.preco_unitario * item.quantidade;
                 subtotal += total;
                 return `
-                    <div class="py-4 flex items-center justify-between">
-                        <img src="${item.imagem}" class="w-12 h-12 object-contain rounded-md bg-stone-50 p-1 border border-stone-200">
+                    <div class="py-3 flex items-center justify-between">
+                        <img src="${item.imagem}" class="w-10 h-10 sm:w-12 sm:h-12 object-contain rounded-md bg-stone-50 p-1 border border-stone-200">
                         <div class="flex-1 px-3">
-                            <h4 class="font-bold text-xs uppercase text-stone-800">${item.marca}</h4>
+                            <h4 class="font-bold text-[11px] sm:text-xs uppercase text-stone-800">${item.marca}</h4>
                             <p class="text-[10px] text-stone-500 line-clamp-1">${item.nome}</p>
                             <span class="text-xs font-bold text-stone-900">R$ ${item.preco_unitario.toFixed(2).replace('.', ',')} x ${item.quantidade}</span>
                         </div>
@@ -583,7 +657,6 @@
             const enderecoCompleto = `${rua}, Nº ${numero} - ${bairro}, ${cidade} - CEP: ${cep}`;
             const subtotalTotal = DB.carrinhoStore.reduce((acc, i) => acc + (i.preco_unitario * i.quantidade), 0);
 
-            // Armazena no relatório local para consulta no Painel Admin
             DB.vendas.push({
                 origem: 'LOJA_VIRTUAL',
                 metodo_pagamento: 'MERCADO_PAGO',
@@ -635,14 +708,14 @@
         function renderPdvQuickGrid() {
             const grid = document.getElementById('pdvQuickGrid');
             grid.innerHTML = DB.perfumes.map(p => `
-                <button onclick="addToPdvCart(${p.id})" ${p.estoque === 0 ? 'disabled' : ''} class="p-3 bg-stone-900 hover:bg-stone-950 disabled:opacity-30 border border-stone-700 text-left rounded-xl transition flex flex-col justify-between h-24">
+                <button onclick="addToPdvCart(${p.id})" ${p.estoque === 0 ? 'disabled' : ''} class="p-2.5 sm:p-3 bg-stone-900 hover:bg-stone-950 disabled:opacity-30 border border-stone-700 text-left rounded-xl transition flex flex-col justify-between h-20 sm:h-24">
                     <div>
-                        <p class="text-[10px] uppercase font-bold text-fabi-400">${p.marca}</p>
-                        <p class="text-xs font-bold text-stone-200 line-clamp-1">${p.nome}</p>
+                        <p class="text-[9px] sm:text-[10px] uppercase font-bold text-fabi-400">${p.marca}</p>
+                        <p class="text-[11px] sm:text-xs font-bold text-stone-200 line-clamp-1">${p.nome}</p>
                     </div>
                     <div class="flex justify-between items-center w-full">
-                        <span class="text-xs font-bold text-stone-100">R$ ${p.preco.toFixed(2)}</span>
-                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-stone-800 text-stone-300 font-mono">${p.estoque} un</span>
+                        <span class="text-[11px] sm:text-xs font-bold text-stone-100">R$ ${p.preco.toFixed(2)}</span>
+                        <span class="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded bg-stone-800 text-stone-300 font-mono">${p.estoque} un</span>
                     </div>
                 </button>
             `).join('');
