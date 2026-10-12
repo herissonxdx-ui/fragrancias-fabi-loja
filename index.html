@@ -12,9 +12,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- SDK OFICIAL MERCADO PAGO -->
-    <script src="https://sdk.mercadopago.com/js/v2"></script>
 
     <script>
         tailwind.config = {
@@ -242,7 +239,7 @@
                 <button onclick="closeCustomerAuthModal()" class="text-stone-400 hover:text-stone-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
 
-            <!-- SE O CLIENTE JÁ ESTIVER LOGADO (EXIBE PERFIL E MEUS PEDIDOS) -->
+            <!-- PERFIL E MEUS PEDIDOS DO CLIENTE LOGADO -->
             <div id="customerLoggedInView" class="space-y-4 hidden">
                 <div class="p-3 bg-stone-50 rounded-xl border border-stone-200 text-xs">
                     <p class="font-bold text-stone-900 text-sm" id="loggedInUserName">Nome do Cliente</p>
@@ -628,14 +625,6 @@
         let currentPaymentId = null;
         let pixPollingInterval = null;
         let currentPixPayloadGlobal = "";
-
-        // Inicializa SDK do Mercado Pago
-        let mp = null;
-        try {
-            mp = new MercadoPago('APP_USR-7282577442110345-101214-79a8ded9c7030683db1a9faa1460ef92-1447000501', { locale: 'pt-BR' });
-        } catch (e) {
-            console.warn('SDK Mercado Pago não carregada.');
-        }
 
         const ADMIN_USER = 'admin';
         const ADMIN_PASS = 'fabi2026';
@@ -1139,6 +1128,7 @@
             renderCartDrawer();
         }
 
+        // --- CHECKOUT DIRETO E INFALÍVEL MERCADO PAGO ---
         async function checkoutStoreOrder() {
             if (DB.carrinhoStore.length === 0) return;
 
@@ -1154,25 +1144,15 @@
             }
 
             const btnCheckout = document.getElementById('btnStoreCheckout');
-            btnCheckout.innerText = 'ABRINDO PAGAMENTO...';
+            btnCheckout.innerText = 'REDIRECIONANDO PARA O PAGAMENTO...';
             btnCheckout.disabled = true;
 
             const enderecoCompleto = `${rua}, Nº ${numero} - ${bairro}, ${cidade} - CEP: ${cep}`;
-            const subtotalTotal = DB.carrinhoStore.reduce((acc, i) => acc + (i.preco_unitario * i.quantidade), 0);
             const emailClienteLogado = loggedCustomer ? loggedCustomer.email : 'cliente@fragranciasfabi.com.br';
 
-            const novaVenda = {
-                origem: 'LOJA_VIRTUAL',
-                metodo_pagamento: 'MERCADO_PAGO',
-                endereco: enderecoCompleto,
-                total: subtotalTotal
-            };
-
-            DB.vendas.push(novaVenda);
-            localStorage.setItem('fabi_vendas_salvas', JSON.stringify(DB.vendas));
-
             try {
-                await fetch(`${API_URL}/vendas`, {
+                // Registro assíncrono em segundo plano
+                fetch(`${API_URL}/vendas`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1195,24 +1175,16 @@
 
                 const dataCheckout = await resCheckout.json();
 
-                if (resCheckout.ok && dataCheckout.id && mp) {
-                    mp.checkout({
-                        preference: { id: dataCheckout.id },
-                        render: {
-                            container: '#mpModalContainer',
-                            label: 'PAGAR COM MERCADO PAGO',
-                        },
-                        autoOpen: true
-                    });
-                } else if (dataCheckout.init_point) {
+                if (resCheckout.ok && dataCheckout.init_point) {
                     window.location.href = dataCheckout.init_point;
                 } else {
-                    alert('Erro ao redirecionar para o pagamento.');
+                    alert('Não foi possível gerar a tela de pagamento. Tente novamente em instantes.');
                     btnCheckout.innerText = 'FINALIZAR PEDIDO (MERCADO PAGO)';
                     btnCheckout.disabled = false;
                 }
             } catch (err) {
-                alert('Erro ao conectar com o servidor. Tente novamente.');
+                console.error('Erro no checkout:', err);
+                alert('Erro de conexão ao abrir o pagamento. Tente novamente.');
                 btnCheckout.innerText = 'FINALIZAR PEDIDO (MERCADO PAGO)';
                 btnCheckout.disabled = false;
             }
