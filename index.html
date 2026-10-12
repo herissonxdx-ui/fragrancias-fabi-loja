@@ -1,3 +1,8 @@
+Aqui está o código completo do **`index.html`** atualizado.
+
+Ele preserva todas as funcionalidades do **E-Commerce**, **PDV Balcão**, **Painel Admin com Salvamento Definitivo no PostgreSQL**, **Modal do Mercado Pago**, **Responsividade Mobile** e a **Persistência do Login no `localStorage**` (assim, você não é desconectado ao atualizar a página com F5):
+
+```html
 <!DOCTYPE html>
 <html lang="pt-BR" class="h-full bg-stone-50 text-stone-900">
 <head>
@@ -423,7 +428,9 @@
         // Credenciais do Administrador
         const ADMIN_USER = 'admin';
         const ADMIN_PASS = 'fabi2026';
-        let isAdminAuthenticated = false;
+        
+        // Verifica se já existe login gravado no navegador
+        let isAdminAuthenticated = localStorage.getItem('fabi_admin_auth') === 'true';
 
         const DB = {
             perfumes: [],
@@ -435,6 +442,16 @@
 
         window.onload = function() {
             fetchPerfumesFromApi();
+
+            // Restaura o estado da sessão caso o usuário recarregue a página (F5)
+            if (isAdminAuthenticated) {
+                document.getElementById('adminTopBar').classList.remove('hidden');
+                document.getElementById('adminTopBar').classList.add('flex');
+                document.getElementById('managerLoginBtn').innerHTML = `<i class="fa-solid fa-user-check text-emerald-500 text-sm"></i> <span class="hidden md:inline font-bold text-emerald-600">Gestor On</span>`;
+                
+                const lastMode = localStorage.getItem('fabi_active_mode') || 'admin';
+                setMode(lastMode);
+            }
         };
 
         function toggleMobileNav() {
@@ -456,11 +473,13 @@
 
             if (u === ADMIN_USER && p === ADMIN_PASS) {
                 isAdminAuthenticated = true;
+                localStorage.setItem('fabi_admin_auth', 'true'); // Persiste a autenticação
                 closeLoginModal();
+
                 document.getElementById('adminTopBar').classList.remove('hidden');
                 document.getElementById('adminTopBar').classList.add('flex');
                 document.getElementById('managerLoginBtn').innerHTML = `<i class="fa-solid fa-user-check text-emerald-500 text-sm"></i> <span class="hidden md:inline font-bold text-emerald-600">Gestor On</span>`;
-                alert("Login efetuado com sucesso! O painel do gestor foi ativado no topo.");
+                
                 setMode('admin');
             } else {
                 alert("Usuário ou senha incorretos.");
@@ -469,9 +488,13 @@
 
         function logoutAdmin() {
             isAdminAuthenticated = false;
+            localStorage.removeItem('fabi_admin_auth');
+            localStorage.removeItem('fabi_active_mode');
+
             document.getElementById('adminTopBar').classList.add('hidden');
             document.getElementById('adminTopBar').classList.remove('flex');
             document.getElementById('managerLoginBtn').innerHTML = `<i class="fa-solid fa-user-lock text-sm"></i> <span class="hidden md:inline">Área do Gestor</span>`;
+            
             setMode('ecommerce');
             alert("Sessão encerrada com sucesso.");
         }
@@ -530,6 +553,10 @@
                 document.getElementById('view-admin').classList.remove('hidden');
                 document.getElementById('btn-mode-admin').className = "px-3 py-1.5 rounded-full font-semibold transition bg-fabi-500 text-white shadow-sm text-[11px] flex items-center gap-1.5 shrink-0";
                 renderSalesLog();
+            }
+
+            if (isAdminAuthenticated) {
+                localStorage.setItem('fabi_active_mode', mode); // Persiste a visão selecionada pelo gestor
             }
         }
 
@@ -956,3 +983,5 @@
     </script>
 </body>
 </html>
+
+```
