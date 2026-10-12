@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- SDK OFICIAL MERCADO PAGO (Para Modal Iframe na loja) -->
+    <!-- SDK OFICIAL MERCADO PAGO -->
     <script src="https://sdk.mercadopago.com/js/v2"></script>
 
     <script>
@@ -50,7 +50,7 @@
 </head>
 <body class="h-full flex flex-col font-sans bg-stone-50 text-stone-800 antialiased selection:bg-fabi-500 selection:text-white">
 
-    <!-- BARRA EXCLUSIVA DO GESTOR (Apenas visível após Login de Administrador) -->
+    <!-- BARRA EXCLUSIVA DO GESTOR -->
     <div id="adminTopBar" class="hidden bg-stone-900 text-stone-300 px-4 py-2.5 text-xs flex-wrap justify-between items-center border-b border-stone-800 z-50 sticky top-0 shadow-md">
         <div class="flex items-center space-x-2 my-1">
             <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -83,19 +83,16 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-16 sm:h-20">
                     
-                    <!-- Botão Menu Mobile -->
                     <button onclick="toggleMobileNav()" class="lg:hidden text-stone-800 p-2 focus:outline-none">
                         <i class="fa-solid fa-bars text-xl"></i>
                     </button>
 
-                    <!-- Logotipo -->
                     <div class="flex-shrink-0 cursor-pointer text-center lg:text-left" onclick="filterBrand('ALL')">
                         <h1 class="font-serif text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-stone-900">
                             FRAGRÂNCIAS <span class="italic text-fabi-500 font-normal">FABI</span>
                         </h1>
                     </div>
 
-                    <!-- Menu Navegação Desktop -->
                     <nav class="hidden lg:flex space-x-6 xl:space-x-8 text-xs font-semibold text-stone-700 uppercase tracking-wider">
                         <a href="#" onclick="event.preventDefault(); filterBrand('ALL')" class="hover:text-fabi-500 transition">Novidades</a>
                         <a href="#" onclick="event.preventDefault(); filterBrand('Nicho')" class="hover:text-fabi-500 transition">Nicho</a>
@@ -104,7 +101,6 @@
                         <a href="#" onclick="event.preventDefault()" class="hover:text-fabi-500 transition">Maquiagem</a>
                     </nav>
 
-                    <!-- Ações: Login Gestor & Sacola -->
                     <div class="flex items-center space-x-3 sm:space-x-4">
                         <button id="managerLoginBtn" onclick="openLoginModal()" class="text-stone-600 hover:text-fabi-600 text-xs font-semibold flex items-center gap-1.5 transition px-2 py-1 rounded-md hover:bg-stone-100">
                             <i class="fa-solid fa-user-lock text-sm"></i>
@@ -120,7 +116,6 @@
                 </div>
             </div>
 
-            <!-- Drawer Menu Mobile -->
             <div id="mobileNav" class="hidden lg:hidden bg-white border-b border-stone-200 px-4 py-3 space-y-2 text-xs font-semibold uppercase tracking-wider border-t">
                 <a href="#" onclick="toggleMobileNav(); filterBrand('ALL');" class="block py-2 text-stone-800 hover:text-fabi-500">Novidades</a>
                 <a href="#" onclick="toggleMobileNav(); filterBrand('Nicho');" class="block py-2 text-stone-800 hover:text-fabi-500">Perfumes de Nicho</a>
@@ -146,12 +141,10 @@
             </div>
         </div>
 
-        <!-- Grelha de Produtos Responsiva -->
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full">
             <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"></div>
         </main>
 
-        <!-- Rodapé da Loja -->
         <footer class="bg-stone-900 text-stone-400 border-t border-stone-800 mt-12 py-8 sm:py-12">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-xs">
                 <div>
@@ -174,7 +167,7 @@
         </footer>
     </div>
 
-    <!-- SACOLA LATERAL RESPONSIVA COM FORMULÁRIO DE ENDEREÇO -->
+    <!-- SACOLA LATERAL -->
     <div id="cartDrawer" class="fixed inset-0 z-50 overflow-hidden hidden">
         <div onclick="toggleCartDrawer(false)" class="absolute inset-0 bg-stone-900/60 backdrop-blur-xs transition-opacity"></div>
         <div class="fixed inset-y-0 right-0 max-w-full flex pl-6 sm:pl-10">
@@ -188,7 +181,6 @@
 
                 <div id="cartDrawerItems" class="p-4 sm:p-6 overflow-y-auto flex-1 divide-y divide-stone-100"></div>
 
-                <!-- Endereço de Entrega -->
                 <div class="px-4 sm:px-6 py-3 bg-stone-100 border-t border-stone-200 space-y-2 text-xs">
                     <h4 class="font-bold text-stone-800 uppercase tracking-wider text-[11px] mb-1">
                         <i class="fa-solid fa-truck-fast text-fabi-500 mr-1"></i> Endereço para Entrega
@@ -215,7 +207,6 @@
                         <span id="cartDrawerSubtotal" class="font-serif text-lg text-fabi-600">R\$ 0,00</span>
                     </div>
 
-                    <!-- Botão e Container para Renderizar o Checkout Modal do Mercado Pago -->
                     <div id="mpModalContainer" class="w-full">
                         <button onclick="checkoutStoreOrder()" id="btnStoreCheckout" disabled class="w-full py-3.5 bg-stone-900 hover:bg-stone-800 disabled:opacity-40 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition shadow-md">
                             Finalizar Pedido (Mercado Pago)
@@ -253,7 +244,7 @@
         </div>
     </div>
 
-    <!-- MODAL NOVO: CÁLCULO DE TROCO EM DINHEIRO (PDV) -->
+    <!-- MODAL: CÁLCULO DE TROCO EM DINHEIRO (PDV) -->
     <div id="pdvCashModal" class="fixed inset-0 z-50 bg-stone-900/80 backdrop-blur-xs hidden flex items-center justify-center p-4">
         <div class="bg-stone-800 border border-stone-700 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-stone-100">
             <div class="flex justify-between items-center border-b border-stone-700 pb-3">
@@ -282,6 +273,38 @@
                     <button onclick="confirmCashPdvSale()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition">
                         Confirmar Venda e Dar Troco
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL NOVO: PIX COM QR CODE (PDV BALCÃO) -->
+    <div id="pdvPixModal" class="fixed inset-0 z-50 bg-stone-900/80 backdrop-blur-xs hidden flex items-center justify-center p-4">
+        <div class="bg-stone-800 border border-stone-700 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-stone-100 text-center">
+            <div class="flex justify-between items-center border-b border-stone-700 pb-3">
+                <h3 class="font-serif font-bold text-teal-400 text-base flex items-center gap-2">
+                    <i class="fa-brands fa-pix"></i> Pagamento via PIX
+                </h3>
+                <button onclick="closePdvPixModal()" class="text-stone-400 hover:text-stone-200"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <div class="space-y-3">
+                <p class="text-xs text-stone-300">Aponte a câmera do celular para realizar o pagamento:</p>
+                
+                <div class="bg-white p-3 rounded-xl inline-block shadow-inner mx-auto">
+                    <img id="pdvPixQrImage" src="" alt="QR Code PIX" class="w-48 h-48 mx-auto">
+                </div>
+
+                <div class="bg-stone-900 border border-stone-700 p-2.5 rounded-xl">
+                    <p class="text-[10px] text-stone-400 uppercase font-bold">Valor Total a Cobrar</p>
+                    <p id="pdvPixTotalText" class="text-xl font-bold font-serif text-teal-300">R\$ 0,00</p>
+                </div>
+
+                <div class="pt-2 space-y-2">
+                    <button onclick="confirmPixPdvSale()" class="w-full py-3 bg-teal-600 hover:bg-teal-500 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-check"></i> Confirmar Pagamento Recebido
+                    </button>
+                    <button onclick="closePdvPixModal()" class="w-full py-2 text-stone-400 hover:text-stone-200 text-xs">Cancelar</button>
                 </div>
             </div>
         </div>
@@ -336,7 +359,7 @@
                         <button onclick="openPdvCashModal()" id="btnPdvCash" disabled class="py-2.5 sm:py-3 bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 text-white font-bold text-[10px] sm:text-xs rounded-xl uppercase tracking-wider transition flex flex-col items-center gap-1">
                             <i class="fa-solid fa-money-bill-1"></i> Dinheiro
                         </button>
-                        <button onclick="finishPdvSale('PIX')" id="btnPdvPix" disabled class="py-2.5 sm:py-3 bg-teal-700 hover:bg-teal-600 disabled:opacity-40 text-white font-bold text-[10px] sm:text-xs rounded-xl uppercase tracking-wider transition flex flex-col items-center gap-1">
+                        <button onclick="openPdvPixModal()" id="btnPdvPix" disabled class="py-2.5 sm:py-3 bg-teal-700 hover:bg-teal-600 disabled:opacity-40 text-white font-bold text-[10px] sm:text-xs rounded-xl uppercase tracking-wider transition flex flex-col items-center gap-1">
                             <i class="fa-brands fa-pix"></i> PIX
                         </button>
                         <button onclick="finishPdvSale('CARTAO')" id="btnPdvCard" disabled class="py-2.5 sm:py-3 bg-fabi-600 hover:bg-fabi-500 disabled:opacity-40 text-white font-bold text-[10px] sm:text-xs rounded-xl uppercase tracking-wider transition flex flex-col items-center gap-1">
@@ -362,7 +385,7 @@
                 </button>
             </div>
 
-            <!-- Tabela de Controle de Estoque -->
+            <!-- Tabela de Controle de Estoque com Edição de Quantidades -->
             <div class="bg-white rounded-2xl border border-stone-200 shadow-xs p-4 sm:p-6 space-y-4">
                 <div class="flex justify-between items-center border-b border-stone-100 pb-3">
                     <h3 class="font-serif text-base sm:text-lg font-bold text-stone-900">Controle de Estoque</h3>
@@ -377,6 +400,7 @@
                                 <th class="p-3">Código de Barras</th>
                                 <th class="p-3 text-right">Preço (R\$)</th>
                                 <th class="p-3 text-center">Estoque Atual</th>
+                                <th class="p-3 text-center">Ajustar Quantidade</th>
                             </tr>
                         </thead>
                         <tbody id="adminInventoryTable" class="divide-y divide-stone-100"></tbody>
@@ -447,7 +471,7 @@
         </div>
     </div>
 
-    <!-- SCRIPT DA APLICAÇÃO CORRIGIDO -->
+    <!-- SCRIPT DA APLICAÇÃO -->
     <script>
         const API_URL = 'https://fragrancias-fabi-api.onrender.com/api';
         
@@ -460,7 +484,7 @@
         
         let isAdminAuthenticated = localStorage.getItem('fabi_admin_auth') === 'true';
 
-        // Carrega vendas gravadas no navegador para prevenir perdas
+        // Carrega vendas gravadas no navegador
         let vendasSalvasLocal = JSON.parse(localStorage.getItem('fabi_vendas_salvas')) || [];
 
         const DB = {
@@ -473,7 +497,7 @@
 
         window.onload = function() {
             fetchPerfumesFromApi();
-            fetchVendasFromApi(); // Tenta buscar o histórico atualizado do servidor
+            fetchVendasFromApi();
 
             if (isAdminAuthenticated) {
                 document.getElementById('adminTopBar').classList.remove('hidden');
@@ -565,7 +589,6 @@
             renderAdminInventory();
         }
 
-        // BUSCA AS VENDAS DA API PARA PREVENIR SUMIÇO APÓS ATUALIZAR PÁGINA
         async function fetchVendasFromApi() {
             try {
                 const res = await fetch(`${API_URL}/vendas`);
@@ -582,7 +605,7 @@
                     }
                 }
             } catch (err) {
-                console.log('Usando vendas do armazenamento local');
+                console.log('Usando vendas salvas localmente.');
             }
             renderSalesLog();
         }
@@ -922,7 +945,7 @@
             renderPdvCart();
         }
 
-        // FUNÇÕES CORRIGIDAS DE PAGAMENTO EM DINHEIRO E TROCO
+        // --- CÁLCULO DE TROCO (DINHEIRO) ---
         function openPdvCashModal() {
             if (DB.carrinhoPdv.length === 0) return;
             const subtotalTotal = DB.carrinhoPdv.reduce((acc, i) => acc + ((i.preco_unitario || i.preco) * i.quantidade), 0);
@@ -968,7 +991,31 @@
             finishPdvSale('DINHEIRO', troco);
         }
 
-        // GRAVAÇÃO DA VENDA COM TROCO E PERSISTÊNCIA LOCAL
+        // --- NOVO: LÓGICA DO QR CODE PIX NO PDV ---
+        function openPdvPixModal() {
+            if (DB.carrinhoPdv.length === 0) return;
+            const subtotalTotal = DB.carrinhoPdv.reduce((acc, i) => acc + ((i.preco_unitario || i.preco) * i.quantidade), 0);
+            
+            document.getElementById('pdvPixTotalText').innerText = `R$ ${subtotalTotal.toFixed(2).replace('.', ',')}`;
+
+            // Gera QR Code estático do valor exato para cobrança
+            const qrPayload = `PIX - Fragrâncias Fabi | Total: R$ ${subtotalTotal.toFixed(2)}`;
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrPayload)}`;
+            
+            document.getElementById('pdvPixQrImage').src = qrUrl;
+            document.getElementById('pdvPixModal').classList.remove('hidden');
+        }
+
+        function closePdvPixModal() {
+            document.getElementById('pdvPixModal').classList.add('hidden');
+        }
+
+        function confirmPixPdvSale() {
+            closePdvPixModal();
+            finishPdvSale('PIX');
+        }
+
+        // --- GRAVAÇÃO DA VENDA NO HISTÓRICO ---
         async function finishPdvSale(metodo, trocoDevolvido = 0) {
             if (DB.carrinhoPdv.length === 0) return;
 
@@ -981,7 +1028,7 @@
                 total: subtotalTotal
             };
 
-            // Salva na memória RAM e no localStorage do navegador imediatamente
+            // Salva na memória RAM e no localStorage imediatamente
             DB.vendas.push(novaVenda);
             localStorage.setItem('fabi_vendas_salvas', JSON.stringify(DB.vendas));
 
@@ -1003,17 +1050,18 @@
                     clearPdvCart();
                     fetchPerfumesFromApi();
                 } else {
-                    alert(`Venda registrada localmente no histórico.`);
+                    alert(`Venda registrada no histórico local.`);
                     clearPdvCart();
                 }
             } catch (err) {
-                alert(`Venda registrada localmente com sucesso!`);
+                alert(`Venda registrada com sucesso!`);
                 clearPdvCart();
             }
 
             renderSalesLog();
         }
 
+        // --- TELA ADMIN: RENDERIZAR E EDITAR ESTOQUE DA TABELA ---
         function renderAdminInventory() {
             const tbody = document.getElementById('adminInventoryTable');
             tbody.innerHTML = DB.perfumes.map(p => `
@@ -1027,8 +1075,43 @@
                             ${p.estoque} un
                         </span>
                     </td>
+                    <td class="p-3 text-center">
+                        <div class="flex items-center justify-center space-x-1">
+                            <button onclick="changeStock(${p.id}, -1)" class="w-7 h-7 bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold rounded-lg transition border border-rose-200" title="Diminuir 1 un">-</button>
+                            <button onclick="changeStock(${p.id}, 1)" class="w-7 h-7 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-bold rounded-lg transition border border-emerald-200" title="Adicionar 1 un">+</button>
+                        </div>
+                    </td>
                 </tr>
             `).join('');
+        }
+
+        // FUNÇÃO PARA ALTERAR QUANTIDADES (+ OU -)
+        async function changeStock(id, delta) {
+            const perfume = DB.perfumes.find(p => p.id === id);
+            if (!perfume) return;
+
+            const novoEstoque = perfume.estoque + delta;
+            if (novoEstoque < 0) {
+                alert("O estoque não pode ser menor do que zero.");
+                return;
+            }
+
+            // Atualização local imediata
+            perfume.estoque = novoEstoque;
+            renderAdminInventory();
+            renderStoreGrid();
+            renderPdvQuickGrid();
+
+            // Tenta atualizar no Banco de Dados
+            try {
+                await fetch(`${API_URL}/perfumes/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ estoque_atual: novoEstoque })
+                });
+            } catch (err) {
+                console.log('Aviso: Erro ao sincronizar alteração com a API.');
+            }
         }
 
         function renderSalesLog() {
