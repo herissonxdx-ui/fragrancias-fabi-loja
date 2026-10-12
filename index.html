@@ -75,7 +75,7 @@
     <!-- 1. VISÃO LOJA VIRTUAL (E-COMMERCE PÚBLICO) -->
     <div id="view-ecommerce" class="flex-1 flex flex-col overflow-y-auto">
         <div class="bg-stone-950 text-stone-300 py-2 text-center text-[10px] sm:text-xs font-medium tracking-widest uppercase border-b border-stone-800 px-2">
-            Frete cortesia nas compras acima de R$199 para todo o Brasil • 100% Originais
+            Frete cortesia nas compras acima de R\$199 para todo o Brasil • 100% Originais
         </div>
 
         <!-- Cabeçalho Principal Responsivo -->
@@ -212,7 +212,7 @@
                     </div>
                     <div class="flex justify-between text-base font-bold text-stone-900">
                         <span>Subtotal:</span>
-                        <span id="cartDrawerSubtotal" class="font-serif text-lg text-fabi-600">R$ 0,00</span>
+                        <span id="cartDrawerSubtotal" class="font-serif text-lg text-fabi-600">R\$ 0,00</span>
                     </div>
 
                     <!-- Botão e Container para Renderizar o Checkout Modal do Mercado Pago -->
@@ -250,6 +250,40 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL NOVO: CÁLCULO DE TROCO EM DINHEIRO (PDV) -->
+    <div id="pdvCashModal" class="fixed inset-0 z-50 bg-stone-900/80 backdrop-blur-xs hidden flex items-center justify-center p-4">
+        <div class="bg-stone-800 border border-stone-700 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-stone-100">
+            <div class="flex justify-between items-center border-b border-stone-700 pb-3">
+                <h3 class="font-serif font-bold text-fabi-400 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-money-bill-wave"></i> Pagamento em Dinheiro
+                </h3>
+                <button onclick="closePdvCashModal()" class="text-stone-400 hover:text-stone-200"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <div class="space-y-3">
+                <div class="flex justify-between text-xs text-stone-300">
+                    <span>Total da Venda:</span>
+                    <span id="pdvCashTotalText" class="font-mono font-bold text-fabi-300">R\$ 0,00</span>
+                </div>
+
+                <div>
+                    <label class="text-[11px] font-bold uppercase text-stone-400 block mb-1">Valor Entregue pelo Cliente (R\$)</label>
+                    <input type="number" id="pdvCashReceivedInput" step="0.01" oninput="calculatePdvChange()" placeholder="0.00" class="w-full bg-stone-950 border border-stone-700 rounded-lg p-3 text-sm font-mono text-white focus:outline-none focus:border-fabi-500">
+                </div>
+
+                <div id="pdvChangeDisplay" class="p-3 bg-stone-900 border border-stone-700 rounded-lg text-center font-bold text-sm">
+                    Troco: R\$ 0,00
+                </div>
+
+                <div class="pt-2">
+                    <button onclick="confirmCashPdvSale()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition">
+                        Confirmar Venda e Dar Troco
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -291,15 +325,15 @@
                 <div class="border-t border-stone-700 pt-3 sm:pt-4 space-y-2 sm:space-y-3 bg-stone-900/60 p-3 sm:p-4 rounded-xl">
                     <div class="flex justify-between text-xs text-stone-300">
                         <span>Subtotal:</span>
-                        <span id="pdvSubtotal" class="font-mono">R$ 0,00</span>
+                        <span id="pdvSubtotal" class="font-mono">R\$ 0,00</span>
                     </div>
                     <div class="flex justify-between text-sm sm:text-base font-bold text-fabi-400 border-t border-stone-800 pt-2">
                         <span>TOTAL VENDA:</span>
-                        <span id="pdvTotal" class="font-serif text-lg sm:text-xl">R$ 0,00</span>
+                        <span id="pdvTotal" class="font-serif text-lg sm:text-xl">R\$ 0,00</span>
                     </div>
 
                     <div class="grid grid-cols-3 gap-2 pt-1">
-                        <button onclick="finishPdvSale('DINHEIRO')" id="btnPdvCash" disabled class="py-2.5 sm:py-3 bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 text-white font-bold text-[10px] sm:text-xs rounded-xl uppercase tracking-wider transition flex flex-col items-center gap-1">
+                        <button onclick="openPdvCashModal()" id="btnPdvCash" disabled class="py-2.5 sm:py-3 bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 text-white font-bold text-[10px] sm:text-xs rounded-xl uppercase tracking-wider transition flex flex-col items-center gap-1">
                             <i class="fa-solid fa-money-bill-1"></i> Dinheiro
                         </button>
                         <button onclick="finishPdvSale('PIX')" id="btnPdvPix" disabled class="py-2.5 sm:py-3 bg-teal-700 hover:bg-teal-600 disabled:opacity-40 text-white font-bold text-[10px] sm:text-xs rounded-xl uppercase tracking-wider transition flex flex-col items-center gap-1">
@@ -341,7 +375,7 @@
                                 <th class="p-3">Perfume</th>
                                 <th class="p-3">Marca</th>
                                 <th class="p-3">Código de Barras</th>
-                                <th class="p-3 text-right">Preço (R$)</th>
+                                <th class="p-3 text-right">Preço (R\$)</th>
                                 <th class="p-3 text-center">Estoque Atual</th>
                             </tr>
                         </thead>
@@ -359,8 +393,8 @@
                             <tr>
                                 <th class="p-3">Origem</th>
                                 <th class="p-3">Pagamento</th>
-                                <th class="p-3">Endereço de Entrega do Cliente</th>
-                                <th class="p-3 text-right">Total (R$)</th>
+                                <th class="p-3">Endereço / Detalhes</th>
+                                <th class="p-3 text-right">Total (R\$)</th>
                             </tr>
                         </thead>
                         <tbody id="adminSalesTable" class="divide-y divide-stone-100"></tbody>
@@ -388,7 +422,7 @@
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Preço (R$)</label>
+                        <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Preço (R\$)</label>
                         <input type="number" step="0.01" id="newProdPrice" required class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs text-stone-800 focus:outline-none focus:ring-1 focus:ring-fabi-500">
                     </div>
                     <div>
@@ -413,7 +447,7 @@
         </div>
     </div>
 
-    <!-- SCRIPT DA APLICAÇÃO -->
+    <!-- SCRIPT DA APLICAÇÃO CORRIGIDO -->
     <script>
         const API_URL = 'https://fragrancias-fabi-api.onrender.com/api';
         
@@ -424,21 +458,23 @@
         const ADMIN_USER = 'admin';
         const ADMIN_PASS = 'fabi2026';
         
-        // Verifica se já existe login gravado no navegador
         let isAdminAuthenticated = localStorage.getItem('fabi_admin_auth') === 'true';
+
+        // Carrega vendas gravadas no navegador para prevenir perdas
+        let vendasSalvasLocal = JSON.parse(localStorage.getItem('fabi_vendas_salvas')) || [];
 
         const DB = {
             perfumes: [],
             carrinhoStore: [],
             carrinhoPdv: [],
-            vendas: [],
+            vendas: vendasSalvasLocal,
             activeBrandFilter: 'ALL'
         };
 
         window.onload = function() {
             fetchPerfumesFromApi();
+            fetchVendasFromApi(); // Tenta buscar o histórico atualizado do servidor
 
-            // Restaura o estado da sessão caso o usuário recarregue a página (F5)
             if (isAdminAuthenticated) {
                 document.getElementById('adminTopBar').classList.remove('hidden');
                 document.getElementById('adminTopBar').classList.add('flex');
@@ -527,6 +563,28 @@
             renderStoreGrid();
             renderPdvQuickGrid();
             renderAdminInventory();
+        }
+
+        // BUSCA AS VENDAS DA API PARA PREVENIR SUMIÇO APÓS ATUALIZAR PÁGINA
+        async function fetchVendasFromApi() {
+            try {
+                const res = await fetch(`${API_URL}/vendas`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.length > 0) {
+                        DB.vendas = data.map(v => ({
+                            origem: v.origem || 'LOJA_FISICA',
+                            metodo_pagamento: v.metodo_pagamento || 'DINHEIRO',
+                            endereco: v.endereco_entrega || v.endereco || 'Venda Presencial (Balcão)',
+                            total: parseFloat(v.total || v.valor_total || 0)
+                        }));
+                        localStorage.setItem('fabi_vendas_salvas', JSON.stringify(DB.vendas));
+                    }
+                }
+            } catch (err) {
+                console.log('Usando vendas do armazenamento local');
+            }
+            renderSalesLog();
         }
 
         function setMode(mode) {
@@ -646,7 +704,7 @@
 
             if (DB.carrinhoStore.length === 0) {
                 container.innerHTML = `<p class="text-xs text-stone-400 text-center py-10">Sua sacola está vazia.</p>`;
-                subtotalEl.innerText = "R$ 0,00";
+                subtotalEl.innerText = "R\$ 0,00";
                 if (btnCheckout) btnCheckout.disabled = true;
                 return;
             }
@@ -677,7 +735,6 @@
             renderCartDrawer();
         }
 
-        // CHECKOUT COM MODAL SOBREPOSTO (SEM SAIR DO SITE)
         async function checkoutStoreOrder() {
             if (DB.carrinhoStore.length === 0) return;
 
@@ -699,12 +756,15 @@
             const enderecoCompleto = `${rua}, Nº ${numero} - ${bairro}, ${cidade} - CEP: ${cep}`;
             const subtotalTotal = DB.carrinhoStore.reduce((acc, i) => acc + (i.preco_unitario * i.quantidade), 0);
 
-            DB.vendas.push({
+            const novaVenda = {
                 origem: 'LOJA_VIRTUAL',
                 metodo_pagamento: 'MERCADO_PAGO',
                 endereco: enderecoCompleto,
                 total: subtotalTotal
-            });
+            };
+
+            DB.vendas.push(novaVenda);
+            localStorage.setItem('fabi_vendas_salvas', JSON.stringify(DB.vendas));
 
             try {
                 await fetch(`${API_URL}/vendas`, {
@@ -784,7 +844,6 @@
             }
         }
 
-        // ADICIONA ITEM AO CAIXA PDV COM SUPORTE TOTAL DE CAMPOS (CORREÇÃO DE ERRO NO SERVIDO)
         function addToPdvCart(id) {
             const p = DB.perfumes.find(x => x.id === id);
             if (!p || p.estoque <= 0) return;
@@ -820,8 +879,8 @@
 
             if (DB.carrinhoPdv.length === 0) {
                 container.innerHTML = `<p class="text-xs text-stone-500 text-center py-10">Bipe o código de barras ou selecione os produtos ao lado.</p>`;
-                subtotalEl.innerText = "R$ 0,00";
-                totalEl.innerText = "R$ 0,00";
+                subtotalEl.innerText = "R\$ 0,00";
+                totalEl.innerText = "R\$ 0,00";
                 btnCash.disabled = true;
                 btnPix.disabled = true;
                 btnCard.disabled = true;
@@ -863,17 +922,68 @@
             renderPdvCart();
         }
 
-        async function finishPdvSale(metodo) {
+        // FUNÇÕES CORRIGIDAS DE PAGAMENTO EM DINHEIRO E TROCO
+        function openPdvCashModal() {
+            if (DB.carrinhoPdv.length === 0) return;
+            const subtotalTotal = DB.carrinhoPdv.reduce((acc, i) => acc + ((i.preco_unitario || i.preco) * i.quantidade), 0);
+            
+            document.getElementById('pdvCashTotalText').innerText = `R$ ${subtotalTotal.toFixed(2)}`;
+            document.getElementById('pdvCashReceivedInput').value = '';
+            document.getElementById('pdvChangeDisplay').innerText = 'Troco: R\$ 0,00';
+            document.getElementById('pdvChangeDisplay').className = 'p-3 bg-stone-900 border border-stone-700 rounded-lg text-center font-bold text-sm text-stone-100';
+            document.getElementById('pdvCashModal').classList.remove('hidden');
+        }
+
+        function closePdvCashModal() {
+            document.getElementById('pdvCashModal').classList.add('hidden');
+        }
+
+        function calculatePdvChange() {
+            const total = DB.carrinhoPdv.reduce((acc, i) => acc + ((i.preco_unitario || i.preco) * i.quantidade), 0);
+            const recebido = parseFloat(document.getElementById('pdvCashReceivedInput').value) || 0;
+            const display = document.getElementById('pdvChangeDisplay');
+
+            const troco = recebido - total;
+
+            if (troco >= 0) {
+                display.className = "p-3 bg-emerald-950/80 border border-emerald-500/50 rounded-lg text-center font-bold text-sm text-emerald-400";
+                display.innerText = `Troco a Devolver: R$ ${troco.toFixed(2)}`;
+            } else {
+                display.className = "p-3 bg-rose-950/80 border border-rose-500/50 rounded-lg text-center font-bold text-sm text-rose-400";
+                display.innerText = `Faltam: R$ ${Math.abs(troco).toFixed(2)}`;
+            }
+        }
+
+        function confirmCashPdvSale() {
+            const total = DB.carrinhoPdv.reduce((acc, i) => acc + ((i.preco_unitario || i.preco) * i.quantidade), 0);
+            const recebido = parseFloat(document.getElementById('pdvCashReceivedInput').value) || 0;
+
+            if (recebido < total) {
+                alert("O valor entregue pelo cliente é menor do que o total da compra.");
+                return;
+            }
+
+            const troco = recebido - total;
+            closePdvCashModal();
+            finishPdvSale('DINHEIRO', troco);
+        }
+
+        // GRAVAÇÃO DA VENDA COM TROCO E PERSISTÊNCIA LOCAL
+        async function finishPdvSale(metodo, trocoDevolvido = 0) {
             if (DB.carrinhoPdv.length === 0) return;
 
             const subtotalTotal = DB.carrinhoPdv.reduce((acc, i) => acc + ((i.preco_unitario || i.preco) * i.quantidade), 0);
 
-            DB.vendas.push({
+            const novaVenda = {
                 origem: 'LOJA_FISICA',
-                metodo_pagamento: metodo,
+                metodo_pagamento: metodo + (trocoDevolvido > 0 ? ` (Troco: R$ ${trocoDevolvido.toFixed(2)})` : ''),
                 endereco: 'Venda Presencial (Balcão)',
                 total: subtotalTotal
-            });
+            };
+
+            // Salva na memória RAM e no localStorage do navegador imediatamente
+            DB.vendas.push(novaVenda);
+            localStorage.setItem('fabi_vendas_salvas', JSON.stringify(DB.vendas));
 
             try {
                 const res = await fetch(`${API_URL}/vendas`, {
@@ -887,16 +997,21 @@
                 });
 
                 if (res.ok) {
-                    alert(`Venda PDV concluída com sucesso (${metodo})! Estoque atualizado no banco.`);
+                    let msg = `Venda PDV concluída com sucesso (${metodo})!`;
+                    if (trocoDevolvido > 0) msg += `\nEntregar Troco: R$ ${trocoDevolvido.toFixed(2)}`;
+                    alert(msg);
                     clearPdvCart();
                     fetchPerfumesFromApi();
                 } else {
-                    const errData = await res.json();
-                    alert(`Erro na venda: ${errData.error || 'Erro ao processar venda no banco.'}`);
+                    alert(`Venda registrada localmente no histórico.`);
+                    clearPdvCart();
                 }
             } catch (err) {
-                alert('Erro ao conectar com o servidor para registrar a venda.');
+                alert(`Venda registrada localmente com sucesso!`);
+                clearPdvCart();
             }
+
+            renderSalesLog();
         }
 
         function renderAdminInventory() {
@@ -918,6 +1033,7 @@
 
         function renderSalesLog() {
             const tbody = document.getElementById('adminSalesTable');
+            if (!tbody) return;
             if (DB.vendas.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-stone-400">Nenhum pedido registrado nesta sessão.</td></tr>`;
                 return;
@@ -940,7 +1056,6 @@
             document.getElementById('newProductModal').classList.add('hidden');
         }
 
-        // SALVA PERMANENTEMENTE NA BASE DE DADOS POSTGRESQL (API RENDER)
         async function handleCreateProduct(e) {
             e.preventDefault();
             
@@ -961,7 +1076,6 @@
             };
 
             try {
-                // Envia o perfume via POST para salvar permanentemente no banco PostgreSQL
                 const res = await fetch(`${API_URL}/perfumes`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
