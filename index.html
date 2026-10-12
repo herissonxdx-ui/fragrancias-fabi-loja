@@ -699,7 +699,6 @@
                 const dataCheckout = await resCheckout.json();
 
                 if (resCheckout.ok && dataCheckout.id) {
-                    // ABRIR O CHECKOUT MODAL DENTRO DO PRÓPRIO SITE
                     mp.checkout({
                         preference: {
                             id: dataCheckout.id
@@ -708,7 +707,7 @@
                             container: '#mpModalContainer',
                             label: 'PAGAR COM MERCADO PAGO',
                         },
-                        autoOpen: true // Abre automaticamente em modal sobreposto
+                        autoOpen: true
                     });
                 } else if (dataCheckout.init_point) {
                     window.location.href = dataCheckout.init_point;
@@ -901,8 +900,10 @@
             document.getElementById('newProductModal').classList.add('hidden');
         }
 
-        function handleCreateProduct(e) {
+        // SALVA PERMANENTEMENTE NA BASE DE DADOS POSTGRESQL (API RENDER)
+        async function handleCreateProduct(e) {
             e.preventDefault();
+            
             const name = document.getElementById('newProdName').value;
             const brand = document.getElementById('newProdBrand').value;
             const price = parseFloat(document.getElementById('newProdPrice').value);
@@ -910,21 +911,47 @@
             const barcode = document.getElementById('newProdBarcode').value;
             const image = document.getElementById('newProdImage').value || "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400";
 
-            DB.perfumes.push({
-                id: DB.perfumes.length + 1,
-                marca: brand,
+            const novoPerfume = {
                 nome: name,
+                marca: brand,
                 preco: price,
-                estoque: stock,
+                estoque_atual: stock,
                 codigo_barras: barcode,
-                imagem: image
-            });
+                imagem_url: image
+            };
 
-            closeNewProductModal();
-            renderAdminInventory();
-            renderStoreGrid();
-            renderPdvQuickGrid();
-            alert("Perfume cadastrado com sucesso!");
+            try {
+                // Envia o perfume via POST para salvar permanentemente no banco PostgreSQL
+                const res = await fetch(`${API_URL}/perfumes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(novoPerfume)
+                });
+
+                if (res.ok) {
+                    alert("Perfume cadastrado e salvo com sucesso no banco de dados!");
+                    closeNewProductModal();
+                    fetchPerfumesFromApi(); // Atualiza a lista lendo do banco
+                } else {
+                    DB.perfumes.push({
+                        id: DB.perfumes.length + 1,
+                        marca: brand,
+                        nome: name,
+                        preco: price,
+                        estoque: stock,
+                        codigo_barras: barcode,
+                        imagem: image
+                    });
+                    closeNewProductModal();
+                    renderAdminInventory();
+                    renderStoreGrid();
+                    renderPdvQuickGrid();
+                    alert("Perfume adicionado localmente.");
+                }
+            } catch (err) {
+                console.error("Erro ao salvar produto:", err);
+                alert("Erro ao conectar com o servidor. Verifique a conexão com o Render.");
+            }
         }
     </script>
 </body>
