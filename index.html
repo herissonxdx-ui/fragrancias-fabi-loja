@@ -109,6 +109,11 @@
                     </nav>
 
                     <div class="flex items-center space-x-3 sm:space-x-4">
+                        <button id="customerAuthBtn" onclick="openCustomerAuthModal()" class="text-stone-700 hover:text-fabi-600 text-xs font-semibold flex items-center gap-1.5 transition px-2 py-1 rounded-md hover:bg-stone-100">
+                            <i class="fa-solid fa-user text-sm text-fabi-500"></i>
+                            <span id="customerAuthName" class="hidden md:inline">Entrar / Criar Conta</span>
+                        </button>
+
                         <button id="managerLoginBtn" onclick="openLoginModal()" class="text-stone-600 hover:text-fabi-600 text-xs font-semibold flex items-center gap-1.5 transition px-2 py-1 rounded-md hover:bg-stone-100">
                             <i class="fa-solid fa-user-lock text-sm"></i>
                             <span class="hidden md:inline">Área do Gestor</span>
@@ -127,8 +132,11 @@
                 <a href="#" onclick="toggleMobileNav(); filterBrand('ALL');" class="block py-2 text-stone-800 hover:text-fabi-500">Novidades</a>
                 <a href="#" onclick="toggleMobileNav(); filterBrand('Nicho');" class="block py-2 text-stone-800 hover:text-fabi-500">Perfumes de Nicho</a>
                 <a href="#" onclick="toggleMobileNav(); filterBrand('ALL');" class="block py-2 text-fabi-600 font-bold">Todas as Fragrâncias</a>
-                <a href="#" onclick="toggleMobileNav(); openLoginModal();" class="block py-2 text-stone-500 border-t border-stone-100 pt-3">
-                    <i class="fa-solid fa-lock mr-1.5 text-fabi-500"></i> Login do Gestor
+                <a href="#" onclick="toggleMobileNav(); openCustomerAuthModal();" class="block py-2 text-stone-700 border-t border-stone-100 pt-3">
+                    <i class="fa-solid fa-user mr-1.5 text-fabi-500"></i> Minha Conta
+                </a>
+                <a href="#" onclick="toggleMobileNav(); openLoginModal();" class="block py-2 text-stone-500">
+                    <i class="fa-solid fa-lock mr-1.5 text-stone-400"></i> Área do Gestor
                 </a>
             </div>
         </header>
@@ -224,6 +232,78 @@
         </div>
     </div>
 
+    <!-- MODAL DE CADASTRO E LOGIN DE CLIENTES COM VERIFICAÇÃO DE E-MAIL -->
+    <div id="customerAuthModal" class="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-stone-100 pb-3">
+                <h3 class="font-serif font-bold text-stone-900 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-user text-fabi-500"></i> Conta do Cliente
+                </h3>
+                <button onclick="closeCustomerAuthModal()" class="text-stone-400 hover:text-stone-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <!-- ETAPA 1: CRIAÇÃO DE CONTA OU LOGIN -->
+            <div id="custAuthStep1" class="space-y-3">
+                <div class="flex border-b border-stone-200 text-xs font-bold">
+                    <button onclick="switchCustomerTab('signup')" id="tabCustomerRegister" class="w-1/2 py-2 text-fabi-600 border-b-2 border-fabi-500">Criar Conta</button>
+                    <button onclick="switchCustomerTab('login')" id="tabCustomerLogin" class="w-1/2 py-2 text-stone-400">Já Tenho Conta</button>
+                </div>
+
+                <!-- FORMULÁRIO DE CADASTRO -->
+                <form id="formCustomerRegister" onsubmit="handleCustomerRegister(event)" class="space-y-3">
+                    <div>
+                        <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Nome Completo</label>
+                        <input type="text" id="custRegName" required placeholder="Seu nome" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">E-mail Real</label>
+                        <input type="email" id="custRegEmail" required placeholder="seuemail@exemplo.com" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Senha</label>
+                        <input type="password" id="custRegPass" minlength="6" required placeholder="••••••••" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                    </div>
+                    <button type="submit" class="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition">
+                        Enviar Código de Verificação
+                    </button>
+                </form>
+
+                <!-- FORMULÁRIO DE LOGIN -->
+                <form id="formCustomerLogin" onsubmit="handleCustomerLogin(event)" class="space-y-3 hidden">
+                    <div>
+                        <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">E-mail</label>
+                        <input type="email" id="custLogEmail" required placeholder="seuemail@exemplo.com" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Senha</label>
+                        <input type="password" id="custLogPass" required placeholder="••••••••" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                    </div>
+                    <button type="submit" class="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition">
+                        Entrar na Minha Conta
+                    </button>
+                </form>
+            </div>
+
+            <!-- ETAPA 2: CONFIRMAÇÃO DO CÓDIGO DO E-MAIL -->
+            <div id="custAuthStep2" class="space-y-3 hidden text-center">
+                <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs">
+                    <i class="fa-solid fa-envelope-circle-check text-2xl text-emerald-600 mb-1 block"></i>
+                    Enviamos um código de verificação para o e-mail: <strong id="verifyEmailText"></strong>
+                </div>
+
+                <div>
+                    <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Digite o Código de 6 Dígitos</label>
+                    <input type="text" id="custVerifyCodeInput" maxlength="6" placeholder="123456" class="w-full bg-stone-50 border border-stone-300 rounded-lg p-3 text-center text-lg font-mono font-bold tracking-widest text-stone-800 focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                </div>
+
+                <button onclick="confirmEmailVerification()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition">
+                    Confirmar e Ativar Conta
+                </button>
+                <button onclick="backToStep1()" class="w-full text-stone-400 hover:text-stone-600 text-[11px]">Voltar / Alterar E-mail</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL DE LOGIN DO GESTOR -->
     <div id="loginModal" class="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
@@ -279,6 +359,37 @@
                 <div class="pt-2">
                     <button onclick="confirmCashPdvSale()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition">
                         Confirmar Venda e Dar Troco
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CONFIRMAÇÃO DE PAGAMENTO EM CARTÃO (PDV) -->
+    <div id="pdvCardModal" class="fixed inset-0 z-50 bg-stone-900/80 backdrop-blur-xs hidden flex items-center justify-center p-4">
+        <div class="bg-stone-800 border border-stone-700 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-stone-100 text-center">
+            <div class="flex justify-between items-center border-b border-stone-700 pb-3">
+                <h3 class="font-serif font-bold text-fabi-400 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-credit-card"></i> Pagamento na Maquininha
+                </h3>
+                <button onclick="closePdvCardModal()" class="text-stone-400 hover:text-stone-200"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <div class="space-y-4 py-2">
+                <div class="w-16 h-16 bg-fabi-500/20 text-fabi-400 border border-fabi-500/40 rounded-full flex items-center justify-center mx-auto text-2xl">
+                    <i class="fa-solid fa-cash-register"></i>
+                </div>
+
+                <p class="text-xs text-stone-300">Passe ou aproxime o cartão do cliente na maquininha física do balcão.</p>
+
+                <div class="bg-stone-900 border border-stone-700 p-3 rounded-xl">
+                    <p class="text-[10px] text-stone-400 uppercase font-bold">Valor a Cobrar na Maquininha</p>
+                    <p id="pdvCardTotalText" class="text-2xl font-bold font-serif text-fabi-300">R$ 0,00</p>
+                </div>
+
+                <div class="pt-2">
+                    <button onclick="confirmCardPdvSale()" class="w-full py-3 bg-fabi-600 hover:bg-fabi-500 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-check"></i> Pagamento Aprovado na Maquininha
                     </button>
                 </div>
             </div>
@@ -373,7 +484,7 @@
                         <button onclick="openPdvPixModal()" id="btnPdvPix" disabled class="py-2.5 sm:py-3 bg-teal-700 hover:bg-teal-600 disabled:opacity-40 text-white font-bold text-[10px] sm:text-xs rounded-xl uppercase tracking-wider transition flex flex-col items-center gap-1">
                             <i class="fa-brands fa-pix"></i> PIX
                         </button>
-                        <button onclick="finishPdvSale('CARTAO')" id="btnPdvCard" disabled class="py-2.5 sm:py-3 bg-fabi-600 hover:bg-fabi-500 disabled:opacity-40 text-white font-bold text-[10px] sm:text-xs rounded-xl uppercase tracking-wider transition flex flex-col items-center gap-1">
+                        <button onclick="openPdvCardModal()" id="btnPdvCard" disabled class="py-2.5 sm:py-3 bg-fabi-600 hover:bg-fabi-500 disabled:opacity-40 text-white font-bold text-[10px] sm:text-xs rounded-xl uppercase tracking-wider transition flex flex-col items-center gap-1">
                             <i class="fa-solid fa-credit-card"></i> Cartão
                         </button>
                     </div>
@@ -502,6 +613,9 @@
         const ADMIN_PASS = 'fabi2026';
         
         let isAdminAuthenticated = localStorage.getItem('fabi_admin_auth') === 'true';
+        let loggedCustomer = JSON.parse(localStorage.getItem('fabi_logged_customer')) || null;
+        let pendingCustomerVerification = null;
+
         let vendasSalvasLocal = JSON.parse(localStorage.getItem('fabi_vendas_salvas')) || [];
         let perfumesSalvosLocal = JSON.parse(localStorage.getItem('fabi_perfumes_local')) || [];
 
@@ -516,6 +630,7 @@
         window.onload = function() {
             fetchPerfumesFromApi();
             fetchVendasFromApi();
+            updateCustomerHeaderUI();
 
             if (isAdminAuthenticated) {
                 document.getElementById('adminTopBar').classList.remove('hidden');
@@ -527,6 +642,124 @@
             }
         };
 
+        // --- SISTEMA DE AUTENTICAÇÃO DE CLIENTES COM CÓDIGO POR E-MAIL ---
+        function openCustomerAuthModal() {
+            if (loggedCustomer) {
+                if (confirm(`Conectado como ${loggedCustomer.nome} (${loggedCustomer.email}). Deseja sair da sua conta?`)) {
+                    loggedCustomer = null;
+                    localStorage.removeItem('fabi_logged_customer');
+                    updateCustomerHeaderUI();
+                }
+                return;
+            }
+            backToStep1();
+            document.getElementById('customerAuthModal').classList.remove('hidden');
+        }
+
+        function closeCustomerAuthModal() {
+            document.getElementById('customerAuthModal').classList.add('hidden');
+        }
+
+        function switchCustomerTab(tab) {
+            const btnReg = document.getElementById('tabCustomerRegister');
+            const btnLog = document.getElementById('tabCustomerLogin');
+            const formReg = document.getElementById('formCustomerRegister');
+            const formLog = document.getElementById('formCustomerLogin');
+
+            if (tab === 'signup') {
+                btnReg.className = "w-1/2 py-2 text-fabi-600 border-b-2 border-fabi-500";
+                btnLog.className = "w-1/2 py-2 text-stone-400";
+                formReg.classList.remove('hidden');
+                formLog.classList.add('hidden');
+            } else {
+                btnLog.className = "w-1/2 py-2 text-fabi-600 border-b-2 border-fabi-500";
+                btnReg.className = "w-1/2 py-2 text-stone-400";
+                formLog.classList.remove('hidden');
+                formReg.classList.add('hidden');
+            }
+        }
+
+        function handleCustomerRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('custRegName').value.trim();
+            const email = document.getElementById('custRegEmail').value.trim();
+            const pass = document.getElementById('custRegPass').value.trim();
+
+            const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+            pendingCustomerVerification = {
+                nome: name,
+                email: email,
+                senha: pass,
+                codigo: generatedCode
+            };
+
+            document.getElementById('verifyEmailText').innerText = email;
+            document.getElementById('custAuthStep1').classList.add('hidden');
+            document.getElementById('custAuthStep2').classList.remove('hidden');
+
+            alert(`[SIMULAÇÃO DE ENVIO DE E-MAIL]\n\nSeu código de confirmação enviado para ${email} é: ${generatedCode}`);
+        }
+
+        function confirmEmailVerification() {
+            const typedCode = document.getElementById('custVerifyCodeInput').value.trim();
+
+            if (!pendingCustomerVerification) return;
+
+            if (typedCode === pendingCustomerVerification.codigo) {
+                loggedCustomer = {
+                    nome: pendingCustomerVerification.nome,
+                    email: pendingCustomerVerification.email
+                };
+
+                let savedUsers = JSON.parse(localStorage.getItem('fabi_registered_customers')) || [];
+                savedUsers.push(pendingCustomerVerification);
+                localStorage.setItem('fabi_registered_customers', JSON.stringify(savedUsers));
+
+                localStorage.setItem('fabi_logged_customer', JSON.stringify(loggedCustomer));
+
+                updateCustomerHeaderUI();
+                closeCustomerAuthModal();
+                alert(`E-mail verificado com sucesso! Bem-vindo(a), ${loggedCustomer.nome}!`);
+            } else {
+                alert("Código de verificação incorreto. Tente novamente.");
+            }
+        }
+
+        function handleCustomerLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('custLogEmail').value.trim();
+            const pass = document.getElementById('custLogPass').value.trim();
+
+            let savedUsers = JSON.parse(localStorage.getItem('fabi_registered_customers')) || [];
+            const user = savedUsers.find(u => u.email === email && u.senha === pass);
+
+            if (user) {
+                loggedCustomer = { nome: user.nome, email: user.email };
+                localStorage.setItem('fabi_logged_customer', JSON.stringify(loggedCustomer));
+                updateCustomerHeaderUI();
+                closeCustomerAuthModal();
+                alert(`Bem-vindo(a) de volta, ${user.nome}!`);
+            } else {
+                alert("E-mail ou senha incorretos.");
+            }
+        }
+
+        function backToStep1() {
+            document.getElementById('custAuthStep2').classList.add('hidden');
+            document.getElementById('custAuthStep1').classList.remove('hidden');
+        }
+
+        function updateCustomerHeaderUI() {
+            const btnText = document.getElementById('customerAuthName');
+            if (loggedCustomer) {
+                btnText.innerHTML = `<span class="text-emerald-600 font-bold">${loggedCustomer.nome.split(' ')[0]}</span>`;
+            } else {
+                btnText.innerText = "Entrar / Criar Conta";
+            }
+        }
+
+        // --- SISTEMA DA LOJA E GESTOR ---
         function toggleMobileNav() {
             document.getElementById('mobileNav').classList.toggle('hidden');
         }
@@ -595,7 +828,7 @@
                     }
                 }
             } catch (err) {
-                console.warn('Carregando catálogo com backup local...');
+                console.warn('Carregando catálogo local...');
             }
 
             if (!DB.perfumes || DB.perfumes.length === 0) {
@@ -629,7 +862,7 @@
                     }
                 }
             } catch (err) {
-                console.log('Usando vendas locais.');
+                console.log('Usando vendas do backup local.');
             }
             renderSalesLog();
         }
@@ -830,7 +1063,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         itens: DB.carrinhoStore,
-                        emailCliente: 'cliente@fragranciasfabi.com.br'
+                        emailCliente: loggedCustomer ? loggedCustomer.email : 'cliente@fragranciasfabi.com.br'
                     })
                 });
 
@@ -838,9 +1071,7 @@
 
                 if (resCheckout.ok && dataCheckout.id && mp) {
                     mp.checkout({
-                        preference: {
-                            id: dataCheckout.id
-                        },
+                        preference: { id: dataCheckout.id },
                         render: {
                             container: '#mpModalContainer',
                             label: 'PAGAR COM MERCADO PAGO',
@@ -855,8 +1086,7 @@
                     btnCheckout.disabled = false;
                 }
             } catch (err) {
-                console.error(err);
-                alert('Erro ao conectar com o servidor. Tente novamente em alguns segundos.');
+                alert('Erro ao conectar com o servidor. Tente novamente.');
                 btnCheckout.innerText = 'FINALIZAR PEDIDO (MERCADO PAGO)';
                 btnCheckout.disabled = false;
             }
@@ -978,7 +1208,7 @@
             document.getElementById('pdvCashTotalText').innerText = `R$ ${subtotalTotal.toFixed(2)}`;
             document.getElementById('pdvCashReceivedInput').value = '';
             document.getElementById('pdvChangeDisplay').innerText = 'Troco: R$ 0,00';
-            document.getElementById('pdvChangeDisplay').className = 'p-3 bg-stone-900 border border-stone-700 rounded-lg text-center font-bold text-sm text-stone-100';
+            document.getElementById('pdvCashDisplayClass', 'p-3 bg-stone-900 border border-stone-700 rounded-lg text-center font-bold text-sm text-stone-100');
             document.getElementById('pdvCashModal').classList.remove('hidden');
         }
 
@@ -1014,6 +1244,25 @@
             const troco = recebido - total;
             closePdvCashModal();
             finishPdvSale('DINHEIRO', troco);
+        }
+
+        // --- CARTÃO PDV ---
+        function openPdvCardModal() {
+            if (DB.carrinhoPdv.length === 0) return;
+            const subtotalTotal = DB.carrinhoPdv.reduce((acc, i) => acc + ((i.preco_unitario || i.preco) * i.quantidade), 0);
+            
+            document.getElementById('pdvCardTotalText').innerText = `R$ ${subtotalTotal.toFixed(2).replace('.', ',')}`;
+            document.getElementById('pdvCardModal').classList.remove('hidden');
+        }
+
+        function closePdvCardModal() {
+            document.getElementById('pdvCardModal').classList.add('hidden');
+        }
+
+        function confirmCardPdvSale() {
+            closePdvCardModal();
+            finishPdvSale('CARTÃO');
+            alert('Venda em Cartão confirmada e registrada com sucesso!');
         }
 
         // --- GERAÇÃO PIX REAL MERCADO PAGO ---
@@ -1056,16 +1305,14 @@
                         startPixPolling(currentPaymentId);
                     }
                 } else {
-                    throw new Error("Não foi possível gerar a cobrança no Mercado Pago.");
+                    throw new Error("Não foi possível gerar a cobrança.");
                 }
             } catch (err) {
-                console.error("Erro na geração do PIX:", err);
-                document.getElementById('pdvPixStatusText').innerText = "Erro na API do Render. Confirme manualmente se necessário:";
+                document.getElementById('pdvPixStatusText').innerText = "Erro na API do Render. Confirme manualmente:";
                 document.getElementById('pdvPixQrContainer').innerHTML = `<p class="text-xs text-rose-400 font-bold p-4">Erro ao conectar com o Mercado Pago.</p>`;
             }
         }
 
-        // CHECAGEM AUTOMÁTICA DE STATUS A CADA 3 SEGUNDOS
         function startPixPolling(paymentId) {
             stopPixPolling();
 
@@ -1127,8 +1374,6 @@
                 setTimeout(() => {
                     btn.innerHTML = `<i class="fa-solid fa-copy"></i> Copiar Código PIX Copia e Cola`;
                 }, 2500);
-            } else {
-                alert('Código PIX indisponível para cópia.');
             }
         }
 
