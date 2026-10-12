@@ -276,33 +276,44 @@
         </div>
     </div>
 
-    <!-- MODAL REAL MERCADO PAGO COM QR CODE DA SUA CONTA -->
+    <!-- MODAL REAL MERCADO PAGO / PIX EMVCO PADRÃO BANCO CENTRAL -->
     <div id="pdvPixModal" class="fixed inset-0 z-50 bg-stone-900/80 backdrop-blur-xs hidden flex items-center justify-center p-4">
         <div class="bg-stone-800 border border-stone-700 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-stone-100 text-center">
             <div class="flex justify-between items-center border-b border-stone-700 pb-3">
                 <h3 class="font-serif font-bold text-teal-400 text-base flex items-center gap-2">
-                    <i class="fa-brands fa-pix"></i> Mercado Pago — PIX
+                    <i class="fa-brands fa-pix"></i> Pagamento PIX Instantâneo
                 </h3>
                 <button onclick="closePdvPixModal()" class="text-stone-400 hover:text-stone-200"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
 
             <div class="space-y-3">
-                <p id="pdvPixStatusText" class="text-xs text-stone-300">Escaneie o QR Code abaixo com o aplicativo do seu banco:</p>
+                <p id="pdvPixStatusText" class="text-xs text-stone-300">Aponte a câmera do aplicativo do seu banco para ler o QR Code:</p>
                 
-                <div id="pdvPixQrContainer" class="bg-white p-3 rounded-xl inline-block shadow-inner mx-auto min-h-[200px] flex items-center justify-center">
+                <div id="pdvPixQrContainer" class="bg-white p-3 rounded-xl inline-block shadow-inner mx-auto min-h-[220px] flex flex-col items-center justify-center">
                     <i class="fa-solid fa-circle-notch animate-spin text-teal-500 text-3xl"></i>
                 </div>
 
                 <div class="bg-stone-900 border border-stone-700 p-2.5 rounded-xl">
-                    <p class="text-[10px] text-stone-400 uppercase font-bold">Valor Total da Venda</p>
+                    <p class="text-[10px] text-stone-400 uppercase font-bold">Valor da Cobrança</p>
                     <p id="pdvPixTotalText" class="text-xl font-bold font-serif text-teal-300">R\$ 0,00</p>
                 </div>
 
-                <div class="pt-2 space-y-2">
+                <!-- Campo para ajustar chave Pix se necessário diretamente no modal -->
+                <div class="text-left bg-stone-900/50 p-2.5 rounded-lg border border-stone-700/80 space-y-1">
+                    <label class="text-[10px] uppercase font-bold text-stone-400 block">Sua Chave PIX Cadastrada:</label>
+                    <div class="flex gap-1.5">
+                        <input type="text" id="inputModalPixKey" value="pagamentos@fragranciasfabi.com.br" onchange="updatePixKeyFromModal()" placeholder="CPF, CNPJ, E-mail ou Telefone" class="w-full bg-stone-950 border border-stone-700 rounded px-2 py-1 text-xs font-mono text-teal-300 focus:outline-none focus:border-teal-500">
+                        <button onclick="updatePixKeyFromModal()" class="px-2 py-1 bg-stone-700 hover:bg-stone-600 text-white text-[10px] font-bold rounded">Atualizar</button>
+                    </div>
+                </div>
+
+                <div class="pt-1 space-y-2">
+                    <button onclick="copyPixPayload()" id="btnCopyPix" class="w-full py-2 bg-stone-700 hover:bg-stone-600 text-stone-200 font-bold rounded-lg text-xs uppercase tracking-wider transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-copy"></i> Copiar Código PIX Copia e Cola
+                    </button>
                     <button onclick="confirmPixPdvSale()" class="w-full py-3 bg-teal-600 hover:bg-teal-500 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition flex items-center justify-center gap-2">
                         <i class="fa-solid fa-check"></i> Confirmar Pagamento Recebido
                     </button>
-                    <button onclick="closePdvPixModal()" class="w-full py-2 text-stone-400 hover:text-stone-200 text-xs">Cancelar</button>
                 </div>
             </div>
         </div>
@@ -376,18 +387,18 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 class="font-serif text-xl sm:text-2xl font-bold text-stone-900">Painel de Gestão & Estoque Unificado</h1>
-                    <p class="text-xs text-stone-500">Sincronizado com a API e Armazenamento do Sistema.</p>
+                    <p class="text-xs text-stone-500">Sincronizado com o Banco do Sistema.</p>
                 </div>
                 <button onclick="openNewProductModal()" class="w-full sm:w-auto px-4 py-2.5 bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs rounded-lg uppercase tracking-wider transition shadow-sm flex items-center justify-center gap-2">
                     <i class="fa-solid fa-plus text-fabi-500"></i> Cadastrar Novo Perfume
                 </button>
             </div>
 
-            <!-- Tabela de Controle de Estoque com Persistência Permanente -->
+            <!-- Tabela de Controle de Estoque -->
             <div class="bg-white rounded-2xl border border-stone-200 shadow-xs p-4 sm:p-6 space-y-4">
                 <div class="flex justify-between items-center border-b border-stone-100 pb-3">
                     <h3 class="font-serif text-base sm:text-lg font-bold text-stone-900">Controle de Estoque</h3>
-                    <span class="text-xs text-emerald-600 font-semibold"><i class="fa-solid fa-shield-check mr-1"></i> Salvo Automaticamente</span>
+                    <span class="text-xs text-emerald-600 font-semibold"><i class="fa-solid fa-shield-check mr-1"></i> Salvo em Tempo Real</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs text-stone-700 min-w-[500px]">
@@ -473,8 +484,14 @@
     <script>
         const API_URL = 'https://fragrancias-fabi-api.onrender.com/api';
         
-        // SEU PIX DIRETO DO MERCADO PAGO / CHAVE CNPJ OU EMAIL
-        const MERCADO_PAGO_CHAVE_PIX = "4b9e4c04-c442-4eae-9fe1-a00982224f77";
+        // SUAS CONFIGURAÇÕES PIX DO MERCADO PAGO / BANCO CENTRAL
+        let CONFIG_PIX = {
+            chave: localStorage.getItem('fabi_chave_pix') || 'pagamentos@fragranciasfabi.com.br',
+            nome: 'FRAGRANCIAS FABI',
+            cidade: 'SAO PAULO'
+        };
+
+        let currentPixPayloadGlobal = "";
 
         // Inicializa SDK do Mercado Pago
         const mp = new MercadoPago('APP_USR-7282577442110345-101214-79a8ded9c7030683db1a9faa1460ef92-1447000501', { locale: 'pt-BR' });
@@ -996,27 +1013,102 @@
             finishPdvSale('DINHEIRO', troco);
         }
 
-        // --- GERAÇÃO DE QR CODE PIX REAL MERCADO PAGO DO BALCÃO ---
-        async function openPdvPixModal() {
+        // --- ALGORITMO OFICIAL DE CÁLCULO DE CRC16 DO BANCO CENTRAL (EMVCO PIX) ---
+        function crc16(str) {
+            let crc = 0xFFFF;
+            for (let c = 0; c < str.length; c++) {
+                crc ^= str.charCodeAt(c) << 8;
+                for (let i = 0; i < 8; i++) {
+                    if ((crc & 0x8000) !== 0) {
+                        crc = ((crc << 1) ^ 0x1021) & 0xFFFF;
+                    } else {
+                        crc = (crc << 1) & 0xFFFF;
+                    }
+                }
+            }
+            let hex = (crc & 0xFFFF).toString(16).toUpperCase();
+            return hex.padStart(4, '0');
+        }
+
+        function formatEMVField(id, val) {
+            const len = val.length.toString().padStart(2, '0');
+            return `${id}${len}${val}`;
+        }
+
+        // GERADOR EXATO DE BR CODE / PIX VALIDO POR BANCOS
+        function generateStaticPixPayload(key, name, city, amount) {
+            const cleanKey = key.trim();
+            const cleanName = name.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").substring(0, 25).toUpperCase();
+            const cleanCity = city.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").substring(0, 15).toUpperCase();
+            const formattedAmount = amount.toFixed(2);
+
+            // Campo 26: Merchant Account Information - Pix
+            const gui = formatEMVField("00", "BR.GOV.BCB.PIX");
+            const keyField = formatEMVField("01", cleanKey);
+            const merchantAccount = formatEMVField("26", `${gui}${keyField}`);
+
+            const payloadWithoutCRC = 
+                formatEMVField("00", "01") +               // Payload Format Indicator
+                formatEMVField("01", "12") +               // Point of Initiation Method (12 = Dinâmico/Fixo com Valor)
+                merchantAccount +
+                formatEMVField("52", "0000") +             // Merchant Category Code
+                formatEMVField("53", "986") +              // Transaction Currency (986 = BRL)
+                formatEMVField("54", formattedAmount) +     // Transaction Amount
+                formatEMVField("58", "BR") +               // Country Code
+                formatEMVField("59", cleanName) +          // Merchant Name
+                formatEMVField("60", cleanCity) +          // Merchant City
+                formatEMVField("62", formatEMVField("05", "***")) + // Additional Data Field
+                "6304";                                    // CRC16 Header
+
+            const checksum = crc16(payloadWithoutCRC);
+            return `${payloadWithoutCRC}${checksum}`;
+        }
+
+        // --- GERAÇÃO DO QR CODE NO MODAL ---
+        function openPdvPixModal() {
             if (DB.carrinhoPdv.length === 0) return;
             const subtotalTotal = DB.carrinhoPdv.reduce((acc, i) => acc + ((i.preco_unitario || i.preco) * i.quantidade), 0);
             
             document.getElementById('pdvPixTotalText').innerText = `R$ ${subtotalTotal.toFixed(2).replace('.', ',')}`;
-            document.getElementById('pdvPixStatusText').innerText = 'Gerando QR Code Pix do Mercado Pago...';
-            document.getElementById('pdvPixQrContainer').innerHTML = `<i class="fa-solid fa-circle-notch animate-spin text-teal-400 text-3xl"></i>`;
+            document.getElementById('inputModalPixKey').value = CONFIG_PIX.chave;
             document.getElementById('pdvPixModal').classList.remove('hidden');
 
-            // Gera o QR Code Pix com os dados de cobrança direta do Mercado Pago da loja
-            const payloadPix = `00020126580014BR.GOV.BCB.PIX0136${MERCADO_PAGO_CHAVE_PIX}520400005303986540${subtotalTotal.toFixed(2).length < 10 ? '0' + subtotalTotal.toFixed(2).length : subtotalTotal.toFixed(2).length}${subtotalTotal.toFixed(2)}5802BR5916Fragrancias Fabi6009SAO PAULO62070503***6304`;
-            const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(payloadPix)}`;
+            renderPixQrCode(subtotalTotal);
+        }
+
+        function updatePixKeyFromModal() {
+            const val = document.getElementById('inputModalPixKey').value.trim();
+            if (val) {
+                CONFIG_PIX.chave = val;
+                localStorage.setItem('fabi_chave_pix', val);
+                const subtotalTotal = DB.carrinhoPdv.reduce((acc, i) => acc + ((i.preco_unitario || i.preco) * i.quantidade), 0);
+                renderPixQrCode(subtotalTotal);
+            }
+        }
+
+        function renderPixQrCode(totalVal) {
+            const payload = generateStaticPixPayload(CONFIG_PIX.chave, CONFIG_PIX.nome, CONFIG_PIX.cidade, totalVal);
+            currentPixPayloadGlobal = payload;
+
+            const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(payload)}`;
 
             document.getElementById('pdvPixQrContainer').innerHTML = `
                 <div class="space-y-2">
-                    <img src="${qrCodeUrl}" alt="QR Code Pix Mercado Pago" class="w-48 h-48 mx-auto rounded-lg shadow-sm border border-stone-200">
-                    <p class="text-[10px] text-stone-500 font-mono">Chave Pix: ${MERCADO_PAGO_CHAVE_PIX}</p>
+                    <img src="${qrCodeUrl}" alt="QR Code Pix" class="w-52 h-52 mx-auto rounded-lg shadow-sm border border-stone-200">
+                    <p class="text-[10px] text-stone-500 font-mono">Chave: ${CONFIG_PIX.chave}</p>
                 </div>
             `;
-            document.getElementById('pdvPixStatusText').innerText = 'Aponte a câmera do aplicativo do seu banco para pagar:';
+        }
+
+        function copyPixPayload() {
+            if (currentPixPayloadGlobal) {
+                navigator.clipboard.writeText(currentPixPayloadGlobal);
+                const btn = document.getElementById('btnCopyPix');
+                btn.innerHTML = `<i class="fa-solid fa-check text-emerald-400"></i> Código PIX Copiado!`;
+                setTimeout(() => {
+                    btn.innerHTML = `<i class="fa-solid fa-copy"></i> Copiar Código PIX Copia e Cola`;
+                }, 2500);
+            }
         }
 
         function closePdvPixModal() {
