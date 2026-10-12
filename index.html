@@ -468,7 +468,7 @@
 
             if (u === ADMIN_USER && p === ADMIN_PASS) {
                 isAdminAuthenticated = true;
-                localStorage.setItem('fabi_admin_auth', 'true'); // Persiste a autenticação
+                localStorage.setItem('fabi_admin_auth', 'true');
                 closeLoginModal();
 
                 document.getElementById('adminTopBar').classList.remove('hidden');
@@ -551,7 +551,7 @@
             }
 
             if (isAdminAuthenticated) {
-                localStorage.setItem('fabi_active_mode', mode); // Persiste a visão selecionada pelo gestor
+                localStorage.setItem('fabi_active_mode', mode);
             }
         }
 
@@ -613,7 +613,16 @@
                 }
                 existing.quantidade++;
             } else {
-                DB.carrinhoStore.push({ perfume_id: p.id, marca: p.marca, nome: p.nome, preco_unitario: p.preco, quantidade: 1, imagem: p.imagem });
+                DB.carrinhoStore.push({ 
+                    perfume_id: p.id, 
+                    id: p.id, 
+                    marca: p.marca, 
+                    nome: p.nome, 
+                    preco_unitario: p.preco, 
+                    preco: p.preco, 
+                    quantidade: 1, 
+                    imagem: p.imagem 
+                });
             }
 
             renderCartDrawer();
@@ -775,11 +784,12 @@
             }
         }
 
+        // ADICIONA ITEM AO CAIXA PDV COM SUPORTE TOTAL DE CAMPOS (CORREÇÃO DE ERRO NO SERVIDO)
         function addToPdvCart(id) {
             const p = DB.perfumes.find(x => x.id === id);
             if (!p || p.estoque <= 0) return;
 
-            const existing = DB.carrinhoPdv.find(x => x.perfume_id === id);
+            const existing = DB.carrinhoPdv.find(x => (x.perfume_id === id || x.id === id));
             if (existing) {
                 if (existing.quantidade + 1 > p.estoque) {
                     alert("Estoque insuficiente na loja física.");
@@ -787,7 +797,15 @@
                 }
                 existing.quantidade++;
             } else {
-                DB.carrinhoPdv.push({ perfume_id: p.id, marca: p.marca, nome: p.nome, preco_unitario: p.preco, quantidade: 1 });
+                DB.carrinhoPdv.push({ 
+                    perfume_id: p.id, 
+                    id: p.id, 
+                    marca: p.marca, 
+                    nome: p.nome, 
+                    preco_unitario: p.preco, 
+                    preco: p.preco, 
+                    quantidade: 1 
+                });
             }
             renderPdvCart();
         }
@@ -812,7 +830,7 @@
 
             let total = 0;
             container.innerHTML = DB.carrinhoPdv.map((item, index) => {
-                const sub = item.preco_unitario * item.quantidade;
+                const sub = (item.preco_unitario || item.preco) * item.quantidade;
                 total += sub;
                 return `
                     <div class="py-2 flex justify-between items-center text-xs">
@@ -848,7 +866,7 @@
         async function finishPdvSale(metodo) {
             if (DB.carrinhoPdv.length === 0) return;
 
-            const subtotalTotal = DB.carrinhoPdv.reduce((acc, i) => acc + (i.preco_unitario * i.quantidade), 0);
+            const subtotalTotal = DB.carrinhoPdv.reduce((acc, i) => acc + ((i.preco_unitario || i.preco) * i.quantidade), 0);
 
             DB.vendas.push({
                 origem: 'LOJA_FISICA',
@@ -874,7 +892,7 @@
                     fetchPerfumesFromApi();
                 } else {
                     const errData = await res.json();
-                    alert(`Erro na venda: ${errData.error}`);
+                    alert(`Erro na venda: ${errData.error || 'Erro ao processar venda no banco.'}`);
                 }
             } catch (err) {
                 alert('Erro ao conectar com o servidor para registrar a venda.');
@@ -953,7 +971,7 @@
                 if (res.ok) {
                     alert("Perfume cadastrado e salvo com sucesso no banco de dados!");
                     closeNewProductModal();
-                    fetchPerfumesFromApi(); // Atualiza a lista lendo do banco
+                    fetchPerfumesFromApi();
                 } else {
                     DB.perfumes.push({
                         id: DB.perfumes.length + 1,
@@ -978,5 +996,3 @@
     </script>
 </body>
 </html>
-
-```
