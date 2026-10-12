@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome 6 Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Google Fonts: Playfair Display & Plus Jakarta Sans -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -84,7 +84,7 @@
     <!-- 1. VISÃO LOJA VIRTUAL -->
     <div id="view-ecommerce" class="flex-1 flex flex-col overflow-y-auto">
         <div class="bg-stone-950 text-stone-300 py-2 text-center text-[10px] sm:text-xs font-medium tracking-widest uppercase border-b border-stone-800 px-2">
-            Frete cortesia nas compras acima de R\$199 para todo o Brasil • 100% Originais
+            Frete cortesia nas compras acima de R$199 para todo o Brasil • 100% Originais
         </div>
 
         <header class="bg-white border-b border-stone-200 sticky top-0 z-40 shadow-xs">
@@ -211,7 +211,7 @@
                     </div>
                     <div class="flex justify-between text-base font-bold text-stone-900">
                         <span>Subtotal:</span>
-                        <span id="cartDrawerSubtotal" class="font-serif text-lg text-fabi-600">R\$ 0,00</span>
+                        <span id="cartDrawerSubtotal" class="font-serif text-lg text-fabi-600">R$ 0,00</span>
                     </div>
 
                     <div id="mpModalContainer" class="w-full">
@@ -251,7 +251,7 @@
         </div>
     </div>
 
-    <!-- MODAL: CÁLCULO DE TROCO EM DINHEIRO (PDV) -->
+    <!-- MODAL: DINHEIRO E TROCO -->
     <div id="pdvCashModal" class="fixed inset-0 z-50 bg-stone-900/80 backdrop-blur-xs hidden flex items-center justify-center p-4">
         <div class="bg-stone-800 border border-stone-700 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-stone-100">
             <div class="flex justify-between items-center border-b border-stone-700 pb-3">
@@ -264,16 +264,16 @@
             <div class="space-y-3">
                 <div class="flex justify-between text-xs text-stone-300">
                     <span>Total da Venda:</span>
-                    <span id="pdvCashTotalText" class="font-mono font-bold text-fabi-300">R\$ 0,00</span>
+                    <span id="pdvCashTotalText" class="font-mono font-bold text-fabi-300">R$ 0,00</span>
                 </div>
 
                 <div>
-                    <label class="text-[11px] font-bold uppercase text-stone-400 block mb-1">Valor Entregue pelo Cliente (R\$)</label>
+                    <label class="text-[11px] font-bold uppercase text-stone-400 block mb-1">Valor Entregue pelo Cliente (R$)</label>
                     <input type="number" id="pdvCashReceivedInput" step="0.01" oninput="calculatePdvChange()" placeholder="0.00" class="w-full bg-stone-950 border border-stone-700 rounded-lg p-3 text-sm font-mono text-white focus:outline-none focus:border-fabi-500">
                 </div>
 
                 <div id="pdvChangeDisplay" class="p-3 bg-stone-900 border border-stone-700 rounded-lg text-center font-bold text-sm">
-                    Troco: R\$ 0,00
+                    Troco: R$ 0,00
                 </div>
 
                 <div class="pt-2">
@@ -285,7 +285,7 @@
         </div>
     </div>
 
-    <!-- MODAL REAL MERCADO PAGO COM COBRANÇA CORRETA E CONFIRMAÇÃO AUTOMÁTICA -->
+    <!-- MODAL REAL MERCADO PAGO PIX AUTOMÁTICO -->
     <div id="pdvPixModal" class="fixed inset-0 z-50 bg-stone-900/80 backdrop-blur-xs hidden flex items-center justify-center p-4">
         <div class="bg-stone-800 border border-stone-700 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-stone-100 text-center">
             <div class="flex justify-between items-center border-b border-stone-700 pb-3">
@@ -306,7 +306,7 @@
 
                 <div class="bg-stone-900 border border-stone-700 p-2.5 rounded-xl">
                     <p class="text-[10px] text-stone-400 uppercase font-bold">Valor da Cobrança</p>
-                    <p id="pdvPixTotalText" class="text-xl font-bold font-serif text-teal-300">R\$ 0,00</p>
+                    <p id="pdvPixTotalText" class="text-xl font-bold font-serif text-teal-300">R$ 0,00</p>
                 </div>
 
                 <div class="pt-1 space-y-2">
@@ -321,21 +321,10 @@
         </div>
     </div>
 
-    <!-- 2. VISÃO FRENTE DE CAIXA (PDV BALCÃO — RESTRITO) -->
+    <!-- 2. VISÃO FRENTE DE CAIXA (PDV BALCÃO) -->
     <div id="view-pdv" class="flex-1 flex flex-col hidden bg-stone-900 text-stone-100 p-4 sm:p-6 overflow-y-auto">
         <div class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 space-y-4">
-                <!-- CAMPO DA CHAVE PIX NO PDV -->
-                <div class="bg-stone-800 border border-teal-500/40 p-3.5 rounded-2xl flex items-center space-x-3 shadow-xl">
-                    <div class="p-2.5 bg-teal-500/20 text-teal-400 rounded-xl">
-                        <i class="fa-brands fa-pix text-xl"></i>
-                    </div>
-                    <div class="flex-1">
-                        <label class="text-[10px] uppercase font-bold text-teal-400 tracking-wider block">Chave PIX Cadastrada no Mercado Pago</label>
-                        <input type="text" id="pdvPixKeyInput" onchange="savePixKeyLocally()" placeholder="E-mail, CPF/CNPJ ou Chave Aleatória" class="w-full bg-stone-950 border border-stone-700 rounded-xl p-2 text-xs font-mono text-teal-300 focus:outline-none focus:border-teal-500 mt-0.5">
-                    </div>
-                </div>
-
                 <div class="bg-stone-800 border border-stone-700 p-4 sm:p-5 rounded-2xl flex items-center space-x-4 shadow-xl">
                     <div class="p-3 bg-fabi-500/20 border border-fabi-500/40 text-fabi-400 rounded-xl">
                         <i class="fa-solid fa-barcode text-2xl sm:text-3xl"></i>
@@ -370,11 +359,11 @@
                 <div class="border-t border-stone-700 pt-3 sm:pt-4 space-y-2 sm:space-y-3 bg-stone-900/60 p-3 sm:p-4 rounded-xl">
                     <div class="flex justify-between text-xs text-stone-300">
                         <span>Subtotal:</span>
-                        <span id="pdvSubtotal" class="font-mono">R\$ 0,00</span>
+                        <span id="pdvSubtotal" class="font-mono">R$ 0,00</span>
                     </div>
                     <div class="flex justify-between text-sm sm:text-base font-bold text-fabi-400 border-t border-stone-800 pt-2">
                         <span>TOTAL VENDA:</span>
-                        <span id="pdvTotal" class="font-serif text-lg sm:text-xl">R\$ 0,00</span>
+                        <span id="pdvTotal" class="font-serif text-lg sm:text-xl">R$ 0,00</span>
                     </div>
 
                     <div class="grid grid-cols-3 gap-2 pt-1">
@@ -394,7 +383,7 @@
         </div>
     </div>
 
-    <!-- 3. VISÃO PAINEL ADMIN & ESTOQUE (RESTRITO) -->
+    <!-- 3. VISÃO PAINEL ADMIN & ESTOQUE -->
     <div id="view-admin" class="flex-1 flex flex-col hidden bg-stone-100 p-4 sm:p-6 overflow-y-auto">
         <div class="max-w-7xl mx-auto w-full space-y-6">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -420,7 +409,7 @@
                                 <th class="p-3">Perfume</th>
                                 <th class="p-3">Marca</th>
                                 <th class="p-3">Código de Barras</th>
-                                <th class="p-3 text-right">Preço (R\$)</th>
+                                <th class="p-3 text-right">Preço (R$)</th>
                                 <th class="p-3 text-center">Estoque Atual</th>
                                 <th class="p-3 text-center">Ajustar Quantidade</th>
                             </tr>
@@ -440,7 +429,7 @@
                                 <th class="p-3">Origem</th>
                                 <th class="p-3">Pagamento</th>
                                 <th class="p-3">Endereço / Detalhes</th>
-                                <th class="p-3 text-right">Total (R\$)</th>
+                                <th class="p-3 text-right">Total (R$)</th>
                             </tr>
                         </thead>
                         <tbody id="adminSalesTable" class="divide-y divide-stone-100"></tbody>
@@ -468,7 +457,7 @@
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Preço (R\$)</label>
+                        <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Preço (R$)</label>
                         <input type="number" step="0.01" id="newProdPrice" required class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs text-stone-800 focus:outline-none focus:ring-1 focus:ring-fabi-500">
                     </div>
                     <div>
@@ -502,7 +491,12 @@
         let currentPixPayloadGlobal = "";
 
         // Inicializa SDK do Mercado Pago
-        const mp = new MercadoPago('APP_USR-7282577442110345-101214-79a8ded9c7030683db1a9faa1460ef92-1447000501', { locale: 'pt-BR' });
+        let mp = null;
+        try {
+            mp = new MercadoPago('APP_USR-7282577442110345-101214-79a8ded9c7030683db1a9faa1460ef92-1447000501', { locale: 'pt-BR' });
+        } catch (e) {
+            console.warn('SDK Mercado Pago não carregada.');
+        }
 
         const ADMIN_USER = 'admin';
         const ADMIN_PASS = 'fabi2026';
@@ -523,11 +517,6 @@
             fetchPerfumesFromApi();
             fetchVendasFromApi();
 
-            // Carrega chave PIX salva
-            const savedKey = localStorage.getItem('fabi_pix_key') || '';
-            const pixInput = document.getElementById('pdvPixKeyInput');
-            if (pixInput && savedKey) pixInput.value = savedKey;
-
             if (isAdminAuthenticated) {
                 document.getElementById('adminTopBar').classList.remove('hidden');
                 document.getElementById('adminTopBar').classList.add('flex');
@@ -537,11 +526,6 @@
                 setMode(lastMode);
             }
         };
-
-        function savePixKeyLocally() {
-            const val = document.getElementById('pdvPixKeyInput').value.trim();
-            localStorage.setItem('fabi_pix_key', val);
-        }
 
         function toggleMobileNav() {
             document.getElementById('mobileNav').classList.toggle('hidden');
@@ -645,7 +629,7 @@
                     }
                 }
             } catch (err) {
-                console.log('Usando vendas do armazenamento local');
+                console.log('Usando vendas locais.');
             }
             renderSalesLog();
         }
@@ -767,7 +751,7 @@
 
             if (DB.carrinhoStore.length === 0) {
                 container.innerHTML = `<p class="text-xs text-stone-400 text-center py-10">Sua sacola está vazia.</p>`;
-                subtotalEl.innerText = "R\$ 0,00";
+                subtotalEl.innerText = "R$ 0,00";
                 if (btnCheckout) btnCheckout.disabled = true;
                 return;
             }
@@ -852,7 +836,7 @@
 
                 const dataCheckout = await resCheckout.json();
 
-                if (resCheckout.ok && dataCheckout.id) {
+                if (resCheckout.ok && dataCheckout.id && mp) {
                     mp.checkout({
                         preference: {
                             id: dataCheckout.id
@@ -943,8 +927,8 @@
 
             if (DB.carrinhoPdv.length === 0) {
                 container.innerHTML = `<p class="text-xs text-stone-500 text-center py-10">Bipe o código de barras ou selecione os produtos ao lado.</p>`;
-                subtotalEl.innerText = "R\$ 0,00";
-                totalEl.innerText = "R\$ 0,00";
+                subtotalEl.innerText = "R$ 0,00";
+                totalEl.innerText = "R$ 0,00";
                 btnCash.disabled = true;
                 btnPix.disabled = true;
                 btnCard.disabled = true;
@@ -993,7 +977,7 @@
             
             document.getElementById('pdvCashTotalText').innerText = `R$ ${subtotalTotal.toFixed(2)}`;
             document.getElementById('pdvCashReceivedInput').value = '';
-            document.getElementById('pdvChangeDisplay').innerText = 'Troco: R\$ 0,00';
+            document.getElementById('pdvChangeDisplay').innerText = 'Troco: R$ 0,00';
             document.getElementById('pdvChangeDisplay').className = 'p-3 bg-stone-900 border border-stone-700 rounded-lg text-center font-bold text-sm text-stone-100';
             document.getElementById('pdvCashModal').classList.remove('hidden');
         }
@@ -1032,83 +1016,56 @@
             finishPdvSale('DINHEIRO', troco);
         }
 
-        // --- GERAÇÃO DE PIX COM ENVIO EXPLICITO DA CHAVE DA LOJA ---
+        // --- GERAÇÃO PIX REAL MERCADO PAGO ---
         async function openPdvPixModal() {
             if (DB.carrinhoPdv.length === 0) return;
             
             const subtotalTotal = DB.carrinhoPdv.reduce((acc, i) => acc + ((i.preco_unitario || i.preco) * i.quantidade), 0);
-            const pixKey = document.getElementById('pdvPixKeyInput').value.trim();
-
-            if (!pixKey) {
-                alert("Por favor, digite a sua Chave PIX do Mercado Pago no campo do PDV antes de gerar o código.");
-                return;
-            }
-
-            savePixKeyLocally();
 
             document.getElementById('pdvPixTotalText').innerText = `R$ ${subtotalTotal.toFixed(2).replace('.', ',')}`;
             document.getElementById('pdvPixStatusText').innerHTML = `<i class="fa-solid fa-circle-notch animate-spin text-teal-400"></i> Gerando cobrança PIX no Mercado Pago...`;
             document.getElementById('pdvPixQrContainer').innerHTML = `<i class="fa-solid fa-circle-notch animate-spin text-teal-500 text-3xl"></i>`;
             document.getElementById('pdvPixModal').classList.remove('hidden');
 
-            const itensFormatados = DB.carrinhoPdv.map(item => ({
-                id: String(item.id || item.perfume_id || '1'),
-                title: `${item.marca} - ${item.nome}`,
-                quantity: parseInt(item.quantidade),
-                unit_price: parseFloat(item.preco_unitario || item.preco)
-            }));
-
             try {
-                const res = await fetch(`${API_URL}/pagamento/checkout`, {
+                const res = await fetch(`${API_URL}/pix/gerar`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        transaction_amount: subtotalTotal,
-                        valor_total: subtotalTotal,
-                        chave_pix: pixKey,
-                        pix_key: pixKey,
-                        metodo_pagamento: "pix",
-                        payment_method_id: "pix",
-                        itens: itensFormatados,
-                        emailCliente: "pdv@fragranciasfabi.com.br"
+                        valor: subtotalTotal,
+                        descricao: "Venda PDV Balcão"
                     })
                 });
 
                 const data = await res.json();
 
-                const pixCopyPaste = data.qr_code || 
-                                     data.point_of_interaction?.transaction_data?.qr_code || 
-                                     data.pix_code;
+                if (res.ok && (data.qr_code || data.qr_code_base64)) {
+                    currentPixPayloadGlobal = data.qr_code || "";
+                    currentPaymentId = data.id;
 
-                const base64Image = data.qr_code_base64 || 
-                                    data.point_of_interaction?.transaction_data?.qr_code_base64;
-
-                currentPaymentId = data.id || data.payment_id;
-
-                if (pixCopyPaste) {
-                    currentPixPayloadGlobal = pixCopyPaste;
-                    
-                    let finalQrImgSrc = base64Image ? `data:image/png;base64,${base64Image}` : `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(pixCopyPaste)}`;
+                    let finalQrImgSrc = data.qr_code_base64 
+                        ? `data:image/png;base64,${data.qr_code_base64}` 
+                        : `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(currentPixPayloadGlobal)}`;
 
                     document.getElementById('pdvPixQrContainer').innerHTML = `
                         <img src="${finalQrImgSrc}" alt="QR Code Pix" class="w-52 h-52 mx-auto rounded-lg shadow-sm border border-stone-200">
                     `;
-                    document.getElementById('pdvPixStatusText').innerHTML = `<i class="fa-solid fa-circle-notch animate-spin text-teal-400"></i> Aguardando pagamento pelo aplicativo do banco...`;
+                    document.getElementById('pdvPixStatusText').innerHTML = `<i class="fa-solid fa-circle-notch animate-spin text-teal-400"></i> Aguardando pagamento pelo app do banco...`;
 
                     if (currentPaymentId) {
                         startPixPolling(currentPaymentId);
                     }
                 } else {
-                    throw new Error("Não foi possível gerar a chave nativa do PIX.");
+                    throw new Error("Não foi possível gerar a cobrança no Mercado Pago.");
                 }
             } catch (err) {
                 console.error("Erro na geração do PIX:", err);
-                document.getElementById('pdvPixStatusText').innerText = "Erro ao conectar com Mercado Pago. Confirme manualmente:";
-                document.getElementById('pdvPixQrContainer').innerHTML = `<p class="text-xs text-rose-400 font-bold p-4">Erro na API do Render. Verifique se a chave PIX digitada está correta na sua conta.</p>`;
+                document.getElementById('pdvPixStatusText').innerText = "Erro na API do Render. Confirme manualmente se necessário:";
+                document.getElementById('pdvPixQrContainer').innerHTML = `<p class="text-xs text-rose-400 font-bold p-4">Erro ao conectar com o Mercado Pago.</p>`;
             }
         }
 
-        // CHECAGEM AUTOMÁTICA DE STATUS NO MERCADO PAGO A CADA 3 SEGUNDOS
+        // CHECAGEM AUTOMÁTICA DE STATUS A CADA 3 SEGUNDOS
         function startPixPolling(paymentId) {
             stopPixPolling();
 
@@ -1123,7 +1080,7 @@
                         }
                     }
                 } catch (e) {
-                    console.log("Verificando status...");
+                    console.log("Verificando pagamento...");
                 }
             }, 3000);
         }
@@ -1135,7 +1092,6 @@
             }
         }
 
-        // SINAL DE CERTO (CHECKMARK VERDE) E CONCLUSÃO DO PEDIDO
         function showSuccessCheckmark() {
             const container = document.getElementById('pdvPixQrContainer');
             const statusText = document.getElementById('pdvPixStatusText');
@@ -1171,6 +1127,8 @@
                 setTimeout(() => {
                     btn.innerHTML = `<i class="fa-solid fa-copy"></i> Copiar Código PIX Copia e Cola`;
                 }, 2500);
+            } else {
+                alert('Código PIX indisponível para cópia.');
             }
         }
 
@@ -1179,13 +1137,12 @@
             document.getElementById('pdvPixModal').classList.add('hidden');
         }
 
-        // --- GRAVAÇÃO DA VENDA E ABASTECIMENTO DE ESTOQUE ---
+        // --- CONCLUIR VENDA ---
         async function finishPdvSale(metodo, trocoDevolvido = 0) {
             if (DB.carrinhoPdv.length === 0) return;
 
             const subtotalTotal = DB.carrinhoPdv.reduce((acc, i) => acc + ((i.preco_unitario || i.preco) * i.quantidade), 0);
 
-            // Abater estoque localmente de imediato
             DB.carrinhoPdv.forEach(item => {
                 const prod = DB.perfumes.find(p => p.id === (item.perfume_id || item.id));
                 if (prod) prod.estoque = Math.max(0, prod.estoque - item.quantidade);
@@ -1213,7 +1170,7 @@
                     })
                 });
             } catch (err) {
-                console.log('Venda salva em backup local.');
+                console.log('Venda salva localmente.');
             }
 
             clearPdvCart();
@@ -1223,7 +1180,6 @@
             renderSalesLog();
         }
 
-        // --- EXIBIR E EDITAR ESTOQUE COM SALVAMENTO PERMANENTE ---
         function renderAdminInventory() {
             const tbody = document.getElementById('adminInventoryTable');
             tbody.innerHTML = DB.perfumes.map(p => `
@@ -1247,7 +1203,6 @@
             `).join('');
         }
 
-        // SALVA AS ALTERAÇÕES DE QUANTIDADE (+ OU -) PERMANENTEMENTE
         async function changeStock(id, delta) {
             const perfume = DB.perfumes.find(p => p.id === id);
             if (!perfume) return;
@@ -1258,16 +1213,13 @@
                 return;
             }
 
-            // 1. Salva imediatamente no LocalStorage
             perfume.estoque = novoEstoque;
             localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
 
-            // Atualiza todas as telas
             renderAdminInventory();
             renderStoreGrid();
             renderPdvQuickGrid();
 
-            // 2. Envia a atualização para a API
             try {
                 await fetch(`${API_URL}/perfumes/${id}`, {
                     method: 'PATCH',
@@ -1275,7 +1227,7 @@
                     body: JSON.stringify({ estoque_atual: novoEstoque })
                 });
             } catch (err) {
-                console.log('Alteração de estoque salva no banco local.');
+                console.log('Estoque salvo localmente.');
             }
         }
 
@@ -1341,7 +1293,7 @@
                     })
                 });
             } catch (err) {
-                console.log("Salvo localmente com sucesso.");
+                console.log("Salvo localmente.");
             }
 
             closeNewProductModal();
