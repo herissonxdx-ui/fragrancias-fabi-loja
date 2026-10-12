@@ -285,7 +285,7 @@
         </div>
     </div>
 
-    <!-- MODAL REAL MERCADO PAGO COM COBRANÇA DE VALOR REAL E CONFIRMAÇÃO AUTOMÁTICA -->
+    <!-- MODAL REAL MERCADO PAGO COM CONFIRMAÇÃO AUTOMÁTICA -->
     <div id="pdvPixModal" class="fixed inset-0 z-50 bg-stone-900/80 backdrop-blur-xs hidden flex items-center justify-center p-4">
         <div class="bg-stone-800 border border-stone-700 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-stone-100 text-center">
             <div class="flex justify-between items-center border-b border-stone-700 pb-3">
@@ -297,7 +297,7 @@
 
             <div class="space-y-3">
                 <p id="pdvPixStatusText" class="text-xs text-stone-300 flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-circle-notch animate-spin text-teal-400"></i> Gerando QR Code do valor...
+                    <i class="fa-solid fa-circle-notch animate-spin text-teal-400"></i> Gerando cobrança PIX no valor correto...
                 </p>
                 
                 <div id="pdvPixQrContainer" class="bg-white p-3 rounded-xl inline-block shadow-inner mx-auto min-h-[220px] flex flex-col items-center justify-center w-full">
@@ -1010,20 +1010,20 @@
             finishPdvSale('DINHEIRO', troco);
         }
 
-        // --- GERAÇÃO DE PIX COM VALOR EXATO E VERIFICAÇÃO AUTOMÁTICA ---
+        // --- GERAÇÃO DO PIX COM VALOR TOTAL CORRETO ---
         async function openPdvPixModal() {
             if (DB.carrinhoPdv.length === 0) return;
             
-            // Calcula o valor real total da compra no balcão
+            // 1. Calcula o valor total correto da venda no caixa
             const subtotalTotal = DB.carrinhoPdv.reduce((acc, i) => acc + ((i.preco_unitario || i.preco) * i.quantidade), 0);
             
             document.getElementById('pdvPixTotalText').innerText = `R$ ${subtotalTotal.toFixed(2).replace('.', ',')}`;
-            document.getElementById('pdvPixStatusText').innerHTML = `<i class="fa-solid fa-circle-notch animate-spin text-teal-400"></i> Gerando cobrança PIX no valor de R$ ${subtotalTotal.toFixed(2)}...`;
+            document.getElementById('pdvPixStatusText').innerHTML = `<i class="fa-solid fa-circle-notch animate-spin text-teal-400"></i> Criando cobrança PIX de R$ ${subtotalTotal.toFixed(2)}...`;
             document.getElementById('pdvPixQrContainer').innerHTML = `<i class="fa-solid fa-circle-notch animate-spin text-teal-500 text-3xl"></i>`;
             document.getElementById('pdvPixModal').classList.remove('hidden');
 
-            // Formata o array de itens com o preço unitário ajustado para o Mercado Pago
-            const itensFormatados = DB.carrinhoPdv.map(item => ({
+            // 2. Prepara os itens padronizados com 'unit_price' para o Mercado Pago
+            const itensParaApi = DB.carrinhoPdv.map(item => ({
                 id: item.id || item.perfume_id,
                 title: `${item.marca} - ${item.nome}`,
                 quantity: item.quantidade,
@@ -1032,13 +1032,13 @@
             }));
 
             try {
-                // Envia os itens e o valor exato para a API no Render
+                // Envia dados para a rota da API no Render
                 const res = await fetch(`${API_URL}/pagamento/checkout`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         valor_total: subtotalTotal,
-                        itens: itensFormatados,
+                        itens: itensParaApi,
                         emailCliente: 'pdv@fragranciasfabi.com.br'
                     })
                 });
@@ -1055,13 +1055,13 @@
                     document.getElementById('pdvPixQrContainer').innerHTML = `
                         <img src="${qrCodeUrl}" alt="QR Code Pix" class="w-52 h-52 mx-auto rounded-lg shadow-sm border border-stone-200">
                     `;
-                    document.getElementById('pdvPixStatusText').innerHTML = `<i class="fa-solid fa-circle-notch animate-spin text-teal-400"></i> Aguardando leitura e pagamento do cliente...`;
+                    document.getElementById('pdvPixStatusText').innerHTML = `<i class="fa-solid fa-circle-notch animate-spin text-teal-400"></i> Aguardando cliente pagar R$ ${subtotalTotal.toFixed(2)}...`;
 
                     if (currentPaymentId) {
                         startPixPolling(currentPaymentId);
                     }
                 } else {
-                    // Fallback para link de pagamento do checkout
+                    // Se a API devolver um link padrão do checkout
                     const fallbackUrl = data.init_point || data.sandbox_init_point || "https://www.mercadopago.com.br";
                     currentPixPayloadGlobal = fallbackUrl;
                     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(fallbackUrl)}`;
@@ -1069,15 +1069,15 @@
                     document.getElementById('pdvPixQrContainer').innerHTML = `
                         <img src="${qrCodeUrl}" alt="QR Code Pix" class="w-52 h-52 mx-auto rounded-lg shadow-sm border border-stone-200">
                     `;
-                    document.getElementById('pdvPixStatusText').innerText = "Aponte a câmera do aplicativo do banco para pagar:";
+                    document.getElementById('pdvPixStatusText').innerText = "Aponte o aplicativo do banco para pagar:";
                 }
             } catch (err) {
-                console.error("Erro ao gerar Pix:", err);
-                document.getElementById('pdvPixStatusText').innerText = "Erro na conexão. Verifique o valor e tente novamente ou confirme manualmente.";
+                console.error("Erro ao conectar no servidor PIX:", err);
+                document.getElementById('pdvPixStatusText').innerText = "Servidor indisponível. Você pode confirmar manualmente abaixo:";
             }
         }
 
-        // VERIFICA SE O PAGAMENTO FOI APROVADO NA API A CADA 3 SEGUNDOS
+        // CHECAGEM DE STATUS NO BANCO A CADA 3 SEGUNDOS
         function startPixPolling(paymentId) {
             stopPixPolling();
 
@@ -1092,7 +1092,7 @@
                         }
                     }
                 } catch (e) {
-                    console.log("Checando pagamento...");
+                    console.log("Aguardando confirmação...");
                 }
             }, 3000);
         }
@@ -1104,12 +1104,12 @@
             }
         }
 
-        // EXIBE O ÍCONE DE CERTO (CHECKMARK VERDE) E CONCLUI A VENDA
+        // MOSTRA O SINAL DE CERTO (CHECKMARK VERDE) E GRAVA O PEDIDO
         function showSuccessCheckmark() {
             const container = document.getElementById('pdvPixQrContainer');
             const statusText = document.getElementById('pdvPixStatusText');
 
-            statusText.innerHTML = `<span class="text-emerald-400 font-bold uppercase tracking-wider"><i class="fa-solid fa-circle-check"></i> Pagamento Aprovado!</span>`;
+            statusText.innerHTML = `<span class="text-emerald-400 font-bold uppercase tracking-wider"><i class="fa-solid fa-circle-check"></i> Pagamento Recebido!</span>`;
 
             container.innerHTML = `
                 <div class="py-6 flex flex-col items-center justify-center animate-pop-in">
@@ -1117,7 +1117,7 @@
                         <i class="fa-solid fa-check text-5xl"></i>
                     </div>
                     <p class="font-bold text-stone-800 text-base">Pagamento Confirmado!</p>
-                    <p class="text-xs text-stone-500">Gravando pedido e dando baixa no estoque...</p>
+                    <p class="text-xs text-stone-500">Concluindo venda no caixa...</p>
                 </div>
             `;
 
