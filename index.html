@@ -232,7 +232,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE CADASTRO E LOGIN DE CLIENTES COM VERIFICAÇÃO DE E-MAIL -->
+    <!-- MODAL DE CADASTRO E LOGIN DE CLIENTES COM VERIFICAÇÃO DE E-MAIL REAL -->
     <div id="customerAuthModal" class="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
             <div class="flex justify-between items-center border-b border-stone-100 pb-3">
@@ -263,8 +263,8 @@
                         <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Senha</label>
                         <input type="password" id="custRegPass" minlength="6" required placeholder="••••••••" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
                     </div>
-                    <button type="submit" class="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition">
-                        Enviar Código de Verificação
+                    <button type="submit" id="btnCustomerSubmit" class="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition">
+                        Enviar Código por E-mail
                     </button>
                 </form>
 
@@ -288,7 +288,7 @@
             <div id="custAuthStep2" class="space-y-3 hidden text-center">
                 <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs">
                     <i class="fa-solid fa-envelope-circle-check text-2xl text-emerald-600 mb-1 block"></i>
-                    Enviamos um código de verificação para o e-mail: <strong id="verifyEmailText"></strong>
+                    Enviamos o código para o e-mail:<br><strong id="verifyEmailText" class="text-stone-900"></strong>
                 </div>
 
                 <div>
@@ -642,7 +642,7 @@
             }
         };
 
-        // --- SISTEMA DE AUTENTICAÇÃO DE CLIENTES COM CÓDIGO POR E-MAIL ---
+        // --- AUTENTICAÇÃO DE CLIENTES COM ENVIO DE E-MAIL REAL ---
         function openCustomerAuthModal() {
             if (loggedCustomer) {
                 if (confirm(`Conectado como ${loggedCustomer.nome} (${loggedCustomer.email}). Deseja sair da sua conta?`)) {
@@ -679,11 +679,15 @@
             }
         }
 
-        function handleCustomerRegister(e) {
+        async function handleCustomerRegister(e) {
             e.preventDefault();
             const name = document.getElementById('custRegName').value.trim();
             const email = document.getElementById('custRegEmail').value.trim();
             const pass = document.getElementById('custRegPass').value.trim();
+
+            const submitBtn = document.getElementById('btnCustomerSubmit');
+            submitBtn.innerText = 'ENVIANDO E-MAIL...';
+            submitBtn.disabled = true;
 
             const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -694,11 +698,32 @@
                 codigo: generatedCode
             };
 
-            document.getElementById('verifyEmailText').innerText = email;
-            document.getElementById('custAuthStep1').classList.add('hidden');
-            document.getElementById('custAuthStep2').classList.remove('hidden');
+            try {
+                const res = await fetch(`${API_URL}/clientes/enviar-codigo`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: email,
+                        nome: name,
+                        codigo: generatedCode
+                    })
+                });
 
-            alert(`[SIMULAÇÃO DE ENVIO DE E-MAIL]\n\nSeu código de confirmação enviado para ${email} é: ${generatedCode}`);
+                if (res.ok) {
+                    document.getElementById('verifyEmailText').innerText = email;
+                    document.getElementById('custAuthStep1').classList.add('hidden');
+                    document.getElementById('custAuthStep2').classList.remove('hidden');
+                    alert(`Código enviado com sucesso! Verifique a caixa de entrada do e-mail: ${email}`);
+                } else {
+                    alert('Erro ao enviar e-mail. Certifique-se de que o e-mail digitado está correto.');
+                }
+            } catch (err) {
+                console.error('Erro na conexão:', err);
+                alert('Falha ao conectar com o servidor para enviar o e-mail.');
+            } finally {
+                submitBtn.innerText = 'Enviar Código por E-mail';
+                submitBtn.disabled = false;
+            }
         }
 
         function confirmEmailVerification() {
@@ -720,9 +745,9 @@
 
                 updateCustomerHeaderUI();
                 closeCustomerAuthModal();
-                alert(`E-mail verificado com sucesso! Bem-vindo(a), ${loggedCustomer.nome}!`);
+                alert(`E-mail verificado com sucesso! Conta ativada. Bem-vindo(a), ${loggedCustomer.nome}!`);
             } else {
-                alert("Código de verificação incorreto. Tente novamente.");
+                alert("Código de verificação incorreto. Verifique o código recebido no seu e-mail.");
             }
         }
 
@@ -1208,7 +1233,7 @@
             document.getElementById('pdvCashTotalText').innerText = `R$ ${subtotalTotal.toFixed(2)}`;
             document.getElementById('pdvCashReceivedInput').value = '';
             document.getElementById('pdvChangeDisplay').innerText = 'Troco: R$ 0,00';
-            document.getElementById('pdvCashDisplayClass', 'p-3 bg-stone-900 border border-stone-700 rounded-lg text-center font-bold text-sm text-stone-100');
+            document.getElementById('pdvChangeDisplay').className = 'p-3 bg-stone-900 border border-stone-700 rounded-lg text-center font-bold text-sm text-stone-100';
             document.getElementById('pdvCashModal').classList.remove('hidden');
         }
 
