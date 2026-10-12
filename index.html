@@ -51,25 +51,25 @@
     <div class="bg-stone-900 text-stone-300 px-4 py-2 text-xs flex flex-wrap justify-between items-center border-b border-stone-800 z-50 sticky top-0">
         <div class="flex items-center space-x-2">
             <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span class="font-bold text-white uppercase tracking-wider text-[11px]">SISTEMA UNIFICADO FRAGRÂNCIAS FABI</span>
+            <span class="font-bold text-white uppercase tracking-wider text-[11px]">FRAGRÂNCIAS FABI — ATELIÊ EXCLUSIVO</span>
         </div>
         <div class="flex items-center space-x-1 sm:space-x-2 mt-1 sm:mt-0">
             <button onclick="setMode('ecommerce')" id="btn-mode-ecommerce" class="px-3 py-1.5 rounded-full font-semibold transition bg-fabi-500 text-white shadow-sm text-[11px] flex items-center gap-1.5">
-                <i class="fa-solid fa-store"></i> <span>Loja Virtual (Site)</span>
+                <i class="fa-solid fa-store"></i> <span>Loja Virtual</span>
             </button>
-            <button onclick="setMode('pdv')" id="btn-mode-pdv" class="px-3 py-1.5 rounded-full font-semibold transition hover:bg-stone-800 text-stone-300 text-[11px] flex items-center gap-1.5">
-                <i class="fa-solid fa-cash-register"></i> <span>Frente de Caixa (PDV)</span>
+            <button onclick="requestAdminAccess('pdv')" id="btn-mode-pdv" class="px-3 py-1.5 rounded-full font-semibold transition hover:bg-stone-800 text-stone-300 text-[11px] flex items-center gap-1.5">
+                <i class="fa-solid fa-lock text-[10px] text-fabi-500"></i> <i class="fa-solid fa-cash-register"></i> <span>PDV Balcão</span>
             </button>
-            <button onclick="setMode('admin')" id="btn-mode-admin" class="px-3 py-1.5 rounded-full font-semibold transition hover:bg-stone-800 text-stone-300 text-[11px] flex items-center gap-1.5">
-                <i class="fa-solid fa-chart-pie"></i> <span>Estoque & Painel</span>
+            <button onclick="requestAdminAccess('admin')" id="btn-mode-admin" class="px-3 py-1.5 rounded-full font-semibold transition hover:bg-stone-800 text-stone-300 text-[11px] flex items-center gap-1.5">
+                <i class="fa-solid fa-lock text-[10px] text-fabi-500"></i> <i class="fa-solid fa-chart-pie"></i> <span>Painel Admin & Estoque</span>
             </button>
         </div>
     </div>
 
-    <!-- 1. VISÃO LOJA VIRTUAL (E-COMMERCE) -->
+    <!-- 1. VISÃO LOJA VIRTUAL (E-COMMERCE PÚBLICO) -->
     <div id="view-ecommerce" class="flex-1 flex flex-col overflow-y-auto">
         <div class="bg-stone-950 text-stone-300 py-2 text-center text-xs font-medium tracking-widest uppercase border-b border-stone-800">
-            Frete grátis nas compras acima de R$199 para todo o Brasil
+            Frete cortesia nas compras acima de R$199 para todo o Brasil • Produtos 100% Originais
         </div>
 
         <header class="bg-white border-b border-stone-200 sticky top-0 z-40 shadow-xs">
@@ -77,7 +77,7 @@
                 <div class="flex items-center justify-between h-20">
                     <div class="flex-shrink-0 cursor-pointer" onclick="filterBrand('ALL')">
                         <h1 class="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-stone-900">
-                            FRAGRÂNCIAS FABI
+                            FRAGRÂNCIAS <span class="italic text-fabi-500 font-normal">FABI</span>
                         </h1>
                     </div>
 
@@ -87,12 +87,11 @@
                         <a href="#" onclick="event.preventDefault(); filterBrand('ALL')" class="text-fabi-600 font-bold border-b-2 border-fabi-500 pb-1">Fragrâncias</a>
                         <a href="#" onclick="event.preventDefault()" class="hover:text-fabi-500 transition">Skin Care</a>
                         <a href="#" onclick="event.preventDefault()" class="hover:text-fabi-500 transition">Maquiagem</a>
-                        <a href="#" onclick="event.preventDefault()" class="hover:text-fabi-500 transition">Sale</a>
                         <a href="#" onclick="event.preventDefault()" class="hover:text-fabi-500 transition">Marcas</a>
                     </nav>
 
                     <div class="flex items-center space-x-5">
-                        <button onclick="toggleCartDrawer(true)" class="relative flex items-center bg-fabi-900 text-white px-4 py-2 rounded-lg hover:bg-stone-800 transition">
+                        <button onclick="toggleCartDrawer(true)" class="relative flex items-center bg-stone-900 text-white px-4 py-2 rounded-lg hover:bg-stone-800 transition">
                             <i class="fa-solid fa-bag-shopping text-base mr-2"></i>
                             <span class="text-xs font-bold uppercase tracking-wider">Sacola</span>
                             <span id="cartCountBadge" class="ml-2 bg-fabi-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">0</span>
@@ -120,7 +119,6 @@
                     <button onclick="filterBrand('Parfums De Marly')" id="pill-Parfums De Marly" class="brand-pill px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-md uppercase tracking-wider shrink-0 transition">Parfums De Marly</button>
                     <button onclick="filterBrand('Dolce&Gabbana')" id="pill-Dolce&Gabbana" class="brand-pill px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-md uppercase tracking-wider shrink-0 transition">Dolce&Gabbana</button>
                     <button onclick="filterBrand('Jean Paul Gaultier')" id="pill-Jean Paul Gaultier" class="brand-pill px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-md uppercase tracking-wider shrink-0 transition">Jean Paul Gaultier</button>
-                    <button onclick="filterBrand('Xerjoff')" id="pill-Xerjoff" class="brand-pill px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-md uppercase tracking-wider shrink-0 transition">Xerjoff</button>
                 </div>
             </div>
         </div>
@@ -133,25 +131,25 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8 text-xs">
                 <div>
                     <h3 class="font-serif text-lg font-bold text-white mb-2">Fragrâncias Fabi</h3>
-                    <p class="text-stone-400 leading-relaxed">Alta perfumaria e cosméticos originais com garantia de procedência.</p>
+                    <p class="text-stone-400 leading-relaxed">Ateliê exclusivo de perfumaria importada e cosméticos de luxo originais.</p>
                 </div>
                 <div>
-                    <h4 class="font-bold text-white uppercase tracking-wider mb-3">Atendimento ao Cliente</h4>
+                    <h4 class="font-bold text-white uppercase tracking-wider mb-3">Atendimento</h4>
                     <p class="mb-1"><i class="fa-brands fa-whatsapp text-emerald-400 mr-1.5"></i> (11) 98888-7777</p>
                 </div>
                 <div>
                     <h4 class="font-bold text-white uppercase tracking-wider mb-3">Pagamento Seguro</h4>
-                    <p class="text-stone-400">PIX Instantâneo e Cartões via Mercado Pago.</p>
+                    <p class="text-stone-400">PIX Instantâneo e Cartão de Crédito em até 10x via Mercado Pago.</p>
                 </div>
                 <div>
-                    <h4 class="font-bold text-white uppercase tracking-wider mb-3">Autenticidade Garantida</h4>
-                    <p class="text-stone-400"><i class="fa-solid fa-shield-halved text-fabi-500 mr-1.5"></i> Produtos 100% Originais.</p>
+                    <h4 class="font-bold text-white uppercase tracking-wider mb-3">Garantia</h4>
+                    <p class="text-stone-400"><i class="fa-solid fa-shield-halved text-fabi-500 mr-1.5"></i> Produtos 100% Originais com Selo de Procedência.</p>
                 </div>
             </div>
         </footer>
     </div>
 
-    <!-- SACOLA LATERAL COM FORMULÁRIO DE ENDEREÇO DE ENTREGA -->
+    <!-- SACOLA LATERAL COM ENDEREÇO DE ENTREGA -->
     <div id="cartDrawer" class="fixed inset-0 z-50 overflow-hidden hidden">
         <div onclick="toggleCartDrawer(false)" class="absolute inset-0 bg-stone-900/60 backdrop-blur-xs transition-opacity"></div>
         <div class="fixed inset-y-0 right-0 max-w-full flex pl-10">
@@ -168,10 +166,10 @@
                 <!-- Formulário de Endereço de Entrega -->
                 <div class="px-6 py-4 bg-stone-100 border-t border-stone-200 space-y-2 text-xs">
                     <h4 class="font-bold text-stone-800 uppercase tracking-wider text-[11px] mb-1">
-                        <i class="fa-solid fa-truck-fast text-fabi-500 mr-1"></i> Endereço de Entrega
+                        <i class="fa-solid fa-truck-fast text-fabi-500 mr-1"></i> Endereço para Entrega
                     </h4>
                     <div class="grid grid-cols-3 gap-2">
-                        <input type="text" id="deliveryCep" placeholder="CEP" class="col-span-1 p-2 bg-white border border-stone-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                        <input type="text" id="deliveryCep" placeholder="CEP (ex: 01000-000)" class="col-span-1 p-2 bg-white border border-stone-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
                         <input type="text" id="deliveryCity" placeholder="Cidade / UF" class="col-span-2 p-2 bg-white border border-stone-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
                     </div>
                     <input type="text" id="deliveryStreet" placeholder="Rua / Avenida" class="w-full p-2 bg-white border border-stone-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
@@ -199,7 +197,7 @@
         </div>
     </div>
 
-    <!-- 2. VISÃO FRENTE DE CAIXA (PDV LOJA FÍSICA) -->
+    <!-- 2. VISÃO FRENTE DE CAIXA (PDV BALCÃO — PROTEGIDO) -->
     <div id="view-pdv" class="flex-1 flex flex-col hidden bg-stone-900 text-stone-100 p-6 overflow-y-auto">
         <div class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 space-y-4">
@@ -208,7 +206,7 @@
                         <i class="fa-solid fa-barcode text-3xl"></i>
                     </div>
                     <div class="flex-1">
-                        <label class="text-[10px] uppercase font-bold text-fabi-400 tracking-wider block">Leitor / Busca Balcão</label>
+                        <label class="text-[10px] uppercase font-bold text-fabi-400 tracking-wider block">Leitor de Código de Barras / Busca Balcão</label>
                         <input type="text" id="pdvBarcodeBar" onkeydown="handlePdvBarcodeScan(event)" placeholder="Bipe o código de barras ou digite o nome e dê ENTER..." class="w-full bg-stone-950 border border-stone-700 rounded-xl p-3 text-sm font-mono text-fabi-300 focus:outline-none focus:border-fabi-500 mt-1">
                     </div>
                 </div>
@@ -261,18 +259,25 @@
         </div>
     </div>
 
-    <!-- 3. VISÃO PAINEL ADMIN & ESTOQUE -->
+    <!-- 3. VISÃO PAINEL ADMIN & GESTÃO DE ESTOQUE (PROTEGIDO) -->
     <div id="view-admin" class="flex-1 flex flex-col hidden bg-stone-100 p-6 overflow-y-auto">
         <div class="max-w-7xl mx-auto w-full space-y-6">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 class="font-serif text-2xl font-bold text-stone-900">Painel de Gestão & Estoque Unificado</h1>
-                    <p class="text-xs text-stone-500">Sincronização instantânea com a API PostgreSQL no Render.</p>
+                    <p class="text-xs text-stone-500">Sincronizado com o banco de dados PostgreSQL no Render.</p>
                 </div>
+                <button onclick="openNewProductModal()" class="px-4 py-2.5 bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs rounded-lg uppercase tracking-wider transition shadow-sm flex items-center gap-2">
+                    <i class="fa-solid fa-plus text-fabi-500"></i> Cadastrar Novo Perfume
+                </button>
             </div>
 
+            <!-- Tabela de Controle de Estoque -->
             <div class="bg-white rounded-2xl border border-stone-200 shadow-xs p-6 space-y-4">
-                <h3 class="font-serif text-lg font-bold text-stone-900">Controle de Estoque</h3>
+                <div class="flex justify-between items-center border-b border-stone-100 pb-3">
+                    <h3 class="font-serif text-lg font-bold text-stone-900">Controle de Estoque</h3>
+                    <span class="text-xs text-emerald-600 font-semibold"><i class="fa-solid fa-rotate mr-1"></i> Tempo Real</span>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs text-stone-700">
                         <thead class="bg-stone-50 uppercase text-[10px] text-stone-400 border-b border-stone-200">
@@ -280,7 +285,7 @@
                                 <th class="p-3">Perfume</th>
                                 <th class="p-3">Marca</th>
                                 <th class="p-3">Código de Barras</th>
-                                <th class="p-3 text-right">Preço</th>
+                                <th class="p-3 text-right">Preço (R$)</th>
                                 <th class="p-3 text-center">Estoque Atual</th>
                             </tr>
                         </thead>
@@ -288,23 +293,104 @@
                     </table>
                 </div>
             </div>
+
+            <!-- Relatório de Pedidos & Endereços de Entrega -->
+            <div class="bg-white rounded-2xl border border-stone-200 shadow-xs p-6 space-y-4">
+                <h3 class="font-serif text-lg font-bold text-stone-900">Relatório de Pedidos E-Commerce & Endereços</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-stone-700">
+                        <thead class="bg-stone-50 uppercase text-[10px] text-stone-400 border-b border-stone-200">
+                            <tr>
+                                <th class="p-3">Origem</th>
+                                <th class="p-3">Pagamento</th>
+                                <th class="p-3">Endereço de Entrega do Cliente</th>
+                                <th class="p-3 text-right">Total (R$)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminSalesTable" class="divide-y divide-stone-100"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- LÓGICA DE APLICAÇÃO JS -->
+    <!-- MODAL DE CADASTRO DE NOVO PRODUTO (EXCLUSIVO ADMIN) -->
+    <div id="newProductModal" class="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-stone-100 pb-3">
+                <h3 class="font-serif font-bold text-stone-900 text-base">Cadastrar Novo Perfume</h3>
+                <button onclick="closeNewProductModal()" class="text-stone-400 hover:text-stone-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="handleCreateProduct(event)" class="space-y-3">
+                <div>
+                    <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Nome do Perfume</label>
+                    <input type="text" id="newProdName" required class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs text-stone-800 focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                </div>
+                <div>
+                    <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Marca</label>
+                    <input type="text" id="newProdBrand" required class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs text-stone-800 focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Preço (R$)</label>
+                        <input type="number" step="0.01" id="newProdPrice" required class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs text-stone-800 focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Estoque Inicial</label>
+                        <input type="number" id="newProdStock" required class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs text-stone-800 focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Código de Barras</label>
+                    <input type="text" id="newProdBarcode" placeholder="Ex: 7891000005" required class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs font-mono text-stone-800 focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                </div>
+                <div>
+                    <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">URL da Imagem</label>
+                    <input type="url" id="newProdImage" placeholder="https://..." class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs text-stone-800 focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                </div>
+                <div class="pt-2">
+                    <button type="submit" class="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition">
+                        Salvar Perfume no Banco de Dados
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPT DE NAVEGAÇÃO E AUTENTICAÇÃO SEGURA -->
     <script>
         const API_URL = 'https://fragrancias-fabi-api.onrender.com/api';
+        const ADMIN_PASS = 'fabi2026'; // Senha de acesso ao Painel Admin e PDV
+        let isAdminAuthenticated = false;
 
         const DB = {
             perfumes: [],
             carrinhoStore: [],
             carrinhoPdv: [],
+            vendas: [],
             activeBrandFilter: 'ALL'
         };
 
         window.onload = function() {
             fetchPerfumesFromApi();
         };
+
+        // Solicitação de Senha para Abas Restritas
+        function requestAdminAccess(targetMode) {
+            if (isAdminAuthenticated) {
+                setMode(targetMode);
+                return;
+            }
+
+            const inputPass = prompt("🔐 Área Restrita (Administração)\nDigite a senha de acesso:");
+            if (inputPass === ADMIN_PASS) {
+                isAdminAuthenticated = true;
+                alert("Acesso autorizado!");
+                setMode(targetMode);
+            } else if (inputPass !== null) {
+                alert("Senha incorreta. Acesso negado.");
+            }
+        }
 
         async function fetchPerfumesFromApi() {
             try {
@@ -324,7 +410,7 @@
                     }
                 }
             } catch (err) {
-                console.warn('Usando catálogo inicial enquanto API inicializa...');
+                console.warn('Servidor inicializando...');
             }
 
             if (DB.perfumes.length === 0) {
@@ -359,6 +445,7 @@
             } else if (mode === 'admin') {
                 document.getElementById('view-admin').classList.remove('hidden');
                 document.getElementById('btn-mode-admin').className = "px-3 py-1.5 rounded-full font-semibold transition bg-fabi-500 text-white shadow-sm text-[11px] flex items-center gap-1.5";
+                renderSalesLog();
             }
         }
 
@@ -494,6 +581,15 @@
             btnCheckout.disabled = true;
 
             const enderecoCompleto = `${rua}, Nº ${numero} - ${bairro}, ${cidade} - CEP: ${cep}`;
+            const subtotalTotal = DB.carrinhoStore.reduce((acc, i) => acc + (i.preco_unitario * i.quantidade), 0);
+
+            // Armazena no relatório local para consulta no Painel Admin
+            DB.vendas.push({
+                origem: 'LOJA_VIRTUAL',
+                metodo_pagamento: 'MERCADO_PAGO',
+                endereco: enderecoCompleto,
+                total: subtotalTotal
+            });
 
             try {
                 await fetch(`${API_URL}/vendas`, {
@@ -638,6 +734,15 @@
         async function finishPdvSale(metodo) {
             if (DB.carrinhoPdv.length === 0) return;
 
+            const subtotalTotal = DB.carrinhoPdv.reduce((acc, i) => acc + (i.preco_unitario * i.quantidade), 0);
+
+            DB.vendas.push({
+                origem: 'LOJA_FISICA',
+                metodo_pagamento: metodo,
+                endereco: 'Venda Presencial (Balcão)',
+                total: subtotalTotal
+            });
+
             try {
                 const res = await fetch(`${API_URL}/vendas`, {
                     method: 'POST',
@@ -677,6 +782,56 @@
                     </td>
                 </tr>
             `).join('');
+        }
+
+        function renderSalesLog() {
+            const tbody = document.getElementById('adminSalesTable');
+            if (DB.vendas.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-stone-400">Nenhum pedido registrado nesta sessão.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = DB.vendas.map(v => `
+                <tr class="hover:bg-stone-50">
+                    <td class="p-3 font-bold ${v.origem === 'LOJA_VIRTUAL' ? 'text-blue-600' : 'text-emerald-600'}">${v.origem === 'LOJA_VIRTUAL' ? 'Site (E-Commerce)' : 'Loja Física (PDV)'}</td>
+                    <td class="p-3 font-semibold">${v.metodo_pagamento}</td>
+                    <td class="p-3 font-medium text-stone-800">${v.endereco}</td>
+                    <td class="p-3 text-right font-bold">R$ ${v.total.toFixed(2).replace('.', ',')}</td>
+                </tr>
+            `).join('');
+        }
+
+        function openNewProductModal() {
+            document.getElementById('newProductModal').classList.remove('hidden');
+        }
+
+        function closeNewProductModal() {
+            document.getElementById('newProductModal').classList.add('hidden');
+        }
+
+        function handleCreateProduct(e) {
+            e.preventDefault();
+            const name = document.getElementById('newProdName').value;
+            const brand = document.getElementById('newProdBrand').value;
+            const price = parseFloat(document.getElementById('newProdPrice').value);
+            const stock = parseInt(document.getElementById('newProdStock').value);
+            const barcode = document.getElementById('newProdBarcode').value;
+            const image = document.getElementById('newProdImage').value || "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400";
+
+            DB.perfumes.push({
+                id: DB.perfumes.length + 1,
+                marca: brand,
+                nome: name,
+                preco: price,
+                estoque: stock,
+                codigo_barras: barcode,
+                imagem: image
+            });
+
+            closeNewProductModal();
+            renderAdminInventory();
+            renderStoreGrid();
+            renderPdvQuickGrid();
+            alert("Perfume cadastrado com sucesso!");
         }
     </script>
 </body>
