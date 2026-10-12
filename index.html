@@ -1,54 +1,197 @@
-async function finalizarCompra() {
-  if (carrinho.length === 0) {
-    alert('Adicione itens ao carrinho primeiro!');
-    return;
-  }
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fragrâncias Fabi — Perfumaria & Cosméticos</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f9f9f9; color: #333; }
+    
+    header { background-color: #4a154b; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    header h1 { font-size: 1.5rem; font-weight: 600; }
+    
+    .cart-btn { background-color: #2eb67d; color: white; border: none; padding: 0.5rem 1rem; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+    .cart-btn:hover { background-color: #259c69; }
+    
+    .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 2rem; margin-top: 1.5rem; }
+    
+    .card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s; display: flex; flex-direction: column; justify-content: space-between; }
+    .card:hover { transform: translateY(-5px); }
+    .card img { width: 100%; height: 200px; object-fit: cover; background-color: #eee; }
+    .card-body { padding: 1rem; display: flex; flex-direction: column; flex-grow: 1; }
+    .card-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 0.5rem; }
+    .card-category { font-size: 0.8rem; color: #777; text-transform: uppercase; margin-bottom: 0.5rem; }
+    .card-price { font-size: 1.25rem; color: #4a154b; font-weight: bold; margin-top: auto; padding-top: 0.5rem; }
+    
+    .btn-add { background-color: #4a154b; color: white; border: none; padding: 0.75rem; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 1rem; width: 100%; }
+    .btn-add:hover { background-color: #611f69; }
+    
+    /* Modal Carrinho */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; justify-content: center; align-items: center; }
+    .modal.active { display: flex; }
+    .modal-content { background: white; width: 90%; max-width: 500px; border-radius: 10px; padding: 1.5rem; max-height: 80vh; display: flex; flex-direction: column; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 1rem; }
+    .modal-body { overflow-y: auto; margin: 1rem 0; flex-grow: 1; }
+    .cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #f0f0f0; padding-bottom: 0.5rem; }
+    .btn-finish { background-color: #2eb67d; color: white; border: none; padding: 1rem; border-radius: 5px; font-weight: bold; font-size: 1rem; cursor: pointer; width: 100%; }
+    .btn-finish:hover { background-color: #259c69; }
+  </style>
+</head>
+<body>
 
-  try {
-    // 1. Registra a venda no banco para dar baixa no estoque
-    const pedido = {
-      origem: 'E-COMMERCE',
-      metodo_pagamento: 'MERCADO_PAGO',
-      itens: carrinho
-    };
+  <header>
+    <h1>Fragrâncias Fabi</h1>
+    <button class="cart-btn" onclick="abrirCarrinho()">
+      🛒 Carrinho (<span id="cart-count">0</span>)
+    </button>
+  </header>
 
-    const resVenda = await fetch(`${API_URL}/vendas`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(pedido)
-    });
+  <div class="container">
+    <h2>Nosso Catálogo</h2>
+    <div id="grid-perfumes" class="grid">
+      <p>Carregando perfumes...</p>
+    </div>
+  </div>
 
-    const dataVenda = await resVenda.json();
+  <!-- Modal do Carrinho -->
+  <div id="modal-carrinho" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Seu Carrinho</h3>
+        <button style="background:none; border:none; font-size:1.5rem; cursor:pointer;" onclick="fecharCarrinho()">&times;</button>
+      </div>
+      <div id="cart-items" class="modal-body">
+        <p>O carrinho está vazio.</p>
+      </div>
+      <div style="border-top: 1px solid #eee; padding-top: 1rem;">
+        <h4 style="margin-bottom: 1rem; text-align: right;">Total: R$ <span id="cart-total">0.00</span></h4>
+        <button class="btn-finish" onclick="finalizarCompra()">Finalizar Pedido (Mercado Pago)</button>
+      </div>
+    </div>
+  </div>
 
-    if (!resVenda.ok) {
-      alert(`Erro no pedido: ${dataVenda.error}`);
-      return;
+  <script>
+    const API_URL = 'https://fragrancias-fabi-api.onrender.com/api';
+    let perfumes = [];
+    let carrinho = [];
+
+    async function carregarPerfumes() {
+      try {
+        const res = await fetch(`${API_URL}/perfumes`);
+        perfumes = await res.json();
+        
+        const grid = document.getElementById('grid-perfumes');
+        grid.innerHTML = '';
+
+        if (perfumes.length === 0) {
+          grid.innerHTML = '<p>Nenhum perfume disponível no momento.</p>';
+          return;
+        }
+
+        perfumes.forEach(p => {
+          const imgUrl = p.imagem_url || 'https://via.placeholder.com/300x200?text=Fragr%C3%A2ncias+Fabi';
+          grid.innerHTML += `
+            <div class="card">
+              <img src="${imgUrl}" alt="${p.nome}">
+              <div class="card-body">
+                <div class="card-category">${p.categoria || 'Perfumaria'}</div>
+                <div class="card-title">${p.nome} (${p.volume_ml}ml)</div>
+                <div>Marca: ${p.marca}</div>
+                <div>Estoque: ${p.estoque_atual} un</div>
+                <div class="card-price">R$ ${parseFloat(p.preco).toFixed(2)}</div>
+                <button class="btn-add" onclick="adicionarAoCarrinho(${p.id})">Adicionar ao Carrinho</button>
+              </div>
+            </div>
+          `;
+        });
+      } catch (err) {
+        console.error('Erro ao carregar perfumes:', err);
+        document.getElementById('grid-perfumes').innerHTML = '<p>Erro ao carregar catálogo de produtos.</p>';
+      }
     }
 
-    // 2. Gera o checkout oficial do Mercado Pago (PIX + Cartão)
-    const resCheckout = await fetch(`${API_URL}/pagamento/checkout`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        itens: carrinho,
-        emailCliente: 'cliente@fragranciasfabi.com.br'
-      })
-    });
+    function adicionarAoCarrinho(id) {
+      const p = perfumes.find(item => item.id === id);
+      const itemExistente = carrinho.find(item => item.perfume_id === id);
 
-    const dataCheckout = await resCheckout.json();
+      if (itemExistente) {
+        if (itemExistente.quantidade < p.estoque_atual) {
+          itemExistente.quantidade++;
+        } else {
+          alert('Quantidade máxima em estoque atingida!');
+          return;
+        }
+      } else {
+        carrinho.push({
+          perfume_id: p.id,
+          nome: p.nome,
+          preco_unitario: parseFloat(p.preco),
+          quantidade: 1
+        });
+      }
 
-    if (dataCheckout.init_point) {
-      carrinho = [];
       atualizarCarrinho();
-      fecharCarrinho();
-      // Redireciona para o pagamento no Mercado Pago
-      window.location.href = dataCheckout.init_point;
-    } else {
-      alert('Erro ao gerar tela de pagamento.');
+      alert(`${p.nome} adicionado ao carrinho!`);
     }
 
-  } catch (err) {
-    console.error(err);
-    alert('Erro ao conectar com o servidor.');
-  }
-}
+    function atualizarCarrinho() {
+      const countEl = document.getElementById('cart-count');
+      const itemsEl = document.getElementById('cart-items');
+      const totalEl = document.getElementById('cart-total');
+
+      const totalItens = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
+      countEl.innerText = totalItens;
+
+      if (carrinho.length === 0) {
+        itemsEl.innerHTML = '<p>O carrinho está vazio.</p>';
+        totalEl.innerText = '0.00';
+        return;
+      }
+
+      itemsEl.innerHTML = '';
+      let valorTotal = 0;
+
+      carrinho.forEach(item => {
+        const subtotal = item.quantidade * item.preco_unitario;
+        valorTotal += subtotal;
+        itemsEl.innerHTML += `
+          <div class="cart-item">
+            <div>
+              <strong>${item.nome}</strong><br>
+              ${item.quantidade}x R$ ${item.preco_unitario.toFixed(2)}
+            </div>
+            <div>
+              <strong>R$ ${subtotal.toFixed(2)}</strong>
+            </div>
+          </div>
+        `;
+      });
+
+      totalEl.innerText = valorTotal.toFixed(2);
+    }
+
+    function abrirCarrinho() {
+      document.getElementById('modal-carrinho').classList.add('active');
+    }
+
+    function fecharCarrinho() {
+      document.getElementById('modal-carrinho').classList.remove('active');
+    }
+
+    async function finalizarCompra() {
+      if (carrinho.length === 0) {
+        alert('Adicione itens ao carrinho primeiro!');
+        return;
+      }
+
+      try {
+        // 1. Registra o pedido no banco para abater estoque
+        const pedido = {
+          origem: 'E-COMMERCE',
+          metodo_pagamento: 'MERCADO_PAGO',
+          itens: carrinho
+        };
+
+        const resVenda =
