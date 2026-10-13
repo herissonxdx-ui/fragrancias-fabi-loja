@@ -645,6 +645,7 @@
         };
 
         window.onload = function() {
+            checkPaymentReturn();
             fetchPerfumesFromApi();
             fetchVendasFromApi();
             updateCustomerHeaderUI();
@@ -658,6 +659,37 @@
                 setMode(lastMode);
             }
         };
+
+        // VERIFICA SE O CLIENTE ACABA DE VOLTAR DO MERCADO PAGO COM SUCESSO
+        async function checkPaymentReturn() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const status = urlParams.get('status');
+
+            if (status === 'success' || status === 'approved') {
+                const pendingOrder = JSON.parse(localStorage.getItem('fabi_pending_online_order'));
+                if (pendingOrder) {
+                    try {
+                        await fetch(`${API_URL}/vendas`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                email_cliente: pendingOrder.email_cliente,
+                                origem: 'E-COMMERCE',
+                                metodo_pagamento: 'MERCADO_PAGO',
+                                itens: pendingOrder.itens,
+                                endereco_entrega: pendingOrder.endereco_entrega,
+                                status: 'APROVADO'
+                            })
+                        });
+                        localStorage.removeItem('fabi_pending_online_order');
+                        alert('🎉 Pagamento aprovado com sucesso! Seu pedido foi registrado.');
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    } catch (e) {
+                        console.error('Erro ao confirmar pedido aprovado:', e);
+                    }
+                }
+            }
+        }
 
         // --- AUTENTICAÇÃO DE CLIENTES COM VERIFICAÇÃO DE E-MAIL REAL E MEUS PEDIDOS ---
         function openCustomerAuthModal() {
@@ -706,18 +738,18 @@
         async function carregarHistoricoPedidosCliente() {
             const container = document.getElementById('listaMeusPedidosContainer');
             if (!loggedCustomer || !loggedCustomer.email) {
-                container.innerHTML = `<p class="text-xs text-stone-400 text-center py-4">Sessão expirada.</p>`;
+                container.innerHTML = `<p class="text-xs text-stone-400 text-center py-4">Sessão expirada. Faça login novamente.</p>`;
                 return;
             }
 
             container.innerHTML = `<p class="text-xs text-stone-400 text-center py-4"><i class="fa-solid fa-circle-notch animate-spin"></i> A carregar seus pedidos...</p>`;
 
             try {
-                const res = await fetch(`${API_URL}/vendas/cliente/${loggedCustomer.email}`);
+                const res = await fetch(`${API_URL}/vendas/cliente/${encodeURIComponent(loggedCustomer.email)}`);
                 if (res.ok) {
                     const pedidos = await res.json();
                     if (!pedidos || pedidos.length === 0) {
-                        container.innerHTML = `<p class="text-xs text-stone-500 text-center py-6">Você ainda não realizou nenhum pedido na nossa loja.</p>`;
+                        container.innerHTML = `<p class="text-xs text-stone-500 text-center py-6">Você ainda não possui pedidos pagos/registrados.</p>`;
                         return;
                     }
 
@@ -845,7 +877,7 @@
             const pass = document.getElementById('custLogPass').value.trim();
 
             let savedUsers = JSON.parse(localStorage.getItem('fabi_registered_customers')) || [];
-            const user = savedUsers.find(u => u.email === email && u.senha === pass);
+            const user = savedUsers.find(u => u.email.toLowerCase() === email.toLowerCase() && u.senha === pass);
 
             if (user) {
                 loggedCustomer = { nome: user.nome, email: user.email };
@@ -1128,7 +1160,7 @@
             renderCartDrawer();
         }
 
-        // --- CHECKOUT DIRETO E INFALÍVEL MERCADO PAGO ---
+        // --- CHECKOUT COM SALVAMENTO PENDENTE DE PEDIDO ---
         async function checkoutStoreOrder() {
             if (DB.carrinhoStore.length === 0) return;
 
@@ -1143,27 +1175,27 @@
                 return;
             }
 
+            if (!loggedCustomer) {
+                alert('Por favor, faça login ou crie uma conta antes de finalizar o pedido.');
+                openCustomerAuthModal();
+                return;
+            }
+
             const btnCheckout = document.getElementById('btnStoreCheckout');
             btnCheckout.innerText = 'REDIRECIONANDO PARA O PAGAMENTO...';
             btnCheckout.disabled = true;
 
             const enderecoCompleto = `${rua}, Nº ${numero} - ${bairro}, ${cidade} - CEP: ${cep}`;
-            const emailClienteLogado = loggedCustomer ? loggedCustomer.email : 'cliente@fragranciasfabi.com.br';
+            const emailClienteLogado = loggedCustomer.email;
+
+            // Salva temporariamente para confirmar quando voltar aprovado do Mercado Pago
+            localStorage.setItem('fabi_pending_online_order', JSON.stringify({
+                email_cliente: emailClienteLogado,
+                itens: DB.carrinhoStore,
+                endereco_entrega: enderecoCompleto
+            }));
 
             try {
-                // Registro assíncrono em segundo plano
-                fetch(`${API_URL}/vendas`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email_cliente: emailClienteLogado,
-                        origem: 'E-COMMERCE',
-                        metodo_pagamento: 'MERCADO_PAGO',
-                        itens: DB.carrinhoStore,
-                        endereco_entrega: enderecoCompleto
-                    })
-                }).catch(e => console.log('Aviso Vendas:', e));
-
                 const resCheckout = await fetch(`${API_URL}/pagamento/checkout`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1510,7 +1542,8 @@
                         email_cliente: loggedCustomer ? loggedCustomer.email : null,
                         origem: 'LOJA_FISICA',
                         metodo_pagamento: metodo,
-                        itens: DB.carrinhoPdv
+                        itens: DB.carrinhoPdv,
+                        status: 'APROVADO'
                     })
                 });
             } catch (err) {
