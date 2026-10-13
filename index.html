@@ -762,7 +762,7 @@
                             </div>
                             <p class="text-[11px] text-stone-600">Pagamento: <strong>${p.metodo_pagamento}</strong></p>
                             <p class="text-[11px] text-stone-600">Endereço: ${p.endereco_entrega || p.endereco || 'Loja Física'}</p>
-                            <p class="text-xs font-bold text-fabi-600 text-right">R$ ${parseFloat(p.total).toFixed(2).replace('.', ',')}</p>
+                            <p class="text-xs font-bold text-fabi-600 text-right">R$ ${parseFloat(p.total || p.valor_total || 0).toFixed(2).replace('.', ',')}</p>
                         </div>
                     `).join('');
                 } else {
@@ -988,25 +988,37 @@
             renderAdminInventory();
         }
 
-        // BUSCA AS VENDAS DIRETO DA API E ATUALIZA A TABELA IMEDIATAMENTE
+        // BUSCA AS VENDAS DA API E TRATA TODOS OS FORMATOS POSSÍVEIS DO BANCO DE DADOS
         async function fetchVendasFromApi() {
             try {
                 const res = await fetch(`${API_URL}/vendas`);
                 if (res.ok) {
                     const data = await res.json();
                     if (data && Array.isArray(data)) {
-                        DB.vendas = data.map(v => ({
-                            origem: v.origem || 'E-COMMERCE',
-                            metodo_pagamento: v.metodo_pagamento || 'MERCADO_PAGO',
-                            endereco: v.endereco_entrega || v.endereco || 'Venda Presencial (Balcão)',
-                            total: parseFloat(v.total || v.valor_total || 0)
-                        }));
+                        DB.vendas = data.map(v => {
+                            const rawTotal = v.total !== undefined ? v.total : (v.valor_total !== undefined ? v.valor_total : 0);
+                            const totalNum = parseFloat(rawTotal) || 0;
+
+                            const end = v.endereco_entrega || v.endereco || 'Venda Presencial (Balcão)';
+                            const met = v.metodo_pagamento || v.metodo || 'MERCADO_PAGO';
+                            const orig = (v.origem || 'E-COMMERCE').toUpperCase();
+
+                            return {
+                                id: v.id,
+                                origem: orig,
+                                metodo_pagamento: met,
+                                endereco: end,
+                                total: totalNum
+                            };
+                        });
+
                         localStorage.setItem('fabi_vendas_salvas', JSON.stringify(DB.vendas));
                     }
                 }
             } catch (err) {
-                console.log('Erro ao consultar API, usando backup local:', err);
+                console.warn('Erro ao conectar com a API de vendas, usando dados locais:', err);
             }
+
             renderSalesLog();
         }
 
@@ -1511,7 +1523,7 @@
             document.getElementById('pdvPixModal').classList.add('hidden');
         }
 
-        // --- CONCLUIR VENDA ---
+        // --- CONCLUIR VENDA PDV ---
         async function finishPdvSale(metodo, trocoDevolvido = 0) {
             if (DB.carrinhoPdv.length === 0) return;
 
@@ -1531,12 +1543,12 @@
                     })
                 });
             } catch (err) {
-                console.log('Venda salva localmente.');
+                console.log('Erro na conexão com API ao salvar venda do PDV.');
             }
 
             clearPdvCart();
             await fetchPerfumesFromApi();
-            fetchVendasFromApi();
+            await fetchVendasFromApi();
         }
 
         function renderAdminInventory() {
@@ -1596,26 +1608,34 @@
             }
         }
 
-        // RENDERIZA AS VENDAS RENDERIZADAS DA API NA TABELA DE ADMIN
+        // RENDERIZA A TABELA DE VENDAS COM VALIDAÇÃO SEGURA
         function renderSalesLog() {
             const tbody = document.getElementById('adminSalesTable');
             if (!tbody) return;
 
             if (!DB.vendas || DB.vendas.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-stone-400">Nenhum pedido registrado.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-stone-400">Nenhum pedido registrado até o momento.</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = DB.vendas.map(v => `
-                <tr class="hover:bg-stone-50 border-b border-stone-100">
-                    <td class="p-3 font-bold ${v.origem === 'LOJA_VIRTUAL' || v.origem === 'E-COMMERCE' ? 'text-blue-600' : 'text-emerald-600'}">
-                        ${v.origem === 'LOJA_VIRTUAL' || v.origem === 'E-COMMERCE' ? 'Site (E-Commerce)' : 'Loja Física (PDV)'}
-                    </td>
-                    <td class="p-3 font-semibold text-stone-800">${v.metodo_pagamento}</td>
-                    <td class="p-3 font-medium text-stone-700">${v.endereco}</td>
-                    <td class="p-3 text-right font-bold text-stone-900">R$ ${v.total.toFixed(2).replace('.', ',')}</td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = DB.vendas.map(v => {
+                const isOnline = v.origem === 'E-COMMERCE' || v.origem === 'LOJA_VIRTUAL' || v.origem === 'SITE';
+                const badgeCor = isOnline ? 'text-blue-600 bg-blue-50' : 'text-emerald-600 bg-emerald-50';
+                const origemTexto = isOnline ? 'Site (E-Commerce)' : 'Loja Física (PDV)';
+
+                return `
+                    <tr class="hover:bg-stone-50 border-b border-stone-100">
+                        <td class="p-3">
+                            <span class="px-2 py-1 rounded-md text-[11px] font-bold ${badgeCor}">
+                                ${origemTexto}
+                            </span>
+                        </td>
+                        <td class="p-3 font-semibold text-stone-800">${v.metodo_pagamento}</td>
+                        <td class="p-3 font-medium text-stone-700">${v.endereco}</td>
+                        <td class="p-3 text-right font-bold text-stone-900">R$ ${v.total.toFixed(2).replace('.', ',')}</td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         function openNewProductModal() {
