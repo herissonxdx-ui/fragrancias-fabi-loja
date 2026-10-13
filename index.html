@@ -1030,7 +1030,8 @@
             } else if (mode === 'admin') {
                 document.getElementById('view-admin').classList.remove('hidden');
                 document.getElementById('btn-mode-admin').className = "px-3 py-1.5 rounded-full font-semibold transition bg-fabi-500 text-white shadow-sm text-[11px] flex items-center gap-1.5 shrink-0";
-                renderSalesLog();
+                // Busca a lista atualizada de vendas direto da API ao alternar para a aba Admin
+                fetchVendasFromApi();
             }
 
             if (isAdminAuthenticated) {
@@ -1188,7 +1189,6 @@
             const enderecoCompleto = `${rua}, Nº ${numero} - ${bairro}, ${cidade} - CEP: ${cep}`;
             const emailClienteLogado = loggedCustomer.email;
 
-            // Salva temporariamente para confirmar quando voltar aprovado do Mercado Pago
             localStorage.setItem('fabi_pending_online_order', JSON.stringify({
                 email_cliente: emailClienteLogado,
                 itens: DB.carrinhoStore,
