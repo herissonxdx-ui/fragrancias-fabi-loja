@@ -684,6 +684,7 @@
                         localStorage.removeItem('fabi_pending_online_order');
                         alert('🎉 Pagamento aprovado com sucesso! Seu pedido foi registrado.');
                         window.history.replaceState({}, document.title, window.location.pathname);
+                        fetchVendasFromApi();
                     } catch (e) {
                         console.error('Erro ao confirmar pedido aprovado:', e);
                     }
@@ -996,20 +997,21 @@
                 const res = await fetch(`${API_URL}/vendas`);
                 if (res.ok) {
                     const data = await res.json();
-                    if (data && data.length > 0) {
+                    if (data && Array.isArray(data)) {
                         DB.vendas = data.map(v => ({
-                            origem: v.origem || 'LOJA_FISICA',
-                            metodo_pagamento: v.metodo_pagamento || 'DINHEIRO',
+                            origem: v.origem || 'E-COMMERCE',
+                            metodo_pagamento: v.metodo_pagamento || 'MERCADO_PAGO',
                             endereco: v.endereco_entrega || v.endereco || 'Venda Presencial (Balcão)',
                             total: parseFloat(v.total || v.valor_total || 0)
                         }));
                         localStorage.setItem('fabi_vendas_salvas', JSON.stringify(DB.vendas));
+                        renderSalesLog();
                     }
                 }
             } catch (err) {
                 console.log('Usando vendas do backup local.');
+                renderSalesLog();
             }
-            renderSalesLog();
         }
 
         function setMode(mode) {
@@ -1030,7 +1032,6 @@
             } else if (mode === 'admin') {
                 document.getElementById('view-admin').classList.remove('hidden');
                 document.getElementById('btn-mode-admin').className = "px-3 py-1.5 rounded-full font-semibold transition bg-fabi-500 text-white shadow-sm text-[11px] flex items-center gap-1.5 shrink-0";
-                // Busca a lista atualizada de vendas direto da API ao alternar para a aba Admin
                 fetchVendasFromApi();
             }
 
@@ -1524,16 +1525,6 @@
             });
             localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
 
-            const novaVenda = {
-                origem: 'LOJA_FISICA',
-                metodo_pagamento: metodo + (trocoDevolvido > 0 ? ` (Troco: R$ ${trocoDevolvido.toFixed(2)})` : ''),
-                endereco: 'Venda Presencial (Balcão)',
-                total: subtotalTotal
-            };
-
-            DB.vendas.push(novaVenda);
-            localStorage.setItem('fabi_vendas_salvas', JSON.stringify(DB.vendas));
-
             try {
                 await fetch(`${API_URL}/vendas`, {
                     method: 'POST',
@@ -1541,8 +1532,9 @@
                     body: JSON.stringify({
                         email_cliente: loggedCustomer ? loggedCustomer.email : null,
                         origem: 'LOJA_FISICA',
-                        metodo_pagamento: metodo,
+                        metodo_pagamento: metodo + (trocoDevolvido > 0 ? ` (Troco: R$ ${trocoDevolvido.toFixed(2)})` : ''),
                         itens: DB.carrinhoPdv,
+                        endereco_entrega: 'Venda Presencial (Balcão)',
                         status: 'APROVADO'
                     })
                 });
@@ -1554,7 +1546,7 @@
             renderAdminInventory();
             renderStoreGrid();
             renderPdvQuickGrid();
-            renderSalesLog();
+            fetchVendasFromApi();
         }
 
         function renderAdminInventory() {
@@ -1611,13 +1603,13 @@
         function renderSalesLog() {
             const tbody = document.getElementById('adminSalesTable');
             if (!tbody) return;
-            if (DB.vendas.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-stone-400">Nenhum pedido registrado nesta sessão.</td></tr>`;
+            if (!DB.vendas || DB.vendas.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-stone-400">Nenhum pedido registrado.</td></tr>`;
                 return;
             }
             tbody.innerHTML = DB.vendas.map(v => `
                 <tr class="hover:bg-stone-50">
-                    <td class="p-3 font-bold ${v.origem === 'LOJA_VIRTUAL' ? 'text-blue-600' : 'text-emerald-600'}">${v.origem === 'LOJA_VIRTUAL' ? 'Site (E-Commerce)' : 'Loja Física (PDV)'}</td>
+                    <td class="p-3 font-bold ${v.origem === 'LOJA_VIRTUAL' || v.origem === 'E-COMMERCE' ? 'text-blue-600' : 'text-emerald-600'}">${v.origem === 'LOJA_VIRTUAL' || v.origem === 'E-COMMERCE' ? 'Site (E-Commerce)' : 'Loja Física (PDV)'}</td>
                     <td class="p-3 font-semibold">${v.metodo_pagamento}</td>
                     <td class="p-3 font-medium text-stone-800">${v.endereco}</td>
                     <td class="p-3 text-right font-bold">R$ ${v.total.toFixed(2).replace('.', ',')}</td>
