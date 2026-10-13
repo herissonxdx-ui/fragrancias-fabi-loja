@@ -951,30 +951,27 @@
             alert("Sessão encerrada com sucesso.");
         }
 
+        // BUSCA PERFUMES DIRETO DA API SEMPRE (SINCRONIZAÇÃO MOBILE + DESKTOP)
         async function fetchPerfumesFromApi() {
             try {
                 const res = await fetch(`${API_URL}/perfumes`);
                 if (res.ok) {
                     const data = await res.json();
                     if (data && data.length > 0) {
-                        const localSaved = JSON.parse(localStorage.getItem('fabi_perfumes_local')) || [];
-                        DB.perfumes = data.map(p => {
-                            const foundLocal = localSaved.find(x => x.id === p.id);
-                            return {
-                                id: p.id,
-                                marca: p.marca || 'Importado',
-                                nome: p.nome,
-                                preco: parseFloat(p.preco),
-                                estoque: foundLocal ? foundLocal.estoque : (p.estoque_atual !== undefined ? p.estoque_atual : 10),
-                                codigo_barras: p.codigo_barras || '789100000' + p.id,
-                                imagem: p.imagem_url || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400'
-                            };
-                        });
+                        DB.perfumes = data.map(p => ({
+                            id: p.id,
+                            marca: p.marca || 'Importado',
+                            nome: p.nome,
+                            preco: parseFloat(p.preco),
+                            estoque: p.estoque_atual !== undefined ? parseInt(p.estoque_atual) : 0,
+                            codigo_barras: p.codigo_barras || '789100000' + p.id,
+                            imagem: p.imagem_url || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400'
+                        }));
                         localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
                     }
                 }
             } catch (err) {
-                console.warn('Carregando catálogo local...');
+                console.warn('Erro ao conectar com a API, carregando catálogo local...');
             }
 
             if (!DB.perfumes || DB.perfumes.length === 0) {
@@ -1026,6 +1023,7 @@
             if (mode === 'ecommerce') {
                 document.getElementById('view-ecommerce').classList.remove('hidden');
                 document.getElementById('btn-mode-ecommerce').className = "px-3 py-1.5 rounded-full font-semibold transition bg-fabi-500 text-white shadow-sm text-[11px] flex items-center gap-1.5 shrink-0";
+                fetchPerfumesFromApi();
             } else if (mode === 'pdv') {
                 document.getElementById('view-pdv').classList.remove('hidden');
                 document.getElementById('btn-mode-pdv').className = "px-3 py-1.5 rounded-full font-semibold transition bg-fabi-500 text-white shadow-sm text-[11px] flex items-center gap-1.5 shrink-0";
@@ -1033,6 +1031,7 @@
                 document.getElementById('view-admin').classList.remove('hidden');
                 document.getElementById('btn-mode-admin').className = "px-3 py-1.5 rounded-full font-semibold transition bg-fabi-500 text-white shadow-sm text-[11px] flex items-center gap-1.5 shrink-0";
                 fetchVendasFromApi();
+                fetchPerfumesFromApi();
             }
 
             if (isAdminAuthenticated) {
@@ -1519,12 +1518,6 @@
 
             const subtotalTotal = DB.carrinhoPdv.reduce((acc, i) => acc + ((i.preco_unitario || i.preco) * i.quantidade), 0);
 
-            DB.carrinhoPdv.forEach(item => {
-                const prod = DB.perfumes.find(p => p.id === (item.perfume_id || item.id));
-                if (prod) prod.estoque = Math.max(0, prod.estoque - item.quantidade);
-            });
-            localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
-
             try {
                 await fetch(`${API_URL}/vendas`, {
                     method: 'POST',
@@ -1543,9 +1536,7 @@
             }
 
             clearPdvCart();
-            renderAdminInventory();
-            renderStoreGrid();
-            renderPdvQuickGrid();
+            await fetchPerfumesFromApi();
             fetchVendasFromApi();
         }
 
@@ -1572,6 +1563,7 @@
             `).join('');
         }
 
+        // SALVA AS ALTERAÇÕES DE ESTOQUE DIRETAMENTE NO BANCO DE DADOS DA API
         async function changeStock(id, delta) {
             const perfume = DB.perfumes.find(p => p.id === id);
             if (!perfume) return;
@@ -1583,20 +1575,25 @@
             }
 
             perfume.estoque = novoEstoque;
-            localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
-
             renderAdminInventory();
             renderStoreGrid();
             renderPdvQuickGrid();
 
             try {
-                await fetch(`${API_URL}/perfumes/${id}`, {
+                const res = await fetch(`${API_URL}/perfumes/${id}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ estoque_atual: novoEstoque })
                 });
+
+                if (res.ok) {
+                    localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
+                } else {
+                    alert('Aviso: Não foi possível salvar a alteração de estoque no servidor.');
+                }
             } catch (err) {
-                console.log('Estoque salvo localmente.');
+                console.error('Erro ao atualizar estoque na API:', err);
+                alert('Erro de conexão ao salvar estoque.');
             }
         }
 
@@ -1635,21 +1632,8 @@
             const barcode = document.getElementById('newProdBarcode').value;
             const image = document.getElementById('newProdImage').value || "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400";
 
-            const novoPerfume = {
-                id: DB.perfumes.length + 1,
-                nome: name,
-                marca: brand,
-                preco: price,
-                estoque: stock,
-                codigo_barras: barcode,
-                imagem: image
-            };
-
-            DB.perfumes.push(novoPerfume);
-            localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
-
             try {
-                await fetch(`${API_URL}/perfumes`, {
+                const res = await fetch(`${API_URL}/perfumes`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1661,15 +1645,18 @@
                         imagem_url: image
                     })
                 });
-            } catch (err) {
-                console.log("Salvo localmente.");
-            }
 
-            closeNewProductModal();
-            renderAdminInventory();
-            renderStoreGrid();
-            renderPdvQuickGrid();
-            alert("Perfume cadastrado e salvo com sucesso!");
+                if (res.ok) {
+                    alert("Perfume cadastrado e salvo com sucesso no banco de dados!");
+                    closeNewProductModal();
+                    await fetchPerfumesFromApi();
+                } else {
+                    alert("Erro ao cadastrar produto na API.");
+                }
+            } catch (err) {
+                console.error("Erro ao cadastrar:", err);
+                alert("Falha de conexão com a API.");
+            }
         }
     </script>
 </body>
