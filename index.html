@@ -559,12 +559,14 @@
             <div class="bg-white rounded-2xl border border-stone-200 shadow-xs p-4 sm:p-6 space-y-4">
                 <h3 class="font-serif text-base sm:text-lg font-bold text-stone-900">Relatório de Pedidos & Endereços</h3>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs text-stone-700 min-w-[550px]">
+                    <table class="w-full text-left text-xs text-stone-700 min-w-[750px]">
                         <thead class="bg-stone-50 uppercase text-[10px] text-stone-400 border-b border-stone-200">
                             <tr>
+                                <th class="p-3">Pedido</th>
                                 <th class="p-3">Origem</th>
                                 <th class="p-3">Pagamento</th>
-                                <th class="p-3">Endereço / Detalhes</th>
+                                <th class="p-3">Status</th>
+                                <th class="p-3">Itens / Endereço</th>
                                 <th class="p-3 text-right">Total (R$)</th>
                             </tr>
                         </thead>
@@ -664,32 +666,34 @@
         async function checkPaymentReturn() {
             const urlParams = new URLSearchParams(window.location.search);
             const status = urlParams.get('status');
+            if (!status) return;
 
-            if (status === 'success' || status === 'approved') {
-                const pendingOrder = JSON.parse(localStorage.getItem('fabi_pending_online_order'));
-                if (pendingOrder) {
-                    try {
-                        await fetch(`${API_URL}/vendas`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                email_cliente: pendingOrder.email_cliente,
-                                origem: 'E-COMMERCE',
-                                metodo_pagamento: 'MERCADO_PAGO',
-                                itens: pendingOrder.itens,
-                                endereco_entrega: pendingOrder.endereco_entrega,
-                                status: 'APROVADO'
-                            })
-                        });
-                        localStorage.removeItem('fabi_pending_online_order');
+            const paymentId = urlParams.get('payment_id') || urlParams.get('collection_id');
+            window.history.replaceState({}, document.title, window.location.pathname);
+
+            // O pedido já foi gravado no servidor (PENDENTE) antes do pagamento.
+            // Aqui só pedimos ao servidor para conferir o pagamento direto no Mercado Pago.
+            if (paymentId && paymentId !== 'null' && /^\d+$/.test(paymentId)) {
+                try {
+                    const res = await fetch(`${API_URL}/pagamento/confirmar`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ payment_id: paymentId })
+                    });
+                    const data = await res.json();
+                    if (data.status === 'approved') {
                         alert('🎉 Pagamento aprovado com sucesso! Seu pedido foi registrado.');
-                        window.history.replaceState({}, document.title, window.location.pathname);
-                        fetchVendasFromApi();
-                    } catch (e) {
-                        console.error('Erro ao confirmar pedido aprovado:', e);
+                    } else if (data.status === 'pending' || data.status === 'in_process') {
+                        alert('Pagamento em análise. Assim que for aprovado, seu pedido será confirmado automaticamente.');
                     }
+                } catch (e) {
+                    console.error('Erro ao confirmar pagamento:', e);
                 }
+            } else if (status === 'failure') {
+                alert('O pagamento não foi concluído. Você pode tentar novamente.');
             }
+
+            fetchVendasFromApi();
         }
 
         // --- AUTENTICAÇÃO DE CLIENTES COM VERIFICAÇÃO DE E-MAIL REAL E MEUS PEDIDOS ---
@@ -760,7 +764,7 @@
                                 <span class="font-bold text-xs text-stone-900">Pedido #${p.id}</span>
                                 <span class="text-[10px] text-stone-400">${new Date(p.created_at).toLocaleDateString('pt-BR')}</span>
                             </div>
-                            <p class="text-[11px] text-stone-600">Pagamento: <strong>${p.metodo_pagamento}</strong></p>
+                            <p class="text-[11px] text-stone-600">Pagamento: <strong>${p.metodo_pagamento}</strong> · Status: <strong>${p.status || 'APROVADO'}</strong></p>
                             <p class="text-[11px] text-stone-600">Endereço: ${p.endereco_entrega || p.endereco || 'Loja Física'}</p>
                             <p class="text-xs font-bold text-fabi-600 text-right">R$ ${parseFloat(p.total).toFixed(2).replace('.', ',')}</p>
                         </div>
@@ -996,6 +1000,9 @@
                     const data = await res.json();
                     if (data && Array.isArray(data)) {
                         DB.vendas = data.map(v => ({
+                            id: v.id,
+                            status: v.status || 'APROVADO',
+                            itens: Array.isArray(v.itens) ? v.itens : [],
                             origem: v.origem || 'E-COMMERCE',
                             metodo_pagamento: v.metodo_pagamento || 'MERCADO_PAGO',
                             endereco: v.endereco_entrega || v.endereco || 'Venda Presencial (Balcão)',
@@ -1186,22 +1193,18 @@
             btnCheckout.innerText = 'REDIRECIONANDO PARA O PAGAMENTO...';
             btnCheckout.disabled = true;
 
-            const enderecoCompleto = `${rua}, Nº ${numero} - ${bairro}, ${cidade} - CEP: ${cep}`;
+            const complemento = document.getElementById('deliveryComplement').value.trim();
+            const enderecoCompleto = `${rua}, Nº ${numero}${complemento ? ' (' + complemento + ')' : ''} - ${bairro}, ${cidade} - CEP: ${cep}`;
             const emailClienteLogado = loggedCustomer.email;
-
-            localStorage.setItem('fabi_pending_online_order', JSON.stringify({
-                email_cliente: emailClienteLogado,
-                itens: DB.carrinhoStore,
-                endereco_entrega: enderecoCompleto
-            }));
 
             try {
                 const resCheckout = await fetch(`${API_URL}/pagamento/checkout`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        itens: DB.carrinhoStore,
-                        emailCliente: emailClienteLogado
+                        itens: DB.carrinhoStore.map(i => ({ perfume_id: i.perfume_id, quantidade: i.quantidade })),
+                        emailCliente: emailClienteLogado,
+                        endereco_entrega: enderecoCompleto
                     })
                 });
 
@@ -1210,7 +1213,7 @@
                 if (resCheckout.ok && dataCheckout.init_point) {
                     window.location.href = dataCheckout.init_point;
                 } else {
-                    alert('Não foi possível gerar a tela de pagamento. Tente novamente em instantes.');
+                    alert(dataCheckout.error || 'Não foi possível gerar a tela de pagamento. Tente novamente em instantes.');
                     btnCheckout.innerText = 'FINALIZAR PEDIDO (MERCADO PAGO)';
                     btnCheckout.disabled = false;
                 }
@@ -1601,17 +1604,31 @@
             const tbody = document.getElementById('adminSalesTable');
             if (!tbody) return;
             if (!DB.vendas || DB.vendas.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-stone-400">Nenhum pedido registrado.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-stone-400">Nenhum pedido registrado.</td></tr>`;
                 return;
             }
-            tbody.innerHTML = DB.vendas.map(v => `
+            const badge = (st) => {
+                const cores = {
+                    APROVADO: 'bg-emerald-100 text-emerald-800',
+                    PENDENTE: 'bg-amber-100 text-amber-800',
+                    RECUSADO: 'bg-rose-100 text-rose-700',
+                    CANCELADO: 'bg-stone-200 text-stone-600'
+                };
+                return `<span class="px-2 py-0.5 rounded font-bold text-[10px] ${cores[st] || 'bg-stone-100 text-stone-700'}">${st}</span>`;
+            };
+            tbody.innerHTML = DB.vendas.map(v => {
+                const isSite = v.origem === 'LOJA_VIRTUAL' || v.origem === 'E-COMMERCE';
+                const itensTxt = (v.itens || []).map(i => `${i.quantidade}x ${i.nome || 'Produto #' + i.perfume_id}`).join(', ');
+                return `
                 <tr class="hover:bg-stone-50">
-                    <td class="p-3 font-bold ${v.origem === 'LOJA_VIRTUAL' || v.origem === 'E-COMMERCE' ? 'text-blue-600' : 'text-emerald-600'}">${v.origem === 'LOJA_VIRTUAL' || v.origem === 'E-COMMERCE' ? 'Site (E-Commerce)' : 'Loja Física (PDV)'}</td>
+                    <td class="p-3 font-mono text-stone-500">${v.id ? '#' + v.id : '-'}</td>
+                    <td class="p-3 font-bold ${isSite ? 'text-blue-600' : 'text-emerald-600'}">${isSite ? 'Site (E-Commerce)' : 'Loja Física (PDV)'}</td>
                     <td class="p-3 font-semibold">${v.metodo_pagamento}</td>
-                    <td class="p-3 font-medium text-stone-800">${v.endereco}</td>
+                    <td class="p-3">${badge(v.status || 'APROVADO')}</td>
+                    <td class="p-3 font-medium text-stone-800">${itensTxt ? `<span class="block text-stone-500">${itensTxt}</span>` : ''}${v.endereco}</td>
                     <td class="p-3 text-right font-bold">R$ ${v.total.toFixed(2).replace('.', ',')}</td>
-                </tr>
-            `).join('');
+                </tr>`;
+            }).join('');
         }
 
         function openNewProductModal() {
