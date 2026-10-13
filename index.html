@@ -951,7 +951,6 @@
             alert("Sessão encerrada com sucesso.");
         }
 
-        // BUSCA PERFUMES DIRETO DA API SEMPRE (SINCRONIZAÇÃO MOBILE + DESKTOP)
         async function fetchPerfumesFromApi() {
             try {
                 const res = await fetch(`${API_URL}/perfumes`);
@@ -989,6 +988,7 @@
             renderAdminInventory();
         }
 
+        // BUSCA AS VENDAS DIRETO DA API E ATUALIZA A TABELA IMEDIATAMENTE
         async function fetchVendasFromApi() {
             try {
                 const res = await fetch(`${API_URL}/vendas`);
@@ -1002,13 +1002,12 @@
                             total: parseFloat(v.total || v.valor_total || 0)
                         }));
                         localStorage.setItem('fabi_vendas_salvas', JSON.stringify(DB.vendas));
-                        renderSalesLog();
                     }
                 }
             } catch (err) {
-                console.log('Usando vendas do backup local.');
-                renderSalesLog();
+                console.log('Erro ao consultar API, usando backup local:', err);
             }
+            renderSalesLog();
         }
 
         function setMode(mode) {
@@ -1597,19 +1596,24 @@
             }
         }
 
+        // RENDERIZA AS VENDAS RENDERIZADAS DA API NA TABELA DE ADMIN
         function renderSalesLog() {
             const tbody = document.getElementById('adminSalesTable');
             if (!tbody) return;
+
             if (!DB.vendas || DB.vendas.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-stone-400">Nenhum pedido registrado.</td></tr>`;
                 return;
             }
+
             tbody.innerHTML = DB.vendas.map(v => `
-                <tr class="hover:bg-stone-50">
-                    <td class="p-3 font-bold ${v.origem === 'LOJA_VIRTUAL' || v.origem === 'E-COMMERCE' ? 'text-blue-600' : 'text-emerald-600'}">${v.origem === 'LOJA_VIRTUAL' || v.origem === 'E-COMMERCE' ? 'Site (E-Commerce)' : 'Loja Física (PDV)'}</td>
-                    <td class="p-3 font-semibold">${v.metodo_pagamento}</td>
-                    <td class="p-3 font-medium text-stone-800">${v.endereco}</td>
-                    <td class="p-3 text-right font-bold">R$ ${v.total.toFixed(2).replace('.', ',')}</td>
+                <tr class="hover:bg-stone-50 border-b border-stone-100">
+                    <td class="p-3 font-bold ${v.origem === 'LOJA_VIRTUAL' || v.origem === 'E-COMMERCE' ? 'text-blue-600' : 'text-emerald-600'}">
+                        ${v.origem === 'LOJA_VIRTUAL' || v.origem === 'E-COMMERCE' ? 'Site (E-Commerce)' : 'Loja Física (PDV)'}
+                    </td>
+                    <td class="p-3 font-semibold text-stone-800">${v.metodo_pagamento}</td>
+                    <td class="p-3 font-medium text-stone-700">${v.endereco}</td>
+                    <td class="p-3 text-right font-bold text-stone-900">R$ ${v.total.toFixed(2).replace('.', ',')}</td>
                 </tr>
             `).join('');
         }
