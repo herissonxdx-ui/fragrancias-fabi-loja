@@ -555,13 +555,14 @@
                 </div>
             </div>
 
-            <!-- Relatório de Pedidos & Endereços -->
+            <!-- Relatório de Pedidos & Endereços (COM DATA / HORA E ORDENAÇÃO RECENTE) -->
             <div class="bg-white rounded-2xl border border-stone-200 shadow-xs p-4 sm:p-6 space-y-4">
                 <h3 class="font-serif text-base sm:text-lg font-bold text-stone-900">Relatório de Pedidos & Endereços</h3>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs text-stone-700 min-w-[550px]">
+                    <table class="w-full text-left text-xs text-stone-700 min-w-[650px]">
                         <thead class="bg-stone-50 uppercase text-[10px] text-stone-400 border-b border-stone-200">
                             <tr>
+                                <th class="p-3">Data / Hora</th>
                                 <th class="p-3">Origem</th>
                                 <th class="p-3">Pagamento</th>
                                 <th class="p-3">Endereço / Detalhes</th>
@@ -660,7 +661,6 @@
             }
         };
 
-        // CORREÇÃO DE SEGURANÇA: O FRONTEND APENAS AVISA O CLIENTE. O REGISTRO DE VENDA OCORRE VIA WEBHOOK NO SERVIDOR.
         function checkPaymentReturn() {
             const urlParams = new URLSearchParams(window.location.search);
             const status = urlParams.get('status');
@@ -748,7 +748,7 @@
                         <div class="p-3 bg-stone-50 border border-stone-200 rounded-xl space-y-1 mb-2">
                             <div class="flex justify-between items-center">
                                 <span class="font-bold text-xs text-stone-900">Pedido #${p.id}</span>
-                                <span class="text-[10px] text-stone-400">${new Date(p.created_at).toLocaleDateString('pt-BR')}</span>
+                                <span class="text-[10px] text-stone-400">${new Date(p.created_at || Date.now()).toLocaleDateString('pt-BR')}</span>
                             </div>
                             <p class="text-[11px] text-stone-600">Pagamento: <strong>${p.metodo_pagamento}</strong></p>
                             <p class="text-[11px] text-stone-600">Endereço: ${p.endereco_entrega || p.endereco || 'Loja Física'}</p>
@@ -978,7 +978,7 @@
             renderAdminInventory();
         }
 
-        // BUSCA VENDAS DA API E COMBINA COM AS SALVAS NO DISPOSITIVO
+        // BUSCA VENDAS DA API E ARMAZENA A DATA DE CRIAÇÃO
         async function fetchVendasFromApi() {
             try {
                 const res = await fetch(`${API_URL}/vendas`);
@@ -992,7 +992,8 @@
                                 origem: (v.origem || 'E-COMMERCE').toUpperCase(),
                                 metodo_pagamento: v.metodo_pagamento || v.metodo || 'MERCADO_PAGO',
                                 endereco: v.endereco_entrega || v.endereco || 'Venda Presencial (Balcão)',
-                                total: parseFloat(rawTotal) || 0
+                                total: parseFloat(rawTotal) || 0,
+                                created_at: v.created_at || null
                             };
                         });
 
@@ -1199,7 +1200,8 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         itens: DB.carrinhoStore,
-                        emailCliente: emailClienteLogado
+                        emailCliente: emailClienteLogado,
+                        endereco: enderecoCompleto
                     })
                 });
 
@@ -1520,7 +1522,8 @@
                 origem: 'LOJA_FISICA',
                 metodo_pagamento: metodo + (trocoDevolvido > 0 ? ` (Troco: R$ ${trocoDevolvido.toFixed(2)})` : ''),
                 endereco: 'Venda Presencial (Balcão)',
-                total: subtotalTotal
+                total: subtotalTotal,
+                created_at: new Date().toISOString()
             };
 
             // 1. Exibe na tela imediatamente
@@ -1574,7 +1577,6 @@
             `).join('');
         }
 
-        // SALVA AS ALTERAÇÕES DE ESTOQUE DIRETAMENTE NO BANCO DE DADOS DA API
         async function changeStock(id, delta) {
             const perfume = DB.perfumes.find(p => p.id === id);
             if (!perfume) return;
@@ -1608,23 +1610,45 @@
             }
         }
 
-        // RENDERIZA A TABELA DE VENDAS COM VALIDAÇÃO SEGURA
+        // RENDERIZA A TABELA DE VENDAS ORDENADA DA MAIS RECENTE PARA A MAIS ANTIGA
         function renderSalesLog() {
             const tbody = document.getElementById('adminSalesTable');
             if (!tbody) return;
 
             if (!DB.vendas || DB.vendas.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-stone-400">Nenhum pedido registrado até o momento.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-stone-400">Nenhum pedido registrado até o momento.</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = DB.vendas.map(v => {
+            // Ordena cronologicamente do mais recente para o mais antigo
+            const vendasOrdenadas = [...DB.vendas].sort((a, b) => {
+                const dateA = new Date(a.created_at || a.id || 0).getTime();
+                const dateB = new Date(b.created_at || b.id || 0).getTime();
+                return dateB - dateA;
+            });
+
+            tbody.innerHTML = vendasOrdenadas.map(v => {
                 const isOnline = v.origem === 'E-COMMERCE' || v.origem === 'LOJA_VIRTUAL' || v.origem === 'SITE';
                 const badgeCor = isOnline ? 'text-blue-600 bg-blue-50' : 'text-emerald-600 bg-emerald-50';
                 const origemTexto = isOnline ? 'Site (E-Commerce)' : 'Loja Física (PDV)';
 
+                let dataHoraFormatada = 'Recente';
+                if (v.created_at || v.id) {
+                    const dateObj = new Date(v.created_at || v.id);
+                    if (!isNaN(dateObj.getTime())) {
+                        dataHoraFormatada = dateObj.toLocaleString('pt-BR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                    }
+                }
+
                 return `
                     <tr class="hover:bg-stone-50 border-b border-stone-100">
+                        <td class="p-3 font-mono text-stone-600 text-[11px] whitespace-nowrap">${dataHoraFormatada}</td>
                         <td class="p-3">
                             <span class="px-2 py-1 rounded-md text-[11px] font-bold ${badgeCor}">
                                 ${origemTexto}
