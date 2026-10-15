@@ -229,7 +229,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE CADASTRO E LOGIN DE CLIENTES COM VERIFICAÇÃO DE E-MAIL REAL E MEUS PEDIDOS -->
+    <!-- MODAL DE CADASTRO E LOGIN DE CLIENTES -->
     <div id="customerAuthModal" class="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <div class="flex justify-between items-center border-b border-stone-100 pb-3">
@@ -421,7 +421,7 @@
         </div>
     </div>
 
-    <!-- MODAL REAL MERCADO PAGO PIX AUTOMÁTICO -->
+    <!-- MODAL MERCADO PAGO PIX AUTOMÁTICO -->
     <div id="pdvPixModal" class="fixed inset-0 z-50 bg-stone-900/80 backdrop-blur-xs hidden flex items-center justify-center p-4">
         <div class="bg-stone-800 border border-stone-700 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-stone-100 text-center">
             <div class="flex justify-between items-center border-b border-stone-700 pb-3">
@@ -555,7 +555,7 @@
                 </div>
             </div>
 
-            <!-- Relatório de Pedidos & Endereços (COM DATA / HORA E ORDENAÇÃO RECENTE) -->
+            <!-- Relatório de Pedidos & Endereços -->
             <div class="bg-white rounded-2xl border border-stone-200 shadow-xs p-4 sm:p-6 space-y-4">
                 <h3 class="font-serif text-base sm:text-lg font-bold text-stone-900">Relatório de Pedidos & Endereços</h3>
                 <div class="overflow-x-auto">
@@ -682,7 +682,7 @@
             }
         }
 
-        // --- AUTENTICAÇÃO DE CLIENTES COM VERIFICAÇÃO DE E-MAIL REAL E MEUS PEDIDOS ---
+        // --- AUTENTICAÇÃO DE CLIENTES ---
         function openCustomerAuthModal() {
             const step1 = document.getElementById('custAuthStep1');
             const step2 = document.getElementById('custAuthStep2');
@@ -978,7 +978,6 @@
             renderAdminInventory();
         }
 
-        // BUSCA VENDAS DA API E ARMAZENA A DATA DE CRIAÇÃO
         async function fetchVendasFromApi() {
             try {
                 const res = await fetch(`${API_URL}/vendas`);
@@ -993,6 +992,7 @@
                                 metodo_pagamento: v.metodo_pagamento || v.metodo || 'MERCADO_PAGO',
                                 endereco: v.endereco_entrega || v.endereco || 'Venda Presencial (Balcão)',
                                 total: parseFloat(rawTotal) || 0,
+                                itens: v.itens || null,
                                 created_at: v.created_at || null
                             };
                         });
@@ -1118,6 +1118,23 @@
             else drawer.classList.add('hidden');
         }
 
+        function changeStoreCartQty(index, delta) {
+            if (!DB.carrinhoStore[index]) return;
+            const item = DB.carrinhoStore[index];
+            const p = DB.perfumes.find(x => x.id === item.perfume_id);
+
+            if (delta > 0 && p && item.quantidade + 1 > p.estoque) {
+                alert(`Estoque máximo atingido (${p.estoque} unidades).`);
+                return;
+            }
+
+            item.quantidade += delta;
+            if (item.quantidade <= 0) {
+                DB.carrinhoStore.splice(index, 1);
+            }
+            renderCartDrawer();
+        }
+
         function renderCartDrawer() {
             const container = document.getElementById('cartDrawerItems');
             const badge = document.getElementById('cartCountBadge');
@@ -1144,7 +1161,12 @@
                         <div class="flex-1 px-3">
                             <h4 class="font-bold text-[11px] sm:text-xs uppercase text-stone-800">${item.marca}</h4>
                             <p class="text-[10px] text-stone-500 line-clamp-1">${item.nome}</p>
-                            <span class="text-xs font-bold text-stone-900">R$ ${item.preco_unitario.toFixed(2).replace('.', ',')} x ${item.quantidade}</span>
+                            <span class="text-xs font-bold text-stone-900">R$ ${item.preco_unitario.toFixed(2).replace('.', ',')} un.</span>
+                        </div>
+                        <div class="flex items-center gap-1 mr-2">
+                            <button onclick="changeStoreCartQty(${index}, -1)" class="w-6 h-6 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold rounded text-xs transition">-</button>
+                            <span class="text-xs font-bold w-4 text-center">${item.quantidade}</span>
+                            <button onclick="changeStoreCartQty(${index}, 1)" class="w-6 h-6 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold rounded text-xs transition">+</button>
                         </div>
                         <button onclick="removeFromStoreCart(${index})" class="text-stone-400 hover:text-rose-500 p-1"><i class="fa-solid fa-trash text-xs"></i></button>
                     </div>
@@ -1512,7 +1534,7 @@
             document.getElementById('pdvPixModal').classList.add('hidden');
         }
 
-        // CONCLUI VENDA NO PDV E GRAVA NA HORA
+        // CONCLUI VENDA NO PDV
         async function finishPdvSale(metodo, trocoDevolvido = 0) {
             if (DB.carrinhoPdv.length === 0) return;
 
@@ -1523,15 +1545,14 @@
                 metodo_pagamento: metodo + (trocoDevolvido > 0 ? ` (Troco: R$ ${trocoDevolvido.toFixed(2)})` : ''),
                 endereco: 'Venda Presencial (Balcão)',
                 total: subtotalTotal,
+                itens: JSON.stringify(DB.carrinhoPdv),
                 created_at: new Date().toISOString()
             };
 
-            // 1. Exibe na tela imediatamente
             DB.vendas.unshift(novaVenda);
             localStorage.setItem('fabi_vendas_salvas', JSON.stringify(DB.vendas));
             renderSalesLog();
 
-            // 2. Envia para a API no Render
             try {
                 await fetch(`${API_URL}/vendas`, {
                     method: 'POST',
@@ -1610,7 +1631,7 @@
             }
         }
 
-        // RENDERIZA A TABELA DE VENDAS ORDENADA DA MAIS RECENTE PARA A MAIS ANTIGA
+        // RENDERIZA A TABELA DE VENDAS
         function renderSalesLog() {
             const tbody = document.getElementById('adminSalesTable');
             if (!tbody) return;
@@ -1620,7 +1641,6 @@
                 return;
             }
 
-            // Ordena cronologicamente do mais recente para o mais antigo
             const vendasOrdenadas = [...DB.vendas].sort((a, b) => {
                 const dateA = new Date(a.created_at || a.id || 0).getTime();
                 const dateB = new Date(b.created_at || b.id || 0).getTime();
@@ -1646,6 +1666,18 @@
                     }
                 }
 
+                let itensFormatados = '<span class="text-[10px] text-stone-400">Itens não detalhados</span>';
+                if (v.itens) {
+                    try {
+                        const lista = typeof v.itens === 'string' ? JSON.parse(v.itens) : v.itens;
+                        if (Array.isArray(lista) && lista.length > 0) {
+                            itensFormatados = lista.map(i => `• <strong>${i.quantidade || 1}x</strong> ${i.nome || i.marca || 'Perfume'}`).join('<br>');
+                        }
+                    } catch (e) {
+                        itensFormatados = `<span class="text-[10px] text-stone-500">${v.itens}</span>`;
+                    }
+                }
+
                 return `
                     <tr class="hover:bg-stone-50 border-b border-stone-100">
                         <td class="p-3 font-mono text-stone-600 text-[11px] whitespace-nowrap">${dataHoraFormatada}</td>
@@ -1655,7 +1687,12 @@
                             </span>
                         </td>
                         <td class="p-3 font-semibold text-stone-800">${v.metodo_pagamento}</td>
-                        <td class="p-3 font-medium text-stone-700">${v.endereco}</td>
+                        <td class="p-3 font-medium text-stone-700">
+                            <div>${v.endereco}</div>
+                            <div class="mt-1 p-1.5 bg-stone-50 rounded border border-stone-200 text-[11px] leading-tight text-stone-800">
+                                <strong>Produtos:</strong><br>${itensFormatados}
+                            </div>
+                        </td>
                         <td class="p-3 text-right font-bold text-stone-900">R$ ${v.total.toFixed(2).replace('.', ',')}</td>
                     </tr>
                 `;
@@ -1706,109 +1743,6 @@
                 alert("Falha de conexão com a API.");
             }
         }
-        <!-- ... (todas as tuas 1700 linhas de código) ... -->
-
-    <script>
-        // ... todo o teu código JavaScript antigo ...
-
-
-        // =========================================================
-        // COLA ESTAS TRÊS FUNÇÕES AQUI NO FINAL DO TEU SCRIPT:
-        // =========================================================
-
-        function alterarQuantidadeSacola(index, delta) {
-            if (!carrinho[index]) return;
-
-            carrinho[index].quantidade = (carrinho[index].quantidade || 1) + delta;
-
-            if (carrinho[index].quantidade <= 0) {
-                carrinho.splice(index, 1);
-            }
-
-            localStorage.setItem('fabi_carrinho', JSON.stringify(carrinho));
-            atualizarSacola();
-        }
-
-        function atualizarSacola() {
-            document.getElementById('count-sacola').innerText = carrinho.reduce((sum, i) => sum + (i.quantidade || 1), 0);
-            const container = document.getElementById('itens-sacola');
-            if (!container) return;
-
-            if (carrinho.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#888; padding:20px;">Sua sacola está vazia.</p>';
-                document.getElementById('total-sacola').innerText = 'R$ 0,00';
-                return;
-            }
-
-            let total = 0;
-            container.innerHTML = carrinho.map((item, index) => {
-                const subtotal = (Number(item.preco) || 0) * (item.quantidade || 1);
-                total += subtotal;
-
-                return `
-                    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #E8DBCB;">
-                        <div>
-                            <strong>${item.nome || item.marca}</strong><br>
-                            <small style="color:#A47E50;">R$ ${Number(item.preco).toFixed(2).replace('.', ',')} un.</small>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <button class="btn-qtd" onclick="alterarQuantidadeSacola(${index}, -1)" style="background:#FAF8F5; border:1px solid #C09A6B; color:#A47E50; width:28px; height:28px; border-radius:4px; font-weight:bold; cursor:pointer;">-</button>
-                            <span style="font-weight:bold; width:20px; text-align:center;">${item.quantidade || 1}</span>
-                            <button class="btn-qtd" onclick="alterarQuantidadeSacola(${index}, 1)" style="background:#FAF8F5; border:1px solid #C09A6B; color:#A47E50; width:28px; height:28px; border-radius:4px; font-weight:bold; cursor:pointer;">+</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            document.getElementById('total-sacola').innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
-        }
-
-        function renderizarVendas(vendas) {
-            const tbody = document.getElementById('tabela-vendas-body');
-            if (!tbody) return;
-
-            if (!vendas || vendas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:#888;">Nenhuma venda registrada.</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = vendas.map(venda => {
-                const dataFormatada = venda.created_at ? new Date(venda.created_at).toLocaleString('pt-BR') : 'Data N/D';
-
-                let itensFormatados = '<small style="color:#888;">Itens não detalhados</small>';
-                if (venda.itens) {
-                    try {
-                        const lista = typeof venda.itens === 'string' ? JSON.parse(venda.itens) : venda.itens;
-                        if (Array.isArray(lista) && lista.length > 0) {
-                            itensFormatados = lista.map(i => `• <strong>${i.quantidade || 1}x</strong> ${i.nome || i.marca || 'Perfume'}`).join('<br>');
-                        }
-                    } catch (e) {
-                        itensFormatados = `<small style="color:#666;">${venda.itens}</small>`;
-                    }
-                }
-
-                return `
-                    <tr style="border-bottom: 1px solid #E8DBCB;">
-                        <td style="padding: 12px; font-size:13px;">${dataFormatada}</td>
-                        <td style="padding: 12px;"><span style="background:#EBF5FF; color:#0066CC; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold;">${venda.origem || 'E-COMMERCE'}</span></td>
-                        <td style="padding: 12px; font-weight:bold; font-size:12px;">${venda.metodo_pagamento || 'MERCADO_PAGO'}</td>
-                        <td style="padding: 12px; font-size:12px; line-height:1.4;">
-                            <div><strong>Endereço:</strong> ${venda.endereco_entrega || 'N/A'}</div>
-                            <div style="margin-top:5px; background:#FAF8F5; padding:6px; border-radius:4px; border:1px solid #E8DBCB;">
-                                <strong>Produtos:</strong><br>${itensFormatados}
-                            </div>
-                        </td>
-                        <td style="padding: 12px; text-align:right; font-weight:bold; color:#A47E50; font-size:14px;">
-                            R$ ${Number(venda.total || 0).toFixed(2).replace('.', ',')}
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-    </script>
-</body>
-</html>
     </script>
 </body>
 </html>
