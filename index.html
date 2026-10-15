@@ -1,1713 +1,468 @@
-<!DOCTYPE html>
-<html lang="pt-BR" class="h-full bg-stone-50 text-stone-900">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fragrâncias Fabi — Parfumerie & Cosmetiques</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome 6 Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        fabi: {
-                            50: '#FAF8F5',
-                            100: '#F5EFE6',
-                            200: '#E8DBCB',
-                            500: '#C09A6B',
-                            600: '#A47E50',
-                            800: '#523E27',
-                            900: '#2A1F13',
-                        }
-                    },
-                    fontFamily: {
-                        serif: ['Playfair Display', 'serif'],
-                        sans: ['Plus Jakarta Sans', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #c09a6b; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #a47e50; }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        @keyframes popIn {
-            0% { transform: scale(0.5); opacity: 0; }
-            80% { transform: scale(1.1); }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        .animate-pop-in {
-            animation: popIn 0.4s ease-out forwards;
-        }
-    </style>
-</head>
-<body class="h-full flex flex-col font-sans bg-stone-50 text-stone-800 antialiased selection:bg-fabi-500 selection:text-white">
-
-    <!-- BARRA EXCLUSIVA DO GESTOR -->
-    <div id="adminTopBar" class="hidden bg-stone-900 text-stone-300 px-4 py-2.5 text-xs flex-wrap justify-between items-center border-b border-stone-800 z-50 sticky top-0 shadow-md">
-        <div class="flex items-center space-x-2 my-1">
-            <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span class="font-bold text-white uppercase tracking-wider text-[11px]">SISTEMA DE GESTÃO ATIVO</span>
-        </div>
-        <div class="flex items-center space-x-1 sm:space-x-2 my-1 overflow-x-auto">
-            <button onclick="setMode('ecommerce')" id="btn-mode-ecommerce" class="px-3 py-1.5 rounded-full font-semibold transition bg-fabi-500 text-white shadow-sm text-[11px] flex items-center gap-1.5 shrink-0">
-                <i class="fa-solid fa-store"></i> <span>Loja Virtual</span>
-            </button>
-            <button onclick="setMode('pdv')" id="btn-mode-pdv" class="px-3 py-1.5 rounded-full font-semibold transition hover:bg-stone-800 text-stone-300 text-[11px] flex items-center gap-1.5 shrink-0">
-                <i class="fa-solid fa-cash-register"></i> <span>PDV Balcão</span>
-            </button>
-            <button onclick="setMode('admin')" id="btn-mode-admin" class="px-3 py-1.5 rounded-full font-semibold transition hover:bg-stone-800 text-stone-300 text-[11px] flex items-center gap-1.5 shrink-0">
-                <i class="fa-solid fa-chart-pie"></i> <span>Painel Admin & Estoque</span>
-            </button>
-            <button onclick="logoutAdmin()" class="px-3 py-1.5 rounded-full font-semibold transition bg-rose-900/80 hover:bg-rose-800 text-rose-200 text-[11px] flex items-center gap-1.5 ml-2 shrink-0">
-                <i class="fa-solid fa-right-from-bracket"></i> <span>Sair</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- 1. VISÃO LOJA VIRTUAL -->
-    <div id="view-ecommerce" class="flex-1 flex flex-col overflow-y-auto">
-        <div class="bg-stone-950 text-stone-300 py-2 text-center text-[10px] sm:text-xs font-medium tracking-widest uppercase border-b border-stone-800 px-2">
-            Frete cortesia nas compras acima de R$199 para todo o Brasil • 100% Originais
-        </div>
-
-        <header class="bg-white border-b border-stone-200 sticky top-0 z-40 shadow-xs">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between h-16 sm:h-20">
-                    <button onclick="toggleMobileNav()" class="lg:hidden text-stone-800 p-2 focus:outline-none">
-                        <i class="fa-solid fa-bars text-xl"></i>
-                    </button>
-
-                    <div class="flex-shrink-0 cursor-pointer text-center lg:text-left" onclick="filterBrand('ALL')">
-                        <h1 class="font-serif text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-stone-900">
-                            FRAGRÂNCIAS <span class="italic text-fabi-500 font-normal">FABI</span>
-                        </h1>
-                    </div>
-
-                    <nav class="hidden lg:flex space-x-6 xl:space-x-8 text-xs font-semibold text-stone-700 uppercase tracking-wider">
-                        <a href="#" onclick="event.preventDefault(); filterBrand('ALL')" class="hover:text-fabi-500 transition">Novidades</a>
-                        <a href="#" onclick="event.preventDefault(); filterBrand('Nicho')" class="hover:text-fabi-500 transition">Nicho</a>
-                        <a href="#" onclick="event.preventDefault(); filterBrand('ALL')" class="text-fabi-600 font-bold border-b-2 border-fabi-500 pb-1">Fragrâncias</a>
-                        <a href="#" onclick="event.preventDefault()" class="hover:text-fabi-500 transition">Skin Care</a>
-                        <a href="#" onclick="event.preventDefault()" class="hover:text-fabi-500 transition">Maquiagem</a>
-                    </nav>
-
-                    <div class="flex items-center space-x-3 sm:space-x-4">
-                        <button id="customerAuthBtn" onclick="openCustomerAuthModal()" class="text-stone-700 hover:text-fabi-600 text-xs font-semibold flex items-center gap-1.5 transition px-2 py-1 rounded-md hover:bg-stone-100">
-                            <i class="fa-solid fa-user text-sm text-fabi-500"></i>
-                            <span id="customerAuthName" class="hidden md:inline">Entrar / Criar Conta</span>
-                        </button>
-
-                        <button id="managerLoginBtn" onclick="openLoginModal()" class="text-stone-600 hover:text-fabi-600 text-xs font-semibold flex items-center gap-1.5 transition px-2 py-1 rounded-md hover:bg-stone-100">
-                            <i class="fa-solid fa-user-lock text-sm"></i>
-                            <span class="hidden md:inline">Área do Gestor</span>
-                        </button>
-
-                        <button onclick="toggleCartDrawer(true)" class="relative flex items-center bg-stone-900 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-stone-800 transition">
-                            <i class="fa-solid fa-bag-shopping text-sm sm:text-base mr-1.5 sm:mr-2"></i>
-                            <span class="text-xs font-bold uppercase tracking-wider hidden sm:inline">Sacola</span>
-                            <span id="cartCountBadge" class="bg-fabi-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1 sm:ml-2">0</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="mobileNav" class="hidden lg:hidden bg-white border-b border-stone-200 px-4 py-3 space-y-2 text-xs font-semibold uppercase tracking-wider border-t">
-                <a href="#" onclick="toggleMobileNav(); filterBrand('ALL');" class="block py-2 text-stone-800 hover:text-fabi-500">Novidades</a>
-                <a href="#" onclick="toggleMobileNav(); filterBrand('Nicho');" class="block py-2 text-stone-800 hover:text-fabi-500">Perfumes de Nicho</a>
-                <a href="#" onclick="toggleMobileNav(); filterBrand('ALL');" class="block py-2 text-fabi-600 font-bold">Todas as Fragrâncias</a>
-                <a href="#" onclick="toggleMobileNav(); openCustomerAuthModal();" class="block py-2 text-stone-700 border-t border-stone-100 pt-3">
-                    <i class="fa-solid fa-user mr-1.5 text-fabi-500"></i> Minha Conta
-                </a>
-                <a href="#" onclick="toggleMobileNav(); openLoginModal();" class="block py-2 text-stone-500">
-                    <i class="fa-solid fa-lock mr-1.5 text-stone-400"></i> Área do Gestor
-                </a>
-            </div>
-        </header>
-
-        <!-- Filtros por Marca -->
-        <div class="bg-white border-b border-stone-200 py-3 sm:py-4">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center space-x-2 overflow-x-auto hide-scrollbar py-1">
-                    <button onclick="filterBrand('ALL')" id="pill-ALL" class="brand-pill px-3.5 py-1.5 sm:px-4 sm:py-2 bg-stone-900 text-white text-[11px] sm:text-xs font-bold rounded-md uppercase tracking-wider shrink-0 transition">Todos os Filtros</button>
-                    <button onclick="filterBrand('Carolina Herrera')" id="pill-Carolina Herrera" class="brand-pill px-3.5 py-1.5 sm:px-4 sm:py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-[11px] sm:text-xs font-semibold rounded-md uppercase tracking-wider shrink-0 transition">Carolina Herrera</button>
-                    <button onclick="filterBrand('Paco Rabanne')" id="pill-Paco Rabanne" class="brand-pill px-3.5 py-1.5 sm:px-4 sm:py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-[11px] sm:text-xs font-semibold rounded-md uppercase tracking-wider shrink-0 transition">Paco Rabanne</button>
-                    <button onclick="filterBrand('Creed')" id="pill-Creed" class="brand-pill px-3.5 py-1.5 sm:px-4 sm:py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-[11px] sm:text-xs font-semibold rounded-md uppercase tracking-wider shrink-0 transition">Creed</button>
-                    <button onclick="filterBrand('Parfums De Marly')" id="pill-Parfums De Marly" class="brand-pill px-3.5 py-1.5 sm:px-4 sm:py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-[11px] sm:text-xs font-semibold rounded-md uppercase tracking-wider shrink-0 transition">Parfums De Marly</button>
-                    <button onclick="filterBrand('Dolce&Gabbana')" id="pill-Dolce&Gabbana" class="brand-pill px-3.5 py-1.5 sm:px-4 sm:py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-[11px] sm:text-xs font-semibold rounded-md uppercase tracking-wider shrink-0 transition">Dolce&Gabbana</button>
-                    <button onclick="filterBrand('Jean Paul Gaultier')" id="pill-Jean Paul Gaultier" class="brand-pill px-3.5 py-1.5 sm:px-4 sm:py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-[11px] sm:text-xs font-semibold rounded-md uppercase tracking-wider shrink-0 transition">Jean Paul Gaultier</button>
-                </div>
-            </div>
-        </div>
-
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full">
-            <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"></div>
-        </main>
-
-        <footer class="bg-stone-900 text-stone-400 border-t border-stone-800 mt-12 py-8 sm:py-12">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-xs">
-                <div>
-                    <h3 class="font-serif text-base sm:text-lg font-bold text-white mb-2">Fragrâncias Fabi</h3>
-                    <p class="text-stone-400 leading-relaxed">Ateliê exclusivo especializado em alta perfumaria importada e cosméticos de luxo originais.</p>
-                </div>
-                <div>
-                    <h4 class="font-bold text-white uppercase tracking-wider mb-2 sm:mb-3">Atendimento</h4>
-                    <p class="mb-1"><i class="fa-brands fa-whatsapp text-emerald-400 mr-1.5"></i> (11) 98888-7777</p>
-                </div>
-                <div>
-                    <h4 class="font-bold text-white uppercase tracking-wider mb-2 sm:mb-3">Pagamento Seguro</h4>
-                    <p class="text-stone-400">PIX Instantâneo e Cartão de Crédito em até 10x via Mercado Pago.</p>
-                </div>
-                <div>
-                    <h4 class="font-bold text-white uppercase tracking-wider mb-2 sm:mb-3">Garantia</h4>
-                    <p class="text-stone-400"><i class="fa-solid fa-shield-halved text-fabi-500 mr-1.5"></i> Produtos 100% Originais.</p>
-                </div>
-            </div>
-        </footer>
-    </div>
-
-    <!-- SACOLA LATERAL -->
-    <div id="cartDrawer" class="fixed inset-0 z-50 overflow-hidden hidden">
-        <div onclick="toggleCartDrawer(false)" class="absolute inset-0 bg-stone-900/60 backdrop-blur-xs transition-opacity"></div>
-        <div class="fixed inset-y-0 right-0 max-w-full flex pl-6 sm:pl-10">
-            <div class="w-screen max-w-md bg-white shadow-2xl flex flex-col justify-between">
-                <div class="p-4 sm:p-6 border-b border-stone-200 flex items-center justify-between">
-                    <h2 class="font-serif text-base sm:text-lg font-bold text-stone-900 flex items-center">
-                        <i class="fa-solid fa-bag-shopping text-fabi-500 mr-2"></i> Sua Sacola
-                    </h2>
-                    <button onclick="toggleCartDrawer(false)" class="text-stone-400 hover:text-stone-600 p-2"><i class="fa-solid fa-xmark text-lg"></i></button>
-                </div>
-
-                <div id="cartDrawerItems" class="p-4 sm:p-6 overflow-y-auto flex-1 divide-y divide-stone-100"></div>
-
-                <div class="px-4 sm:px-6 py-3 bg-stone-100 border-t border-stone-200 space-y-2 text-xs">
-                    <h4 class="font-bold text-stone-800 uppercase tracking-wider text-[11px] mb-1">
-                        <i class="fa-solid fa-truck-fast text-fabi-500 mr-1"></i> Endereço para Entrega
-                    </h4>
-                    <div class="grid grid-cols-3 gap-2">
-                        <input type="text" id="deliveryCep" placeholder="CEP" class="col-span-1 p-2 bg-white border border-stone-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
-                        <input type="text" id="deliveryCity" placeholder="Cidade / UF" class="col-span-2 p-2 bg-white border border-stone-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
-                    </div>
-                    <input type="text" id="deliveryStreet" placeholder="Rua / Avenida" class="w-full p-2 bg-white border border-stone-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
-                    <div class="grid grid-cols-3 gap-2">
-                        <input type="text" id="deliveryNumber" placeholder="Número" class="col-span-1 p-2 bg-white border border-stone-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
-                        <input type="text" id="deliveryNeighborhood" placeholder="Bairro" class="col-span-2 p-2 bg-white border border-stone-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
-                    </div>
-                    <input type="text" id="deliveryComplement" placeholder="Complemento (Apto, Bloco...)" class="w-full p-2 bg-white border border-stone-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
-                </div>
-
-                <div class="p-4 sm:p-6 border-t border-stone-200 bg-stone-50 space-y-3">
-                    <div class="flex justify-between text-xs text-stone-500">
-                        <span>Frete:</span>
-                        <span class="text-emerald-600 font-bold">CORTESIA</span>
-                    </div>
-                    <div class="flex justify-between text-base font-bold text-stone-900">
-                        <span>Subtotal:</span>
-                        <span id="cartDrawerSubtotal" class="font-serif text-lg text-fabi-600">R$ 0,00</span>
-                    </div>
-
-                    <div id="mpModalContainer" class="w-full">
-                        <button onclick="checkoutStoreOrder()" id="btnStoreCheckout" disabled class="w-full py-3.5 bg-stone-900 hover:bg-stone-800 disabled:opacity-40 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition shadow-md">
-                            Finalizar Pedido (Mercado Pago)
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DE CADASTRO E LOGIN DE CLIENTES COM VERIFICAÇÃO DE E-MAIL REAL E MEUS PEDIDOS -->
-    <div id="customerAuthModal" class="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <div class="flex justify-between items-center border-b border-stone-100 pb-3">
-                <h3 class="font-serif font-bold text-stone-900 text-base flex items-center gap-2">
-                    <i class="fa-solid fa-user text-fabi-500"></i> Conta do Cliente
-                </h3>
-                <button onclick="closeCustomerAuthModal()" class="text-stone-400 hover:text-stone-600"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-
-            <!-- PERFIL E MEUS PEDIDOS DO CLIENTE LOGADO -->
-            <div id="customerLoggedInView" class="space-y-4 hidden">
-                <div class="p-3 bg-stone-50 rounded-xl border border-stone-200 text-xs">
-                    <p class="font-bold text-stone-900 text-sm" id="loggedInUserName">Nome do Cliente</p>
-                    <p class="text-stone-500" id="loggedInUserEmail">email@exemplo.com</p>
-                </div>
-
-                <div class="flex border-b border-stone-200 text-xs font-bold">
-                    <button onclick="switchCustomerPanelTab('profile')" id="tabClientProfile" class="w-1/2 py-2 text-fabi-600 border-b-2 border-fabi-500">Meus Dados</button>
-                    <button onclick="switchCustomerPanelTab('orders'); carregarHistoricoPedidosCliente();" id="tabClientOrders" class="w-1/2 py-2 text-stone-400">Meus Pedidos</button>
-                </div>
-
-                <!-- ABA DADOS -->
-                <div id="clientPanelProfile" class="space-y-3 pt-2">
-                    <p class="text-xs text-stone-600">Sua conta está ativa e conectada com sucesso na Fragrâncias Fabi.</p>
-                    <button onclick="fazerLogoutCliente()" class="w-full py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-lg text-xs uppercase tracking-wider transition border border-rose-200">
-                        Sair da Conta
-                    </button>
-                </div>
-
-                <!-- ABA MEUS PEDIDOS -->
-                <div id="clientPanelOrders" class="space-y-3 pt-2 hidden max-h-64 overflow-y-auto pr-1">
-                    <div id="listaMeusPedidosContainer">
-                        <p class="text-xs text-stone-400 text-center py-4">A carregar pedidos...</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ETAPA 1: CRIAÇÃO DE CONTA OU LOGIN -->
-            <div id="custAuthStep1" class="space-y-3">
-                <div class="flex border-b border-stone-200 text-xs font-bold">
-                    <button onclick="switchCustomerTab('signup')" id="tabCustomerRegister" class="w-1/2 py-2 text-fabi-600 border-b-2 border-fabi-500">Criar Conta</button>
-                    <button onclick="switchCustomerTab('login')" id="tabCustomerLogin" class="w-1/2 py-2 text-stone-400">Já Tenho Conta</button>
-                </div>
-
-                <!-- FORMULÁRIO DE CADASTRO -->
-                <form id="formCustomerRegister" onsubmit="handleCustomerRegister(event)" class="space-y-3">
-                    <div>
-                        <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Nome Completo</label>
-                        <input type="text" id="custRegName" required placeholder="Seu nome" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
-                    </div>
-                    <div>
-                        <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">E-mail Real</label>
-                        <input type="email" id="custRegEmail" required placeholder="seuemail@exemplo.com" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
-                    </div>
-                    <div>
-                        <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Senha</label>
-                        <input type="password" id="custRegPass" minlength="6" required placeholder="••••••••" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
-                    </div>
-                    <button type="submit" id="btnCustomerSubmit" class="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition">
-                        Enviar Código por E-mail
-                    </button>
-                </form>
-
-                <!-- FORMULÁRIO DE LOGIN -->
-                <form id="formCustomerLogin" onsubmit="handleCustomerLogin(event)" class="space-y-3 hidden">
-                    <div>
-                        <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">E-mail</label>
-                        <input type="email" id="custLogEmail" required placeholder="seuemail@exemplo.com" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
-                    </div>
-                    <div>
-                        <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Senha</label>
-                        <input type="password" id="custLogPass" required placeholder="••••••••" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
-                    </div>
-                    <button type="submit" class="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition">
-                        Entrar na Minha Conta
-                    </button>
-                </form>
-            </div>
-
-            <!-- ETAPA 2: CONFIRMAÇÃO DO CÓDIGO DO E-MAIL -->
-            <div id="custAuthStep2" class="space-y-3 hidden text-center">
-                <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs">
-                    <i class="fa-solid fa-envelope-circle-check text-2xl text-emerald-600 mb-1 block"></i>
-                    Enviamos o código para o e-mail:<br><strong id="verifyEmailText" class="text-stone-900"></strong>
-                </div>
-
-                <div>
-                    <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Digite o Código de 6 Dígitos</label>
-                    <input type="text" id="custVerifyCodeInput" maxlength="6" placeholder="123456" class="w-full bg-stone-50 border border-stone-300 rounded-lg p-3 text-center text-lg font-mono font-bold tracking-widest text-stone-800 focus:outline-none focus:ring-1 focus:ring-fabi-500">
-                </div>
-
-                <button onclick="confirmEmailVerification()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition">
-                    Confirmar e Ativar Conta
-                </button>
-                <button onclick="backToStep1()" class="w-full text-stone-400 hover:text-stone-600 text-[11px]">Voltar / Alterar E-mail</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DE LOGIN DO GESTOR -->
-    <div id="loginModal" class="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
-            <div class="flex justify-between items-center border-b border-stone-100 pb-3">
-                <h3 class="font-serif font-bold text-stone-900 text-base flex items-center gap-2">
-                    <i class="fa-solid fa-user-shield text-fabi-500"></i> Autenticação do Gestor
-                </h3>
-                <button onclick="closeLoginModal()" class="text-stone-400 hover:text-stone-600"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <form onsubmit="handleAdminLogin(event)" class="space-y-3">
-                <div>
-                    <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Usuário</label>
-                    <input type="text" id="loginUser" required placeholder="Ex: admin" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs text-stone-800 focus:outline-none focus:ring-1 focus:ring-fabi-500">
-                </div>
-                <div>
-                    <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Senha</label>
-                    <input type="password" id="loginPass" required placeholder="••••••••" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs text-stone-800 focus:outline-none focus:ring-1 focus:ring-fabi-500">
-                </div>
-                <div class="pt-2">
-                    <button type="submit" class="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition">
-                        Entrar no Painel de Controle
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL: DINHEIRO E TROCO -->
-    <div id="pdvCashModal" class="fixed inset-0 z-50 bg-stone-900/80 backdrop-blur-xs hidden flex items-center justify-center p-4">
-        <div class="bg-stone-800 border border-stone-700 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-stone-100">
-            <div class="flex justify-between items-center border-b border-stone-700 pb-3">
-                <h3 class="font-serif font-bold text-fabi-400 text-base flex items-center gap-2">
-                    <i class="fa-solid fa-money-bill-wave"></i> Pagamento em Dinheiro
-                </h3>
-                <button onclick="closePdvCashModal()" class="text-stone-400 hover:text-stone-200"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-
-            <div class="space-y-3">
-                <div class="flex justify-between text-xs text-stone-300">
-                    <span>Total da Venda:</span>
-                    <span id="pdvCashTotalText" class="font-mono font-bold text-fabi-300">R$ 0,00</span>
-                </div>
-
-                <div>
-                    <label class="text-[11px] font-bold uppercase text-stone-400 block mb-1">Valor Entregue pelo Cliente (R$)</label>
-                    <input type="number" id="pdvCashReceivedInput" step="0.01" oninput="calculatePdvChange()" placeholder="0.00" class="w-full bg-stone-950 border border-stone-700 rounded-lg p-3 text-sm font-mono text-white focus:outline-none focus:border-fabi-500">
-                </div>
-
-                <div id="pdvChangeDisplay" class="p-3 bg-stone-900 border border-stone-700 rounded-lg text-center font-bold text-sm">
-                    Troco: R$ 0,00
-                </div>
-
-                <div class="pt-2">
-                    <button onclick="confirmCashPdvSale()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition">
-                        Confirmar Venda e Dar Troco
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL: CONFIRMAÇÃO DE PAGAMENTO EM CARTÃO (PDV) -->
-    <div id="pdvCardModal" class="fixed inset-0 z-50 bg-stone-900/80 backdrop-blur-xs hidden flex items-center justify-center p-4">
-        <div class="bg-stone-800 border border-stone-700 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-stone-100 text-center">
-            <div class="flex justify-between items-center border-b border-stone-700 pb-3">
-                <h3 class="font-serif font-bold text-fabi-400 text-base flex items-center gap-2">
-                    <i class="fa-solid fa-credit-card"></i> Pagamento na Maquininha
-                </h3>
-                <button onclick="closePdvCardModal()" class="text-stone-400 hover:text-stone-200"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-
-            <div class="space-y-4 py-2">
-                <div class="w-16 h-16 bg-fabi-500/20 text-fabi-400 border border-fabi-500/40 rounded-full flex items-center justify-center mx-auto text-2xl">
-                    <i class="fa-solid fa-cash-register"></i>
-                </div>
-
-                <p class="text-xs text-stone-300">Passe ou aproxime o cartão do cliente na maquininha física do balcão.</p>
-
-                <div class="bg-stone-900 border border-stone-700 p-3 rounded-xl">
-                    <p class="text-[10px] text-stone-400 uppercase font-bold">Valor a Cobrar na Maquininha</p>
-                    <p id="pdvCardTotalText" class="text-2xl font-bold font-serif text-fabi-300">R$ 0,00</p>
-                </div>
-
-                <div class="pt-2">
-                    <button onclick="confirmCardPdvSale()" class="w-full py-3 bg-fabi-600 hover:bg-fabi-500 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-check"></i> Pagamento Aprovado na Maquininha
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL REAL MERCADO PAGO PIX AUTOMÁTICO -->
-    <div id="pdvPixModal" class="fixed inset-0 z-50 bg-stone-900/80 backdrop-blur-xs hidden flex items-center justify-center p-4">
-        <div class="bg-stone-800 border border-stone-700 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-stone-100 text-center">
-            <div class="flex justify-between items-center border-b border-stone-700 pb-3">
-                <h3 class="font-serif font-bold text-teal-400 text-base flex items-center gap-2">
-                    <i class="fa-brands fa-pix"></i> Pagamento PIX Instantâneo
-                </h3>
-                <button onclick="closePdvPixModal()" class="text-stone-400 hover:text-stone-200"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-
-            <div class="space-y-3">
-                <p id="pdvPixStatusText" class="text-xs text-stone-300 flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-circle-notch animate-spin text-teal-400"></i> Gerando cobrança no Mercado Pago...
-                </p>
-                
-                <div id="pdvPixQrContainer" class="bg-white p-3 rounded-xl inline-block shadow-inner mx-auto min-h-[220px] flex flex-col items-center justify-center w-full">
-                    <i class="fa-solid fa-circle-notch animate-spin text-teal-500 text-3xl"></i>
-                </div>
-
-                <div class="bg-stone-900 border border-stone-700 p-2.5 rounded-xl">
-                    <p class="text-[10px] text-stone-400 uppercase font-bold">Valor da Cobrança</p>
-                    <p id="pdvPixTotalText" class="text-xl font-bold font-serif text-teal-300">R$ 0,00</p>
-                </div>
-
-                <div class="pt-1 space-y-2">
-                    <button onclick="copyPixPayload()" id="btnCopyPix" class="w-full py-2 bg-stone-700 hover:bg-stone-600 text-stone-200 font-bold rounded-lg text-xs uppercase tracking-wider transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-copy"></i> Copiar Código PIX Copia e Cola
-                    </button>
-                    <button onclick="confirmPixPdvSaleManually()" class="w-full py-2.5 bg-emerald-700/80 hover:bg-emerald-600 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-check"></i> Confirmar Manualmente (Se Necessário)
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 2. VISÃO FRENTE DE CAIXA (PDV BALCÃO) -->
-    <div id="view-pdv" class="flex-1 flex flex-col hidden bg-stone-900 text-stone-100 p-4 sm:p-6 overflow-y-auto">
-        <div class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-2 space-y-4">
-                <div class="bg-stone-800 border border-stone-700 p-4 sm:p-5 rounded-2xl flex items-center space-x-4 shadow-xl">
-                    <div class="p-3 bg-fabi-500/20 border border-fabi-500/40 text-fabi-400 rounded-xl">
-                        <i class="fa-solid fa-barcode text-2xl sm:text-3xl"></i>
-                    </div>
-                    <div class="flex-1">
-                        <label class="text-[10px] uppercase font-bold text-fabi-400 tracking-wider block">Leitor / Busca Balcão</label>
-                        <input type="text" id="pdvBarcodeBar" onkeydown="handlePdvBarcodeScan(event)" placeholder="Bipe o código ou digite o nome..." class="w-full bg-stone-950 border border-stone-700 rounded-xl p-2.5 sm:p-3 text-xs sm:text-sm font-mono text-fabi-300 focus:outline-none focus:border-fabi-500 mt-1">
-                    </div>
-                </div>
-
-                <div class="bg-stone-800/80 border border-stone-700/80 rounded-2xl p-4 sm:p-5 shadow-xl">
-                    <h3 class="font-serif text-stone-200 font-bold mb-3 text-xs sm:text-sm flex items-center">
-                        <i class="fa-solid fa-grip mr-2 text-fabi-500"></i> Catálogo Rápido de Balcão
-                    </h3>
-                    <div id="pdvQuickGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3 max-h-[380px] sm:max-h-[460px] overflow-y-auto pr-1"></div>
-                </div>
-            </div>
-
-            <div class="bg-stone-800 border border-stone-700 rounded-2xl p-4 sm:p-6 shadow-2xl flex flex-col justify-between h-[520px] sm:h-[600px]">
-                <div>
-                    <div class="flex justify-between items-center border-b border-stone-700 pb-3 mb-4">
-                        <div>
-                            <h2 class="font-serif font-bold text-stone-100 text-sm sm:text-base">Caixa #01 — Loja Física</h2>
-                            <p class="text-[10px] text-stone-400">Atendimento Presencial</p>
-                        </div>
-                        <span class="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold rounded-full">Aberto</span>
-                    </div>
-
-                    <div id="pdvCartItems" class="space-y-2 overflow-y-auto h-[200px] sm:h-[260px] pr-1 divide-y divide-stone-700/50"></div>
-                </div>
-
-                <div class="border-t border-stone-700 pt-3 sm:pt-4 space-y-2 sm:space-y-3 bg-stone-900/60 p-3 sm:p-4 rounded-xl">
-                    <div class="flex justify-between text-xs text-stone-300">
-                        <span>Subtotal:</span>
-                        <span id="pdvSubtotal" class="font-mono">R$ 0,00</span>
-                    </div>
-                    <div class="flex justify-between text-sm sm:text-base font-bold text-fabi-400 border-t border-stone-800 pt-2">
-                        <span>TOTAL VENDA:</span>
-                        <span id="pdvTotal" class="font-serif text-lg sm:text-xl">R$ 0,00</span>
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-2 pt-1">
-                        <button onclick="openPdvCashModal()" id="btnPdvCash" disabled class="py-2.5 sm:py-3 bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 text-white font-bold text-[10px] sm:text-xs rounded-xl uppercase tracking-wider transition flex flex-col items-center gap-1">
-                            <i class="fa-solid fa-money-bill-1"></i> Dinheiro
-                        </button>
-                        <button onclick="openPdvPixModal()" id="btnPdvPix" disabled class="py-2.5 sm:py-3 bg-teal-700 hover:bg-teal-600 disabled:opacity-40 text-white font-bold text-[10px] sm:text-xs rounded-xl uppercase tracking-wider transition flex flex-col items-center gap-1">
-                            <i class="fa-brands fa-pix"></i> PIX
-                        </button>
-                        <button onclick="openPdvCardModal()" id="btnPdvCard" disabled class="py-2.5 sm:py-3 bg-fabi-600 hover:bg-fabi-500 disabled:opacity-40 text-white font-bold text-[10px] sm:text-xs rounded-xl uppercase tracking-wider transition flex flex-col items-center gap-1">
-                            <i class="fa-solid fa-credit-card"></i> Cartão
-                        </button>
-                    </div>
-                    <button onclick="clearPdvCart()" class="w-full py-1.5 text-stone-400 hover:text-stone-200 text-[10px] font-semibold text-center transition">Limpar Itens do Caixa</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 3. VISÃO PAINEL ADMIN & ESTOQUE -->
-    <div id="view-admin" class="flex-1 flex flex-col hidden bg-stone-100 p-4 sm:p-6 overflow-y-auto">
-        <div class="max-w-7xl mx-auto w-full space-y-6">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h1 class="font-serif text-xl sm:text-2xl font-bold text-stone-900">Painel de Gestão & Estoque Unificado</h1>
-                    <p class="text-xs text-stone-500">Sincronizado com a API no Render.</p>
-                </div>
-                <button onclick="openNewProductModal()" class="w-full sm:w-auto px-4 py-2.5 bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs rounded-lg uppercase tracking-wider transition shadow-sm flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-plus text-fabi-500"></i> Cadastrar Novo Perfume
-                </button>
-            </div>
-
-            <!-- Tabela de Controle de Estoque -->
-            <div class="bg-white rounded-2xl border border-stone-200 shadow-xs p-4 sm:p-6 space-y-4">
-                <div class="flex justify-between items-center border-b border-stone-100 pb-3">
-                    <h3 class="font-serif text-base sm:text-lg font-bold text-stone-900">Controle de Estoque</h3>
-                    <span class="text-xs text-emerald-600 font-semibold"><i class="fa-solid fa-shield-check mr-1"></i> Salvo em Tempo Real</span>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs text-stone-700 min-w-[500px]">
-                        <thead class="bg-stone-50 uppercase text-[10px] text-stone-400 border-b border-stone-200">
-                            <tr>
-                                <th class="p-3">Perfume</th>
-                                <th class="p-3">Marca</th>
-                                <th class="p-3">Código de Barras</th>
-                                <th class="p-3 text-right">Preço (R$)</th>
-                                <th class="p-3 text-center">Estoque Atual</th>
-                                <th class="p-3 text-center">Ajustar Quantidade</th>
-                            </tr>
-                        </thead>
-                        <tbody id="adminInventoryTable" class="divide-y divide-stone-100"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Relatório de Pedidos & Endereços -->
-            <div class="bg-white rounded-2xl border border-stone-200 shadow-xs p-4 sm:p-6 space-y-4">
-                <h3 class="font-serif text-base sm:text-lg font-bold text-stone-900">Relatório de Pedidos & Endereços</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs text-stone-700 min-w-[550px]">
-                        <thead class="bg-stone-50 uppercase text-[10px] text-stone-400 border-b border-stone-200">
-                            <tr>
-                                <th class="p-3">Origem</th>
-                                <th class="p-3">Pagamento</th>
-                                <th class="p-3">Endereço / Detalhes</th>
-                                <th class="p-3 text-right">Total (R$)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="adminSalesTable" class="divide-y divide-stone-100"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DE CADASTRO DE PRODUTO -->
-    <div id="newProductModal" class="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <div class="flex justify-between items-center border-b border-stone-100 pb-3">
-                <h3 class="font-serif font-bold text-stone-900 text-base">Cadastrar Novo Perfume</h3>
-                <button onclick="closeNewProductModal()" class="text-stone-400 hover:text-stone-600"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <form onsubmit="handleCreateProduct(event)" class="space-y-3">
-                <div>
-                    <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Nome do Perfume</label>
-                    <input type="text" id="newProdName" required class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs text-stone-800 focus:outline-none focus:ring-1 focus:ring-fabi-500">
-                </div>
-                <div>
-                    <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Marca</label>
-                    <input type="text" id="newProdBrand" required class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs text-stone-800 focus:outline-none focus:ring-1 focus:ring-fabi-500">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Preço (R$)</label>
-                        <input type="number" step="0.01" id="newProdPrice" required class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs text-stone-800 focus:outline-none focus:ring-1 focus:ring-fabi-500">
-                    </div>
-                    <div>
-                        <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Estoque Inicial</label>
-                        <input type="number" id="newProdStock" required class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs text-stone-800 focus:outline-none focus:ring-1 focus:ring-fabi-500">
-                    </div>
-                </div>
-                <div>
-                    <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Código de Barras</label>
-                    <input type="text" id="newProdBarcode" placeholder="Ex: 7891000005" required class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs font-mono text-stone-800 focus:outline-none focus:ring-1 focus:ring-fabi-500">
-                </div>
-                <div>
-                    <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">URL da Imagem</label>
-                    <input type="url" id="newProdImage" placeholder="https://..." class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs text-stone-800 focus:outline-none focus:ring-1 focus:ring-fabi-500">
-                </div>
-                <div class="pt-2">
-                    <button type="submit" class="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition">
-                        Salvar Perfume
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- SCRIPT DA APLICAÇÃO -->
-    <script>
-        const API_URL = 'https://fragrancias-fabi-api.onrender.com/api';
-        
-        let currentPaymentId = null;
-        let pixPollingInterval = null;
-        let currentPixPayloadGlobal = "";
-
-        const ADMIN_USER = 'admin';
-        const ADMIN_PASS = 'fabi2026';
-        
-        let isAdminAuthenticated = localStorage.getItem('fabi_admin_auth') === 'true';
-        let loggedCustomer = JSON.parse(localStorage.getItem('fabi_logged_customer')) || null;
-        let pendingCustomerVerification = null;
-
-        let vendasSalvasLocal = JSON.parse(localStorage.getItem('fabi_vendas_salvas')) || [];
-        let perfumesSalvosLocal = JSON.parse(localStorage.getItem('fabi_perfumes_local')) || [];
-
-        const DB = {
-            perfumes: perfumesSalvosLocal,
-            carrinhoStore: [],
-            carrinhoPdv: [],
-            vendas: vendasSalvasLocal,
-            activeBrandFilter: 'ALL'
-        };
-
-        window.onload = function() {
-            checkPaymentReturn();
-            fetchPerfumesFromApi();
-            fetchVendasFromApi();
-            updateCustomerHeaderUI();
-
-            if (isAdminAuthenticated) {
-                document.getElementById('adminTopBar').classList.remove('hidden');
-                document.getElementById('adminTopBar').classList.add('flex');
-                document.getElementById('managerLoginBtn').innerHTML = `<i class="fa-solid fa-user-check text-emerald-500 text-sm"></i> <span class="hidden md:inline font-bold text-emerald-600">Gestor On</span>`;
-                
-                const lastMode = localStorage.getItem('fabi_active_mode') || 'admin';
-                setMode(lastMode);
-            }
-        };
-
-        // VERIFICA RETORNO DO MERCADO PAGO E SALVA ONLINE INSTANTANEAMENTE
-        async function checkPaymentReturn() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const status = urlParams.get('status');
-
-            if (status === 'success' || status === 'approved') {
-                const pendingOrder = JSON.parse(localStorage.getItem('fabi_pending_online_order'));
-                if (pendingOrder) {
-                    const subtotal = (pendingOrder.itens || []).reduce((acc, i) => acc + ((i.preco_unitario || i.preco) * i.quantidade), 0);
-                    const novaVendaOnline = {
-                        id: Date.now(),
-                        origem: 'E-COMMERCE',
-                        metodo_pagamento: 'MERCADO_PAGO',
-                        endereco: pendingOrder.endereco_entrega,
-                        total: subtotal
-                    };
-
-                    // 1. Grava no dispositivo imediatamente
-                    DB.vendas.unshift(novaVendaOnline);
-                    localStorage.setItem('fabi_vendas_salvas', JSON.stringify(DB.vendas));
-                    renderSalesLog();
-
-                    // 2. Envia para o banco de dados da API
-                    try {
-                        await fetch(`${API_URL}/vendas`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                email_cliente: pendingOrder.email_cliente,
-                                origem: 'E-COMMERCE',
-                                metodo_pagamento: 'MERCADO_PAGO',
-                                itens: pendingOrder.itens,
-                                endereco_entrega: pendingOrder.endereco_entrega,
-                                status: 'APROVADO',
-                                total: subtotal
-                            })
-                        });
-                    } catch (e) {
-                        console.warn('Venda online salva localmente.');
-                    }
-
-                    localStorage.removeItem('fabi_pending_online_order');
-                    alert('🎉 Pagamento aprovado com sucesso! Seu pedido foi registrado.');
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                }
-            }
-        }
-
-        // --- AUTENTICAÇÃO DE CLIENTES COM VERIFICAÇÃO DE E-MAIL REAL E MEUS PEDIDOS ---
-        function openCustomerAuthModal() {
-            const step1 = document.getElementById('custAuthStep1');
-            const step2 = document.getElementById('custAuthStep2');
-            const loggedView = document.getElementById('customerLoggedInView');
-
-            if (loggedCustomer) {
-                document.getElementById('loggedInUserName').innerText = loggedCustomer.nome;
-                document.getElementById('loggedInUserEmail').innerText = loggedCustomer.email;
-                
-                step1.classList.add('hidden');
-                step2.classList.add('hidden');
-                loggedView.classList.remove('hidden');
-                switchCustomerPanelTab('profile');
-            } else {
-                loggedView.classList.add('hidden');
-                backToStep1();
-            }
-            document.getElementById('customerAuthModal').classList.remove('hidden');
-        }
-
-        function closeCustomerAuthModal() {
-            document.getElementById('customerAuthModal').classList.add('hidden');
-        }
-
-        function switchCustomerPanelTab(tab) {
-            const btnProfile = document.getElementById('tabClientProfile');
-            const btnOrders = document.getElementById('tabClientOrders');
-            const divProfile = document.getElementById('clientPanelProfile');
-            const divOrders = document.getElementById('clientPanelOrders');
-
-            if (tab === 'profile') {
-                btnProfile.className = "w-1/2 py-2 text-fabi-600 border-b-2 border-fabi-500";
-                btnOrders.className = "w-1/2 py-2 text-stone-400";
-                divProfile.classList.remove('hidden');
-                divOrders.classList.add('hidden');
-            } else {
-                btnOrders.className = "w-1/2 py-2 text-fabi-600 border-b-2 border-fabi-500";
-                btnProfile.className = "w-1/2 py-2 text-stone-400";
-                divOrders.classList.remove('hidden');
-                divProfile.classList.add('hidden');
-            }
-        }
-
-        async function carregarHistoricoPedidosCliente() {
-            const container = document.getElementById('listaMeusPedidosContainer');
-            if (!loggedCustomer || !loggedCustomer.email) {
-                container.innerHTML = `<p class="text-xs text-stone-400 text-center py-4">Sessão expirada. Faça login novamente.</p>`;
-                return;
-            }
-
-            container.innerHTML = `<p class="text-xs text-stone-400 text-center py-4"><i class="fa-solid fa-circle-notch animate-spin"></i> A carregar seus pedidos...</p>`;
-
-            try {
-                const res = await fetch(`${API_URL}/vendas/cliente/${encodeURIComponent(loggedCustomer.email)}`);
-                if (res.ok) {
-                    const pedidos = await res.json();
-                    if (!pedidos || pedidos.length === 0) {
-                        container.innerHTML = `<p class="text-xs text-stone-500 text-center py-6">Você ainda não possui pedidos pagos/registrados.</p>`;
-                        return;
-                    }
-
-                    container.innerHTML = pedidos.map(p => `
-                        <div class="p-3 bg-stone-50 border border-stone-200 rounded-xl space-y-1 mb-2">
-                            <div class="flex justify-between items-center">
-                                <span class="font-bold text-xs text-stone-900">Pedido #${p.id}</span>
-                                <span class="text-[10px] text-stone-400">${new Date(p.created_at).toLocaleDateString('pt-BR')}</span>
-                            </div>
-                            <p class="text-[11px] text-stone-600">Pagamento: <strong>${p.metodo_pagamento}</strong></p>
-                            <p class="text-[11px] text-stone-600">Endereço: ${p.endereco_entrega || p.endereco || 'Loja Física'}</p>
-                            <p class="text-xs font-bold text-fabi-600 text-right">R$ ${parseFloat(p.total || p.valor_total || 0).toFixed(2).replace('.', ',')}</p>
-                        </div>
-                    `).join('');
-                } else {
-                    container.innerHTML = `<p class="text-xs text-rose-500 text-center py-4">Erro ao buscar histórico de pedidos.</p>`;
-                }
-            } catch (err) {
-                container.innerHTML = `<p class="text-xs text-rose-500 text-center py-4">Falha ao conectar com o servidor.</p>`;
-            }
-        }
-
-        function fazerLogoutCliente() {
-            loggedCustomer = null;
-            localStorage.removeItem('fabi_logged_customer');
-            updateCustomerHeaderUI();
-            closeCustomerAuthModal();
-            alert('Você saiu da sua conta.');
-        }
-
-        function switchCustomerTab(tab) {
-            const btnReg = document.getElementById('tabCustomerRegister');
-            const btnLog = document.getElementById('tabCustomerLogin');
-            const formReg = document.getElementById('formCustomerRegister');
-            const formLog = document.getElementById('formCustomerLogin');
-
-            if (tab === 'signup') {
-                btnReg.className = "w-1/2 py-2 text-fabi-600 border-b-2 border-fabi-500";
-                btnLog.className = "w-1/2 py-2 text-stone-400";
-                formReg.classList.remove('hidden');
-                formLog.classList.add('hidden');
-            } else {
-                btnLog.className = "w-1/2 py-2 text-fabi-600 border-b-2 border-fabi-500";
-                btnReg.className = "w-1/2 py-2 text-stone-400";
-                formLog.classList.remove('hidden');
-                formReg.classList.add('hidden');
-            }
-        }
-
-        async function handleCustomerRegister(e) {
-            e.preventDefault();
-            const name = document.getElementById('custRegName').value.trim();
-            const email = document.getElementById('custRegEmail').value.trim();
-            const pass = document.getElementById('custRegPass').value.trim();
-
-            const submitBtn = document.getElementById('btnCustomerSubmit');
-            submitBtn.innerText = 'ENVIANDO E-MAIL...';
-            submitBtn.disabled = true;
-
-            const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-            pendingCustomerVerification = {
-                nome: name,
-                email: email,
-                senha: pass,
-                codigo: generatedCode
-            };
-
-            try {
-                const res = await fetch(`${API_URL}/clientes/enviar-codigo`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: email,
-                        nome: name,
-                        codigo: generatedCode
-                    })
-                });
-
-                if (res.ok) {
-                    document.getElementById('verifyEmailText').innerText = email;
-                    document.getElementById('custAuthStep1').classList.add('hidden');
-                    document.getElementById('custAuthStep2').classList.remove('hidden');
-                    alert(`Código enviado com sucesso! Verifique a caixa de entrada do e-mail: ${email}`);
-                } else {
-                    alert('Erro ao enviar e-mail. Certifique-se de que o e-mail digitado está correto.');
-                }
-            } catch (err) {
-                console.error('Erro na conexão:', err);
-                alert('Falha ao conectar com o servidor para enviar o e-mail.');
-            } finally {
-                submitBtn.innerText = 'Enviar Código por E-mail';
-                submitBtn.disabled = false;
-            }
-        }
-
-        function confirmEmailVerification() {
-            const typedCode = document.getElementById('custVerifyCodeInput').value.trim();
-
-            if (!pendingCustomerVerification) return;
-
-            if (typedCode === pendingCustomerVerification.codigo) {
-                loggedCustomer = {
-                    nome: pendingCustomerVerification.nome,
-                    email: pendingCustomerVerification.email
-                };
-
-                let savedUsers = JSON.parse(localStorage.getItem('fabi_registered_customers')) || [];
-                savedUsers.push(pendingCustomerVerification);
-                localStorage.setItem('fabi_registered_customers', JSON.stringify(savedUsers));
-
-                localStorage.setItem('fabi_logged_customer', JSON.stringify(loggedCustomer));
-
-                updateCustomerHeaderUI();
-                closeCustomerAuthModal();
-                alert(`E-mail verificado com sucesso! Conta ativada. Bem-vindo(a), ${loggedCustomer.nome}!`);
-            } else {
-                alert("Código de verificação incorreto. Verifique o código recebido no seu e-mail.");
-            }
-        }
-
-        function handleCustomerLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('custLogEmail').value.trim();
-            const pass = document.getElementById('custLogPass').value.trim();
-
-            let savedUsers = JSON.parse(localStorage.getItem('fabi_registered_customers')) || [];
-            const user = savedUsers.find(u => u.email.toLowerCase() === email.toLowerCase() && u.senha === pass);
-
-            if (user) {
-                loggedCustomer = { nome: user.nome, email: user.email };
-                localStorage.setItem('fabi_logged_customer', JSON.stringify(loggedCustomer));
-                updateCustomerHeaderUI();
-                closeCustomerAuthModal();
-                alert(`Bem-vindo(a) de volta, ${user.nome}!`);
-            } else {
-                alert("E-mail ou senha incorretos.");
-            }
-        }
-
-        function backToStep1() {
-            document.getElementById('custAuthStep2').classList.add('hidden');
-            document.getElementById('custAuthStep1').classList.remove('hidden');
-        }
-
-        function updateCustomerHeaderUI() {
-            const btnText = document.getElementById('customerAuthName');
-            if (loggedCustomer) {
-                btnText.innerHTML = `<span class="text-emerald-600 font-bold">${loggedCustomer.nome.split(' ')[0]}</span>`;
-            } else {
-                btnText.innerText = "Entrar / Criar Conta";
-            }
-        }
-
-        // --- SISTEMA DA LOJA E GESTOR ---
-        function toggleMobileNav() {
-            document.getElementById('mobileNav').classList.toggle('hidden');
-        }
-
-        function openLoginModal() {
-            document.getElementById('loginModal').classList.remove('hidden');
-        }
-
-        function closeLoginModal() {
-            document.getElementById('loginModal').classList.add('hidden');
-        }
-
-        function handleAdminLogin(e) {
-            e.preventDefault();
-            const u = document.getElementById('loginUser').value.trim();
-            const p = document.getElementById('loginPass').value.trim();
-
-            if (u === ADMIN_USER && p === ADMIN_PASS) {
-                isAdminAuthenticated = true;
-                localStorage.setItem('fabi_admin_auth', 'true');
-                closeLoginModal();
-
-                document.getElementById('adminTopBar').classList.remove('hidden');
-                document.getElementById('adminTopBar').classList.add('flex');
-                document.getElementById('managerLoginBtn').innerHTML = `<i class="fa-solid fa-user-check text-emerald-500 text-sm"></i> <span class="hidden md:inline font-bold text-emerald-600">Gestor On</span>`;
-                
-                setMode('admin');
-            } else {
-                alert("Usuário ou senha incorretos.");
-            }
-        }
-
-        function logoutAdmin() {
-            isAdminAuthenticated = false;
-            localStorage.removeItem('fabi_admin_auth');
-            localStorage.removeItem('fabi_active_mode');
-
-            document.getElementById('adminTopBar').classList.add('hidden');
-            document.getElementById('adminTopBar').classList.remove('flex');
-            document.getElementById('managerLoginBtn').innerHTML = `<i class="fa-solid fa-user-lock text-sm"></i> <span class="hidden md:inline">Área do Gestor</span>`;
+const express = require('express');
+const cors = require('cors');
+const { Pool } = require('pg');
+const { MercadoPagoConfig, Preference, Payment } = require('mercadopago');
+const axios = require('axios');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// 1. Conexão com o PostgreSQL no Render
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
+});
+
+// 2. Inicialização das Tabelas no Banco de Dados
+async function initDatabase() {
+    if (!process.env.DATABASE_URL) return;
+    try {
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS perfumes (
+                id SERIAL PRIMARY KEY,
+                nome VARCHAR(255) NOT NULL,
+                marca VARCHAR(100),
+                preco NUMERIC(10, 2) NOT NULL,
+                estoque_atual INT NOT NULL DEFAULT 0,
+                codigo_barras VARCHAR(100) UNIQUE,
+                imagem_url TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS vendas (
+                id SERIAL PRIMARY KEY,
+                email_cliente VARCHAR(255),
+                origem VARCHAR(50) NOT NULL,
+                metodo_pagamento VARCHAR(50) NOT NULL,
+                endereco_entrega TEXT,
+                total NUMERIC(10, 2) NOT NULL,
+                status VARCHAR(50) DEFAULT 'APROVADO',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        console.log('✅ Banco de Dados conectado e tabelas prontas!');
+    } catch (err) {
+        console.error('❌ Erro ao inicializar tabelas:', err.message);
+    }
+}
+initDatabase();
+
+// 3. Configuração do Mercado Pago
+const client = new MercadoPagoConfig({
+    accessToken: process.env.MP_ACCESS_TOKEN || 'APP_USR-7282577442110345-101214-79a8ded9c7030683db1a9faa1460ef92-1447000501'
+});
+
+// 4. FUNÇÃO AUXILIAR: Enviar E-mail de Confirmação de Compra via Brevo
+async function enviarEmailConfirmacaoPedido({ email, nome, total, metodo, itens, endereco, pedidoId }) {
+    if (!email || !email.includes('@')) {
+        console.log('⚠️ E-mail do cliente não fornecido ou inválido. Envio cancelado.');
+        return;
+    }
+
+    const itensHtml = (itens || []).map(item => `
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #E8DBCB;">${item.nome || item.title || item.marca || 'Perfume Importado'}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #E8DBCB; text-align: center;">${item.quantidade || item.quantity || 1}x</td>
+            <td style="padding: 10px; border-bottom: 1px solid #E8DBCB; text-align: right;">R$ ${Number(item.preco_unitario || item.preco || item.unit_price || 0).toFixed(2).replace('.', ',')}</td>
+        </tr>
+    `).join('');
+
+    const htmlContent = `
+        <div style="font-family: Arial, sans-serif; padding: 25px; color: #2A1F13; max-width: 600px; border: 1px solid #E8DBCB; border-radius: 12px; margin: 0 auto; background-color: #ffffff;">
+            <h2 style="color: #A47E50; font-family: Georgia, serif; text-align: center; margin-bottom: 5px;">FRAGRÂNCIAS FABI</h2>
+            <p style="text-align: center; color: #A47E50; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; margin-top: 0;">Parfumerie & Cosmétiques</p>
+            <hr style="border: 0; border-top: 1px solid #E8DBCB; margin: 20px 0;">
             
-            setMode('ecommerce');
-            alert("Sessão encerrada com sucesso.");
-        }
-
-        async function fetchPerfumesFromApi() {
-            try {
-                const res = await fetch(`${API_URL}/perfumes`);
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data && data.length > 0) {
-                        DB.perfumes = data.map(p => ({
-                            id: p.id,
-                            marca: p.marca || 'Importado',
-                            nome: p.nome,
-                            preco: parseFloat(p.preco),
-                            estoque: p.estoque_atual !== undefined ? parseInt(p.estoque_atual) : 0,
-                            codigo_barras: p.codigo_barras || '789100000' + p.id,
-                            imagem: p.imagem_url || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400'
-                        }));
-                        localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
-                    }
-                }
-            } catch (err) {
-                console.warn('Erro ao conectar com a API, carregando catálogo local...');
-            }
-
-            if (!DB.perfumes || DB.perfumes.length === 0) {
-                DB.perfumes = [
-                    { id: 1, marca: "TED LAPIDUS PARIS", nome: "Ted Lapidus Pour Homme Eau de Toilette", preco: 489.90, estoque: 10, codigo_barras: "7891000001", imagem: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400" },
-                    { id: 2, marca: "GUY LAROCHE", nome: "Drakkar Noir Desodorante Masculino", preco: 229.90, estoque: 8, codigo_barras: "7891000002", imagem: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400" },
-                    { id: 3, marca: "JEAN PAUL GAULTIER", nome: "Le Male Spray Desodorante", preco: 249.90, estoque: 12, codigo_barras: "7891000003", imagem: "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400" },
-                    { id: 4, marca: "CAROLINA HERRERA", nome: "CH HC Spray Desodorante Masculino", preco: 289.90, estoque: 6, codigo_barras: "7891000004", imagem: "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400" }
-                ];
-                localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
-            }
-
-            renderStoreGrid();
-            renderPdvQuickGrid();
-            renderAdminInventory();
-        }
-
-        // BUSCA VENDAS DA API E COMBINA COM AS SALVAS NO DISPOSITIVO
-        async function fetchVendasFromApi() {
-            try {
-                const res = await fetch(`${API_URL}/vendas`);
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data && Array.isArray(data) && data.length > 0) {
-                        const apiVendas = data.map(v => {
-                            const rawTotal = v.total !== undefined ? v.total : (v.valor_total !== undefined ? v.valor_total : 0);
-                            return {
-                                id: v.id,
-                                origem: (v.origem || 'E-COMMERCE').toUpperCase(),
-                                metodo_pagamento: v.metodo_pagamento || v.metodo || 'MERCADO_PAGO',
-                                endereco: v.endereco_entrega || v.endereco || 'Venda Presencial (Balcão)',
-                                total: parseFloat(rawTotal) || 0
-                            };
-                        });
-
-                        const idsExistentes = new Set(apiVendas.map(x => String(x.id)));
-                        const locaisNaoEnviadas = DB.vendas.filter(x => !idsExistentes.has(String(x.id)));
-                        DB.vendas = [...apiVendas, ...locaisNaoEnviadas];
-                        localStorage.setItem('fabi_vendas_salvas', JSON.stringify(DB.vendas));
-                    }
-                }
-            } catch (err) {
-                console.warn('Carregando histórico salvo no dispositivo...');
-            }
-
-            renderSalesLog();
-        }
-
-        function setMode(mode) {
-            document.getElementById('view-ecommerce').classList.add('hidden');
-            document.getElementById('view-pdv').classList.add('hidden');
-            document.getElementById('view-admin').classList.add('hidden');
-
-            document.getElementById('btn-mode-ecommerce').className = "px-3 py-1.5 rounded-full font-semibold transition hover:bg-stone-800 text-stone-300 text-[11px] flex items-center gap-1.5 shrink-0";
-            document.getElementById('btn-mode-pdv').className = "px-3 py-1.5 rounded-full font-semibold transition hover:bg-stone-800 text-stone-300 text-[11px] flex items-center gap-1.5 shrink-0";
-            document.getElementById('btn-mode-admin').className = "px-3 py-1.5 rounded-full font-semibold transition hover:bg-stone-800 text-stone-300 text-[11px] flex items-center gap-1.5 shrink-0";
-
-            if (mode === 'ecommerce') {
-                document.getElementById('view-ecommerce').classList.remove('hidden');
-                document.getElementById('btn-mode-ecommerce').className = "px-3 py-1.5 rounded-full font-semibold transition bg-fabi-500 text-white shadow-sm text-[11px] flex items-center gap-1.5 shrink-0";
-                fetchPerfumesFromApi();
-            } else if (mode === 'pdv') {
-                document.getElementById('view-pdv').classList.remove('hidden');
-                document.getElementById('btn-mode-pdv').className = "px-3 py-1.5 rounded-full font-semibold transition bg-fabi-500 text-white shadow-sm text-[11px] flex items-center gap-1.5 shrink-0";
-            } else if (mode === 'admin') {
-                document.getElementById('view-admin').classList.remove('hidden');
-                document.getElementById('btn-mode-admin').className = "px-3 py-1.5 rounded-full font-semibold transition bg-fabi-500 text-white shadow-sm text-[11px] flex items-center gap-1.5 shrink-0";
-                fetchVendasFromApi();
-                fetchPerfumesFromApi();
-            }
-
-            if (isAdminAuthenticated) {
-                localStorage.setItem('fabi_active_mode', mode);
-            }
-        }
-
-        function filterBrand(brand) {
-            DB.activeBrandFilter = brand;
-            document.querySelectorAll('.brand-pill').forEach(btn => {
-                btn.className = "brand-pill px-3.5 py-1.5 sm:px-4 sm:py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-[11px] sm:text-xs font-semibold rounded-md uppercase tracking-wider shrink-0 transition";
-            });
-            const activeBtn = document.getElementById(`pill-${brand}`);
-            if (activeBtn) activeBtn.className = "brand-pill px-3.5 py-1.5 sm:px-4 sm:py-2 bg-stone-900 text-white text-[11px] sm:text-xs font-bold rounded-md uppercase tracking-wider shrink-0 transition";
-            renderStoreGrid();
-        }
-
-        function renderStoreGrid() {
-            let filtered = DB.perfumes.filter(p => {
-                return DB.activeBrandFilter === 'ALL' || p.marca.toLowerCase().includes(DB.activeBrandFilter.toLowerCase());
-            });
-
-            const grid = document.getElementById('productGrid');
-            grid.innerHTML = filtered.map(p => {
-                const parcelValue = (p.preco / 10).toFixed(2).replace('.', ',');
-                return `
-                    <div class="bg-white rounded-xl border border-stone-200 overflow-hidden flex flex-col justify-between group hover:shadow-xl transition duration-300">
-                        <div>
-                            <div class="h-48 sm:h-64 bg-stone-50 flex items-center justify-center p-4 sm:p-6 relative overflow-hidden">
-                                <img src="${p.imagem}" alt="${p.nome}" class="max-h-full max-w-full object-contain group-hover:scale-105 transition duration-300">
-                            </div>
-                            <div class="p-3 sm:p-4 space-y-1">
-                                <h3 class="font-bold text-[11px] sm:text-xs uppercase text-stone-900 tracking-wider">${p.marca}</h3>
-                                <p class="text-xs text-stone-500 line-clamp-2 leading-relaxed">${p.nome}</p>
-                            </div>
-                        </div>
-
-                        <div class="p-3 sm:p-4 pt-0 space-y-2 sm:space-y-3">
-                            <div>
-                                <span class="text-sm sm:text-base font-bold text-stone-900">R$ ${p.preco.toFixed(2).replace('.', ',')}</span>
-                                <p class="text-[9px] sm:text-[10px] text-stone-400">ou 10x de R$ ${parcelValue} sem juros</p>
-                            </div>
-
-                            <button onclick="addToStoreCart(${p.id})" ${p.estoque === 0 ? 'disabled' : ''} class="w-full py-2 sm:py-2.5 bg-stone-900 hover:bg-stone-800 disabled:opacity-30 text-white font-bold text-[10px] sm:text-xs uppercase tracking-wider rounded-lg transition flex items-center justify-center gap-1.5">
-                                <i class="fa-solid fa-bag-shopping"></i>
-                                <span>${p.estoque > 0 ? 'Adicionar à Sacola' : 'Esgotado'}</span>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function addToStoreCart(id) {
-            const p = DB.perfumes.find(x => x.id === id);
-            if (!p || p.estoque <= 0) return;
-
-            const existing = DB.carrinhoStore.find(x => x.perfume_id === id);
-            if (existing) {
-                if (existing.quantidade + 1 > p.estoque) {
-                    alert(`Estoque máximo atingido (${p.estoque} unidades).`);
-                    return;
-                }
-                existing.quantidade++;
-            } else {
-                DB.carrinhoStore.push({ 
-                    perfume_id: p.id, 
-                    id: p.id, 
-                    marca: p.marca, 
-                    nome: p.nome, 
-                    preco_unitario: p.preco, 
-                    preco: p.preco, 
-                    quantidade: 1, 
-                    imagem: p.imagem 
-                });
-            }
-
-            renderCartDrawer();
-            toggleCartDrawer(true);
-        }
-
-        function toggleCartDrawer(open) {
-            const drawer = document.getElementById('cartDrawer');
-            if (open) drawer.classList.remove('hidden');
-            else drawer.classList.add('hidden');
-        }
-
-        function renderCartDrawer() {
-            const container = document.getElementById('cartDrawerItems');
-            const badge = document.getElementById('cartCountBadge');
-            const subtotalEl = document.getElementById('cartDrawerSubtotal');
-            const btnCheckout = document.getElementById('btnStoreCheckout');
-
-            const totalQty = DB.carrinhoStore.reduce((acc, item) => acc + item.quantidade, 0);
-            badge.innerText = totalQty;
-
-            if (DB.carrinhoStore.length === 0) {
-                container.innerHTML = `<p class="text-xs text-stone-400 text-center py-10">Sua sacola está vazia.</p>`;
-                subtotalEl.innerText = "R$ 0,00";
-                if (btnCheckout) btnCheckout.disabled = true;
-                return;
-            }
-
-            let subtotal = 0;
-            container.innerHTML = DB.carrinhoStore.map((item, index) => {
-                const total = item.preco_unitario * item.quantidade;
-                subtotal += total;
-                return `
-                    <div class="py-3 flex items-center justify-between">
-                        <img src="${item.imagem}" class="w-10 h-10 sm:w-12 sm:h-12 object-contain rounded-md bg-stone-50 p-1 border border-stone-200">
-                        <div class="flex-1 px-3">
-                            <h4 class="font-bold text-[11px] sm:text-xs uppercase text-stone-800">${item.marca}</h4>
-                            <p class="text-[10px] text-stone-500 line-clamp-1">${item.nome}</p>
-                            <span class="text-xs font-bold text-stone-900">R$ ${item.preco_unitario.toFixed(2).replace('.', ',')} x ${item.quantidade}</span>
-                        </div>
-                        <button onclick="removeFromStoreCart(${index})" class="text-stone-400 hover:text-rose-500 p-1"><i class="fa-solid fa-trash text-xs"></i></button>
-                    </div>
-                `;
-            }).join('');
-
-            subtotalEl.innerText = `R$ ${subtotal.toFixed(2).replace('.', ',')}`;
-            if (btnCheckout) btnCheckout.disabled = false;
-        }
-
-        function removeFromStoreCart(index) {
-            DB.carrinhoStore.splice(index, 1);
-            renderCartDrawer();
-        }
-
-        // --- CHECKOUT COM SALVAMENTO PENDENTE DE PEDIDO ---
-        async function checkoutStoreOrder() {
-            if (DB.carrinhoStore.length === 0) return;
-
-            const cep = document.getElementById('deliveryCep').value.trim();
-            const rua = document.getElementById('deliveryStreet').value.trim();
-            const numero = document.getElementById('deliveryNumber').value.trim();
-            const bairro = document.getElementById('deliveryNeighborhood').value.trim();
-            const cidade = document.getElementById('deliveryCity').value.trim();
-
-            if (!cep || !rua || !numero || !bairro || !cidade) {
-                alert('Por favor, preencha todos os campos do Endereço de Entrega antes de finalizar.');
-                return;
-            }
-
-            if (!loggedCustomer) {
-                alert('Por favor, faça login ou crie uma conta antes de finalizar o pedido.');
-                openCustomerAuthModal();
-                return;
-            }
-
-            const btnCheckout = document.getElementById('btnStoreCheckout');
-            btnCheckout.innerText = 'REDIRECIONANDO PARA O PAGAMENTO...';
-            btnCheckout.disabled = true;
-
-            const enderecoCompleto = `${rua}, Nº ${numero} - ${bairro}, ${cidade} - CEP: ${cep}`;
-            const emailClienteLogado = loggedCustomer.email;
-
-            localStorage.setItem('fabi_pending_online_order', JSON.stringify({
-                email_cliente: emailClienteLogado,
-                itens: DB.carrinhoStore,
-                endereco_entrega: enderecoCompleto
-            }));
-
-            try {
-                const resCheckout = await fetch(`${API_URL}/pagamento/checkout`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        itens: DB.carrinhoStore,
-                        emailCliente: emailClienteLogado
-                    })
-                });
-
-                const dataCheckout = await resCheckout.json();
-
-                if (resCheckout.ok && dataCheckout.init_point) {
-                    window.location.href = dataCheckout.init_point;
-                } else {
-                    alert('Não foi possível gerar a tela de pagamento. Tente novamente em instantes.');
-                    btnCheckout.innerText = 'FINALIZAR PEDIDO (MERCADO PAGO)';
-                    btnCheckout.disabled = false;
-                }
-            } catch (err) {
-                console.error('Erro no checkout:', err);
-                alert('Erro de conexão ao abrir o pagamento. Tente novamente.');
-                btnCheckout.innerText = 'FINALIZAR PEDIDO (MERCADO PAGO)';
-                btnCheckout.disabled = false;
-            }
-        }
-
-        function renderPdvQuickGrid() {
-            const grid = document.getElementById('pdvQuickGrid');
-            grid.innerHTML = DB.perfumes.map(p => `
-                <button onclick="addToPdvCart(${p.id})" ${p.estoque === 0 ? 'disabled' : ''} class="p-2.5 sm:p-3 bg-stone-900 hover:bg-stone-950 disabled:opacity-30 border border-stone-700 text-left rounded-xl transition flex flex-col justify-between h-20 sm:h-24">
-                    <div>
-                        <p class="text-[9px] sm:text-[10px] uppercase font-bold text-fabi-400">${p.marca}</p>
-                        <p class="text-[11px] sm:text-xs font-bold text-stone-200 line-clamp-1">${p.nome}</p>
-                    </div>
-                    <div class="flex justify-between items-center w-full">
-                        <span class="text-[11px] sm:text-xs font-bold text-stone-100">R$ ${p.preco.toFixed(2)}</span>
-                        <span class="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded bg-stone-800 text-stone-300 font-mono">${p.estoque} un</span>
-                    </div>
-                </button>
-            `).join('');
-        }
-
-        function handlePdvBarcodeScan(e) {
-            if (e.key === 'Enter') {
-                const term = e.target.value.trim().toLowerCase();
-                const p = DB.perfumes.find(x => x.codigo_barras === term || x.nome.toLowerCase().includes(term));
-                if (p) {
-                    addToPdvCart(p.id);
-                    e.target.value = '';
-                } else {
-                    alert('Produto não encontrado.');
-                }
-            }
-        }
-
-        function addToPdvCart(id) {
-            const p = DB.perfumes.find(x => x.id === id);
-            if (!p || p.estoque <= 0) return;
-
-            const existing = DB.carrinhoPdv.find(x => (x.perfume_id === id || x.id === id));
-            if (existing) {
-                if (existing.quantidade + 1 > p.estoque) {
-                    alert("Estoque insuficiente na loja física.");
-                    return;
-                }
-                existing.quantidade++;
-            } else {
-                DB.carrinhoPdv.push({ 
-                    perfume_id: p.id, 
-                    id: p.id, 
-                    marca: p.marca, 
-                    nome: p.nome, 
-                    preco_unitario: p.preco, 
-                    preco: p.preco, 
-                    quantidade: 1,
-                    imagem: p.imagem
-                });
-            }
-            renderPdvCart();
-        }
-
-        function renderPdvCart() {
-            const container = document.getElementById('pdvCartItems');
-            const subtotalEl = document.getElementById('pdvSubtotal');
-            const totalEl = document.getElementById('pdvTotal');
-            const btnCash = document.getElementById('btnPdvCash');
-            const btnPix = document.getElementById('btnPdvPix');
-            const btnCard = document.getElementById('btnPdvCard');
-
-            if (DB.carrinhoPdv.length === 0) {
-                container.innerHTML = `<p class="text-xs text-stone-500 text-center py-10">Bipe o código de barras ou selecione os produtos ao lado.</p>`;
-                subtotalEl.innerText = "R$ 0,00";
-                totalEl.innerText = "R$ 0,00";
-                btnCash.disabled = true;
-                btnPix.disabled = true;
-                btnCard.disabled = true;
-                return;
-            }
-
-            let total = 0;
-            container.innerHTML = DB.carrinhoPdv.map((item, index) => {
-                const sub = (item.preco_unitario || item.preco) * item.quantidade;
-                total += sub;
-                return `
-                    <div class="py-2 flex justify-between items-center text-xs">
-                        <div class="flex-1">
-                            <p class="font-bold text-stone-100">${item.marca}</p>
-                            <p class="text-[10px] text-stone-400 truncate">${item.nome}</p>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="font-mono text-fabi-300">R$ ${sub.toFixed(2)} (${item.quantidade}x)</span>
-                            <button onclick="removeFromPdvCart(${index})" class="text-rose-400 hover:text-rose-300 p-1"><i class="fa-solid fa-xmark"></i></button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            subtotalEl.innerText = `R$ ${total.toFixed(2)}`;
-            totalEl.innerText = `R$ ${total.toFixed(2)}`;
-            btnCash.disabled = false;
-            btnPix.disabled = false;
-            btnCard.disabled = false;
-        }
-
-        function removeFromPdvCart(index) {
-            DB.carrinhoPdv.splice(index, 1);
-            renderPdvCart();
-        }
-
-        function clearPdvCart() {
-            DB.carrinhoPdv = [];
-            renderPdvCart();
-        }
-
-        // --- DINHEIRO E TROCO ---
-        function openPdvCashModal() {
-            if (DB.carrinhoPdv.length === 0) return;
-            const subtotalTotal = DB.carrinhoPdv.reduce((acc, i) => acc + ((i.preco_unitario || i.preco) * i.quantidade), 0);
+            <p style="font-size: 15px;">Olá, <strong>${nome || 'Cliente'}</strong>!</p>
+            <p style="font-size: 14px; color: #555;">Seu pedido foi confirmado com sucesso! Já estamos preparando tudo com carinho para você.</p>
             
-            document.getElementById('pdvCashTotalText').innerText = `R$ ${subtotalTotal.toFixed(2)}`;
-            document.getElementById('pdvCashReceivedInput').value = '';
-            document.getElementById('pdvChangeDisplay').innerText = 'Troco: R$ 0,00';
-            document.getElementById('pdvChangeDisplay').className = 'p-3 bg-stone-900 border border-stone-700 rounded-lg text-center font-bold text-sm text-stone-100';
-            document.getElementById('pdvCashModal').classList.remove('hidden');
-        }
+            ${pedidoId ? `<p style="font-size: 13px; color: #777;"><strong>Número do Pedido:</strong> #${pedidoId}</p>` : ''}
+            <p style="font-size: 13px; color: #555;"><strong>Forma de Pagamento:</strong> ${metodo}</p>
+            <p style="font-size: 13px; color: #555;"><strong>Endereço de Entrega:</strong> ${endereco || 'Retirada / Conforme informado'}</p>
 
-        function closePdvCashModal() {
-            document.getElementById('pdvCashModal').classList.add('hidden');
-        }
+            ${itensHtml ? `
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px;">
+                    <thead>
+                        <tr style="background-color: #FAF8F5; color: #A47E50; text-align: left;">
+                            <th style="padding: 10px; border-bottom: 1px solid #E8DBCB;">Produto</th>
+                            <th style="padding: 10px; border-bottom: 1px solid #E8DBCB; text-align: center;">Qtd</th>
+                            <th style="padding: 10px; border-bottom: 1px solid #E8DBCB; text-align: right;">Preço</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${itensHtml}
+                    </tbody>
+                </table>
+            ` : ''}
 
-        function calculatePdvChange() {
-            const total = DB.carrinhoPdv.reduce((acc, i) => acc + ((i.preco_unitario || i.preco) * i.quantidade), 0);
-            const recebido = parseFloat(document.getElementById('pdvCashReceivedInput').value) || 0;
-            const display = document.getElementById('pdvChangeDisplay');
+            <div style="background-color: #FAF8F5; border: 1px solid #E8DBCB; padding: 15px; text-align: right; margin-top: 20px; border-radius: 8px;">
+                <span style="font-size: 14px; color: #555;">Total do Pedido: </span>
+                <strong style="font-size: 18px; color: #A47E50;">R$ ${Number(total).toFixed(2).replace('.', ',')}</strong>
+            </div>
 
-            const troco = recebido - total;
+            <hr style="border: 0; border-top: 1px solid #E8DBCB; margin: 25px 0 15px 0;">
+            <p style="font-size: 12px; color: #888; text-align: center;">Dúvidas? Entre em contato via WhatsApp: (11) 98888-7777</p>
+        </div>
+    `;
 
-            if (troco >= 0) {
-                display.className = "p-3 bg-emerald-950/80 border border-emerald-500/50 rounded-lg text-center font-bold text-sm text-emerald-400";
-                display.innerText = `Troco a Devolver: R$ ${troco.toFixed(2)}`;
-            } else {
-                display.className = "p-3 bg-rose-950/80 border border-rose-500/50 rounded-lg text-center font-bold text-sm text-rose-400";
-                display.innerText = `Faltam: R$ ${Math.abs(troco).toFixed(2)}`;
+    try {
+        const response = await axios.post('https://api.brevo.com/v3/smtp/email', {
+            sender: { name: "Fragrâncias Fabi", email: "fragranciasfabi@gmail.com" },
+            to: [{ email: email, name: nome || 'Cliente' }],
+            subject: `Pedido Confirmado! — Fragrâncias Fabi`,
+            htmlContent: htmlContent
+        }, {
+            headers: {
+                'api-key': process.env.BREVO_API_KEY,
+                'Content-Type': 'application/json'
             }
-        }
+        });
+        console.log(`📧 E-mail de confirmação enviado para ${email} (Status: ${response.status})`);
+    } catch (err) {
+        console.error('❌ Erro ao enviar e-mail de compra:', err.response?.data || err.message);
+    }
+}
 
-        function confirmCashPdvSale() {
-            const total = DB.carrinhoPdv.reduce((acc, i) => acc + ((i.preco_unitario || i.preco) * i.quantidade), 0);
-            const recebido = parseFloat(document.getElementById('pdvCashReceivedInput').value) || 0;
+// WEBHOOK SEGURO DO MERCADO PAGO: SÓ GRAVA A VENDA QUANDO O PAGAMENTO ESTIVER REALMENTE APROVADO
+app.post('/api/webhook/mercadopago', async (req, res) => {
+    const paymentId = req.query['data.id'] || req.query.id || req.body?.data?.id;
+    const type = req.query.type || req.body?.type;
 
-            if (recebido < total) {
-                alert("O valor entregue pelo cliente é menor do que o total da compra.");
-                return;
-            }
+    res.status(200).send('OK');
 
-            const troco = recebido - total;
-            closePdvCashModal();
-            finishPdvSale('DINHEIRO', troco);
-        }
+    if (paymentId && (type === 'payment' || !type)) {
+        try {
+            const payment = new Payment(client);
+            const paymentData = await payment.get({ id: paymentId });
 
-        // --- CARTÃO PDV ---
-        function openPdvCardModal() {
-            if (DB.carrinhoPdv.length === 0) return;
-            const subtotalTotal = DB.carrinhoPdv.reduce((acc, i) => acc + ((i.preco_unitario || i.preco) * i.quantidade), 0);
-            
-            document.getElementById('pdvCardTotalText').innerText = `R$ ${subtotalTotal.toFixed(2).replace('.', ',')}`;
-            document.getElementById('pdvCardModal').classList.remove('hidden');
-        }
+            if (paymentData.status === 'approved') {
+                const emailCliente = paymentData.payer?.email || '';
+                const valorTotal = Number(paymentData.transaction_amount) || 0;
+                const metodo = (paymentData.payment_method_id || 'MERCADO_PAGO').toUpperCase();
 
-        function closePdvCardModal() {
-            document.getElementById('pdvCardModal').classList.add('hidden');
-        }
+                if (process.env.DATABASE_URL) {
+                    const jaExiste = await pool.query(
+                        "SELECT id FROM vendas WHERE LOWER(email_cliente) = LOWER($1) AND total = $2 AND created_at > NOW() - INTERVAL '1 hour'",
+                        [emailCliente, valorTotal]
+                    );
 
-        function confirmCardPdvSale() {
-            closePdvCardModal();
-            finishPdvSale('CARTÃO');
-            alert('Venda em Cartão confirmada e registrada com sucesso!');
-        }
+                    if (jaExiste.rows.length === 0) {
+                        const newSale = await pool.query(`
+                            INSERT INTO vendas (email_cliente, origem, metodo_pagamento, endereco_entrega, total, status)
+                            VALUES ($1, $2, $3, $4, $5, $6)
+                            RETURNING *
+                        `, [
+                            emailCliente,
+                            'E-COMMERCE',
+                            metodo,
+                            'Entrega via Correios/Transportadora',
+                            valorTotal,
+                            'APROVADO'
+                        ]);
 
-        // --- GERAÇÃO PIX REAL MERCADO PAGO ---
-        async function openPdvPixModal() {
-            if (DB.carrinhoPdv.length === 0) return;
-            
-            const subtotalTotal = DB.carrinhoPdv.reduce((acc, i) => acc + ((i.preco_unitario || i.preco) * i.quantidade), 0);
+                        console.log(`✅ Venda #${paymentId} gravada com segurança via Webhook!`);
 
-            document.getElementById('pdvPixTotalText').innerText = `R$ ${subtotalTotal.toFixed(2).replace('.', ',')}`;
-            document.getElementById('pdvPixStatusText').innerHTML = `<i class="fa-solid fa-circle-notch animate-spin text-teal-400"></i> Gerando cobrança PIX no Mercado Pago...`;
-            document.getElementById('pdvPixQrContainer').innerHTML = `<i class="fa-solid fa-circle-notch animate-spin text-teal-500 text-3xl"></i>`;
-            document.getElementById('pdvPixModal').classList.remove('hidden');
-
-            try {
-                const res = await fetch(`${API_URL}/pix/gerar`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        valor: subtotalTotal,
-                        descricao: "Venda PDV Balcão"
-                    })
-                });
-
-                const data = await res.json();
-
-                if (res.ok && (data.qr_code || data.qr_code_base64)) {
-                    currentPixPayloadGlobal = data.qr_code || "";
-                    currentPaymentId = data.id;
-
-                    let finalQrImgSrc = data.qr_code_base64 
-                        ? `data:image/png;base64,${data.qr_code_base64}` 
-                        : `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(currentPixPayloadGlobal)}`;
-
-                    document.getElementById('pdvPixQrContainer').innerHTML = `
-                        <img src="${finalQrImgSrc}" alt="QR Code Pix" class="w-52 h-52 mx-auto rounded-lg shadow-sm border border-stone-200">
-                    `;
-                    document.getElementById('pdvPixStatusText').innerHTML = `<i class="fa-solid fa-circle-notch animate-spin text-teal-400"></i> Aguardando pagamento pelo app do banco...`;
-
-                    if (currentPaymentId) {
-                        startPixPolling(currentPaymentId);
-                    }
-                } else {
-                    throw new Error("Não foi possível gerar a cobrança.");
-                }
-            } catch (err) {
-                document.getElementById('pdvPixStatusText').innerText = "Erro na API do Render. Confirme manualmente:";
-                document.getElementById('pdvPixQrContainer').innerHTML = `<p class="text-xs text-rose-400 font-bold p-4">Erro ao conectar com o Mercado Pago.</p>`;
-            }
-        }
-
-        function startPixPolling(paymentId) {
-            stopPixPolling();
-
-            pixPollingInterval = setInterval(async () => {
-                try {
-                    const res = await fetch(`${API_URL}/pagamento/status/${paymentId}`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data.status === 'approved' || data.status === 'aprovado') {
-                            stopPixPolling();
-                            showSuccessCheckmark();
+                        if (emailCliente) {
+                            await enviarEmailConfirmacaoPedido({
+                                email: emailCliente,
+                                total: valorTotal,
+                                metodo: metodo,
+                                endereco: 'Entrega via Correios/Transportadora',
+                                pedidoId: newSale.rows[0]?.id || paymentId
+                            });
                         }
                     }
-                } catch (e) {
-                    console.log("Verificando pagamento...");
                 }
-            }, 3000);
-        }
-
-        function stopPixPolling() {
-            if (pixPollingInterval) {
-                clearInterval(pixPollingInterval);
-                pixPollingInterval = null;
             }
+        } catch (err) {
+            console.error('❌ Erro no Webhook:', err.message);
         }
+    }
+});
 
-        function showSuccessCheckmark() {
-            const container = document.getElementById('pdvPixQrContainer');
-            const statusText = document.getElementById('pdvPixStatusText');
+// ENVIO DE CÓDIGO DE VERIFICAÇÃO (BREVO)
+app.post('/api/clientes/enviar-codigo', async (req, res) => {
+    const { email, nome, codigo } = req.body;
+    if (!email || !codigo) return res.status(400).json({ error: 'E-mail e código são obrigatórios.' });
 
-            statusText.innerHTML = `<span class="text-emerald-400 font-bold uppercase tracking-wider"><i class="fa-solid fa-circle-check"></i> Pagamento Aprovado!</span>`;
-
-            container.innerHTML = `
-                <div class="py-6 flex flex-col items-center justify-center animate-pop-in">
-                    <div class="w-24 h-24 bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-lg mb-3">
-                        <i class="fa-solid fa-check text-5xl"></i>
+    try {
+        await axios.post('https://api.brevo.com/v3/smtp/email', {
+            sender: { name: "Fragrâncias Fabi", email: "fragranciasfabi@gmail.com" },
+            to: [{ email: email, name: nome || 'Cliente' }],
+            subject: "Seu Código de Confirmação — Fragrâncias Fabi",
+            htmlContent: `
+                <div style="font-family: Arial, sans-serif; padding: 25px; color: #2A1F13; max-width: 500px; border: 1px solid #E8DBCB; border-radius: 12px; margin: 0 auto;">
+                    <h2 style="color: #A47E50; font-family: Georgia, serif; text-align: center;">FRAGRÂNCIAS FABI</h2>
+                    <hr style="border: 0; border-top: 1px solid #E8DBCB; margin: 20px 0;">
+                    <p style="font-size: 16px;">Olá, <strong>${nome || 'Cliente'}</strong>!</p>
+                    <p style="font-size: 14px; color: #555;">Utilize o código de verificação abaixo para ativar a sua conta:</p>
+                    <div style="background-color: #FAF8F5; border: 1px dashed #C09A6B; padding: 18px; font-size: 28px; font-weight: bold; letter-spacing: 8px; text-align: center; color: #2A1F13; border-radius: 8px; margin: 20px 0;">
+                        ${codigo}
                     </div>
-                    <p class="font-bold text-stone-800 text-base">Pagamento Confirmado!</p>
-                    <p class="text-xs text-stone-500">Dando baixa no estoque...</p>
                 </div>
+            `
+        }, {
+            headers: {
+                'api-key': process.env.BREVO_API_KEY,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        res.json({ success: true, message: 'E-mail enviado com sucesso!' });
+    } catch (err) {
+        console.error('Erro e-mail:', err.response?.data || err.message);
+        res.status(500).json({ error: 'Falha ao enviar e-mail.' });
+    }
+});
+
+// PERFUMES
+app.get('/api/perfumes', async (req, res) => {
+    try {
+        if (process.env.DATABASE_URL) {
+            const result = await pool.query('SELECT * FROM perfumes ORDER BY id ASC');
+            return res.json(result.rows);
+        }
+        res.json([]);
+    } catch (err) {
+        console.error('Erro ao buscar perfumes:', err);
+        res.status(500).json({ error: 'Erro ao consultar catálogo.' });
+    }
+});
+
+app.post('/api/perfumes', async (req, res) => {
+    const { nome, marca, preco, estoque_atual, codigo_barras, imagem_url } = req.body;
+    if (!nome || preco === undefined) return res.status(400).json({ error: 'Nome e preço são obrigatórios.' });
+
+    try {
+        if (process.env.DATABASE_URL) {
+            const query = `
+                INSERT INTO perfumes (nome, marca, preco, estoque_atual, codigo_barras, imagem_url)
+                VALUES ($1, $2, $3, $4, $5, $6)
+                RETURNING *;
             `;
-
-            setTimeout(() => {
-                closePdvPixModal();
-                finishPdvSale('PIX (CONFIRMADO AUTOMÁTICO)');
-            }, 2200);
+            const values = [nome, marca || 'Importado', Number(preco) || 0, Number(estoque_atual) || 0, codigo_barras || null, imagem_url || null];
+            const result = await pool.query(query, values);
+            return res.status(201).json(result.rows[0]);
         }
+        res.status(201).json({ id: Date.now(), nome, marca, preco, estoque_atual });
+    } catch (err) {
+        console.error('Erro ao cadastrar perfume:', err);
+        res.status(500).json({ error: 'Erro ao salvar perfume.' });
+    }
+});
 
-        function confirmPixPdvSaleManually() {
-            stopPixPolling();
-            showSuccessCheckmark();
+app.patch('/api/perfumes/:id', async (req, res) => {
+    const { id } = req.params;
+    const { estoque_atual } = req.body;
+
+    try {
+        if (process.env.DATABASE_URL) {
+            const result = await pool.query(
+                'UPDATE perfumes SET estoque_atual = $1 WHERE id = $2 RETURNING *',
+                [Number(estoque_atual) || 0, id]
+            );
+            return res.json(result.rows[0] || { id, estoque_atual });
         }
+        res.json({ id, estoque_atual });
+    } catch (err) {
+        console.error('Erro ao atualizar estoque:', err);
+        res.status(500).json({ error: 'Erro ao atualizar estoque.' });
+    }
+});
 
-        function copyPixPayload() {
-            if (currentPixPayloadGlobal) {
-                navigator.clipboard.writeText(currentPixPayloadGlobal);
-                const btn = document.getElementById('btnCopyPix');
-                btn.innerHTML = `<i class="fa-solid fa-check text-emerald-400"></i> Código PIX Copiado!`;
-                setTimeout(() => {
-                    btn.innerHTML = `<i class="fa-solid fa-copy"></i> Copiar Código PIX Copia e Cola`;
-                }, 2500);
+// VENDAS
+app.get('/api/vendas', async (req, res) => {
+    try {
+        if (process.env.DATABASE_URL) {
+            const result = await pool.query('SELECT * FROM vendas ORDER BY id DESC');
+            return res.json(result.rows);
+        }
+        res.json([]);
+    } catch (err) {
+        console.error('Erro ao buscar vendas:', err);
+        res.status(500).json({ error: 'Erro ao buscar vendas.' });
+    }
+});
+
+app.get('/api/vendas/cliente/:email', async (req, res) => {
+    const { email } = req.params;
+    try {
+        if (process.env.DATABASE_URL) {
+            const result = await pool.query(
+                "SELECT * FROM vendas WHERE LOWER(email_cliente) = LOWER($1) ORDER BY id DESC",
+                [email]
+            );
+            return res.json(result.rows);
+        }
+        res.json([]);
+    } catch (err) {
+        console.error('Erro ao buscar pedidos do cliente:', err);
+        res.status(500).json({ error: 'Erro ao consultar pedidos.' });
+    }
+});
+
+app.post('/api/vendas', async (req, res) => {
+    const { email_cliente, origem, metodo_pagamento, itens, endereco_entrega, status, total: totalBody } = req.body;
+
+    try {
+        let total = Number(totalBody) || 0;
+
+        if (itens && Array.isArray(itens)) {
+            let totalCalculado = 0;
+            for (const item of itens) {
+                const qtd = Number(item.quantidade || item.quantity || 1);
+                const preco = Number(item.preco_unitario || item.preco || item.unit_price || 0);
+                totalCalculado += preco * qtd;
+
+                const produtoId = item.perfume_id || item.id;
+                if (produtoId && process.env.DATABASE_URL) {
+                    try {
+                        await pool.query(
+                            'UPDATE perfumes SET estoque_atual = GREATEST(0, estoque_atual - $1) WHERE id = $2',
+                            [qtd, produtoId]
+                        );
+                    } catch (e) {
+                        console.warn('Aviso estoque:', produtoId);
+                    }
+                }
             }
+            if (totalCalculado > 0) total = totalCalculado;
         }
 
-        function closePdvPixModal() {
-            stopPixPolling();
-            document.getElementById('pdvPixModal').classList.add('hidden');
-        }
+        let novaVenda;
+        if (process.env.DATABASE_URL) {
+            const query = `
+                INSERT INTO vendas (email_cliente, origem, metodo_pagamento, endereco_entrega, total, status)
+                VALUES ($1, $2, $3, $4, $5, $6)
+                RETURNING *;
+            `;
+            const values = [
+                email_cliente || null, 
+                origem || 'E-COMMERCE', 
+                metodo_pagamento || 'MERCADO_PAGO', 
+                endereco_entrega || 'Venda Presencial (Balcão)', 
+                total,
+                status || 'APROVADO'
+            ];
 
-        // CONCLUI VENDA NO PDV E GRAVA NA HORA
-        async function finishPdvSale(metodo, trocoDevolvido = 0) {
-            if (DB.carrinhoPdv.length === 0) return;
-
-            const subtotalTotal = DB.carrinhoPdv.reduce((acc, i) => acc + ((i.preco_unitario || i.preco) * i.quantidade), 0);
-            const novaVenda = {
+            const result = await pool.query(query, values);
+            novaVenda = result.rows[0];
+        } else {
+            novaVenda = {
                 id: Date.now(),
-                origem: 'LOJA_FISICA',
-                metodo_pagamento: metodo + (trocoDevolvido > 0 ? ` (Troco: R$ ${trocoDevolvido.toFixed(2)})` : ''),
-                endereco: 'Venda Presencial (Balcão)',
-                total: subtotalTotal
+                email_cliente,
+                origem: origem || 'E-COMMERCE',
+                metodo_pagamento: metodo_pagamento || 'MERCADO_PAGO',
+                endereco_entrega: endereco_entrega || 'Venda Presencial (Balcão)',
+                total,
+                status: 'APROVADO'
             };
-
-            // 1. Exibe na tela imediatamente
-            DB.vendas.unshift(novaVenda);
-            localStorage.setItem('fabi_vendas_salvas', JSON.stringify(DB.vendas));
-            renderSalesLog();
-
-            // 2. Envia para a API no Render
-            try {
-                await fetch(`${API_URL}/vendas`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email_cliente: loggedCustomer ? loggedCustomer.email : null,
-                        origem: 'LOJA_FISICA',
-                        metodo_pagamento: novaVenda.metodo_pagamento,
-                        itens: DB.carrinhoPdv,
-                        endereco_entrega: 'Venda Presencial (Balcão)',
-                        status: 'APROVADO',
-                        total: subtotalTotal
-                    })
-                });
-            } catch (err) {
-                console.warn('Venda do PDV registrada localmente.');
-            }
-
-            clearPdvCart();
-            await fetchPerfumesFromApi();
         }
 
-        function renderAdminInventory() {
-            const tbody = document.getElementById('adminInventoryTable');
-            tbody.innerHTML = DB.perfumes.map(p => `
-                <tr class="hover:bg-stone-50">
-                    <td class="p-3 font-bold text-stone-800">${p.nome}</td>
-                    <td class="p-3 font-semibold text-fabi-600">${p.marca}</td>
-                    <td class="p-3 font-mono text-stone-500">${p.codigo_barras}</td>
-                    <td class="p-3 text-right font-bold">R$ ${p.preco.toFixed(2).replace('.', ',')}</td>
-                    <td class="p-3 text-center">
-                        <span class="px-2 py-0.5 rounded font-bold ${p.estoque <= 5 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-800'}">
-                            ${p.estoque} un
-                        </span>
-                    </td>
-                    <td class="p-3 text-center">
-                        <div class="flex items-center justify-center space-x-1">
-                            <button onclick="changeStock(${p.id}, -1)" class="w-7 h-7 bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold rounded-lg transition border border-rose-200" title="Diminuir 1 un">-</button>
-                            <button onclick="changeStock(${p.id}, 1)" class="w-7 h-7 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-bold rounded-lg transition border border-emerald-200" title="Adicionar 1 un">+</button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
+        // Dispara o e-mail de confirmação (ex: para vendas físicas/balcão)
+        if (email_cliente) {
+            await enviarEmailConfirmacaoPedido({
+                email: email_cliente,
+                total: total,
+                metodo: metodo_pagamento || 'MERCADO_PAGO',
+                itens: itens,
+                endereco: endereco_entrega,
+                pedidoId: novaVenda.id
+            });
         }
 
-        // SALVA AS ALTERAÇÕES DE ESTOQUE DIRETAMENTE NO BANCO DE DADOS DA API
-        async function changeStock(id, delta) {
-            const perfume = DB.perfumes.find(p => p.id === id);
-            if (!perfume) return;
+        return res.status(201).json(novaVenda);
+    } catch (err) {
+        console.error('❌ Erro ao registrar venda:', err.message);
+        res.status(500).json({ error: 'Erro ao registrar venda.' });
+    }
+});
 
-            const novoEstoque = perfume.estoque + delta;
-            if (novoEstoque < 0) {
-                alert("O estoque não pode ser menor que zero.");
-                return;
-            }
+// PAGAMENTOS (MERCADO PAGO)
+app.post('/api/pix/gerar', async (req, res) => {
+    const { valor, descricao } = req.body;
 
-            perfume.estoque = novoEstoque;
-            renderAdminInventory();
-            renderStoreGrid();
-            renderPdvQuickGrid();
-
-            try {
-                const res = await fetch(`${API_URL}/perfumes/${id}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ estoque_atual: novoEstoque })
-                });
-
-                if (res.ok) {
-                    localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
-                } else {
-                    alert('Aviso: Não foi possível salvar a alteração de estoque no servidor.');
+    try {
+        const payment = new Payment(client);
+        const response = await payment.create({
+            body: {
+                transaction_amount: Number(valor),
+                description: descricao || 'Venda Balcão — Fragrâncias Fabi',
+                payment_method_id: 'pix',
+                payer: {
+                    email: 'cliente@fragranciasfabi.com.br',
+                    first_name: 'Cliente',
+                    last_name: 'Balcao'
                 }
-            } catch (err) {
-                console.error('Erro ao atualizar estoque na API:', err);
-                alert('Erro de conexão ao salvar estoque.');
             }
-        }
+        });
 
-        // RENDERIZA A TABELA DE VENDAS COM VALIDAÇÃO SEGURA
-        function renderSalesLog() {
-            const tbody = document.getElementById('adminSalesTable');
-            if (!tbody) return;
+        res.json({
+            id: response.id,
+            status: response.status,
+            qr_code: response.point_of_interaction?.transaction_data?.qr_code,
+            qr_code_base64: response.point_of_interaction?.transaction_data?.qr_code_base64
+        });
+    } catch (err) {
+        console.error('Erro PIX:', err);
+        res.status(500).json({ error: 'Erro ao gerar PIX.' });
+    }
+});
 
-            if (!DB.vendas || DB.vendas.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-stone-400">Nenhum pedido registrado até o momento.</td></tr>`;
-                return;
+app.get('/api/pagamento/status/:id', async (req, res) => {
+    try {
+        const payment = new Payment(client);
+        const response = await payment.get({ id: req.params.id });
+        res.json({ status: response.status });
+    } catch (err) {
+        res.status(500).json({ error: 'Erro ao verificar status.' });
+    }
+});
+
+app.post('/api/pagamento/checkout', async (req, res) => {
+    const { itens, emailCliente } = req.body;
+
+    try {
+        const itemsMp = (itens || []).map(item => ({
+            title: String(item.nome || item.title || item.marca || 'Perfume Importado'),
+            quantity: Number(item.quantidade || item.quantity || 1),
+            currency_id: 'BRL',
+            unit_price: Number(item.preco_unitario || item.preco || item.unit_price || 1)
+        }));
+
+        const preference = new Preference(client);
+        const response = await preference.create({
+            body: {
+                items: itemsMp,
+                payer: {
+                    email: (emailCliente && emailCliente.includes('@')) ? emailCliente : 'cliente@fragranciasfabi.com.br'
+                },
+                notification_url: 'https://fragrancias-fabi-api.onrender.com/api/webhook/mercadopago',
+                back_urls: {
+                    success: 'https://herissonxdx-ui.github.io/fragrancias-fabi-loja/?status=success',
+                    failure: 'https://herissonxdx-ui.github.io/fragrancias-fabi-loja/?status=failure',
+                    pending: 'https://herissonxdx-ui.github.io/fragrancias-fabi-loja/?status=pending'
+                },
+                auto_return: 'approved'
             }
+        });
 
-            tbody.innerHTML = DB.vendas.map(v => {
-                const isOnline = v.origem === 'E-COMMERCE' || v.origem === 'LOJA_VIRTUAL' || v.origem === 'SITE';
-                const badgeCor = isOnline ? 'text-blue-600 bg-blue-50' : 'text-emerald-600 bg-emerald-50';
-                const origemTexto = isOnline ? 'Site (E-Commerce)' : 'Loja Física (PDV)';
+        res.json({ id: response.id, init_point: response.init_point });
+    } catch (err) {
+        console.error('❌ Erro checkout:', err.message);
+        res.status(500).json({ error: 'Erro ao gerar checkout.' });
+    }
+});
 
-                return `
-                    <tr class="hover:bg-stone-50 border-b border-stone-100">
-                        <td class="p-3">
-                            <span class="px-2 py-1 rounded-md text-[11px] font-bold ${badgeCor}">
-                                ${origemTexto}
-                            </span>
-                        </td>
-                        <td class="p-3 font-semibold text-stone-800">${v.metodo_pagamento}</td>
-                        <td class="p-3 font-medium text-stone-700">${v.endereco}</td>
-                        <td class="p-3 text-right font-bold text-stone-900">R$ ${v.total.toFixed(2).replace('.', ',')}</td>
-                    </tr>
-                `;
-            }).join('');
-        }
+app.get('/', (req, res) => {
+    res.send('API Fragrâncias Fabi ativa!');
+});
 
-        function openNewProductModal() {
-            document.getElementById('newProductModal').classList.remove('hidden');
-        }
-
-        function closeNewProductModal() {
-            document.getElementById('newProductModal').classList.add('hidden');
-        }
-
-        async function handleCreateProduct(e) {
-            e.preventDefault();
-            
-            const name = document.getElementById('newProdName').value;
-            const brand = document.getElementById('newProdBrand').value;
-            const price = parseFloat(document.getElementById('newProdPrice').value);
-            const stock = parseInt(document.getElementById('newProdStock').value);
-            const barcode = document.getElementById('newProdBarcode').value;
-            const image = document.getElementById('newProdImage').value || "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400";
-
-            try {
-                const res = await fetch(`${API_URL}/perfumes`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        nome: name,
-                        marca: brand,
-                        preco: price,
-                        estoque_atual: stock,
-                        codigo_barras: barcode,
-                        imagem_url: image
-                    })
-                });
-
-                if (res.ok) {
-                    alert("Perfume cadastrado e salvo com sucesso no banco de dados!");
-                    closeNewProductModal();
-                    await fetchPerfumesFromApi();
-                } else {
-                    alert("Erro ao cadastrar produto na API.");
-                }
-            } catch (err) {
-                console.error("Erro ao cadastrar:", err);
-                alert("Falha de conexão com a API.");
-            }
-        }
-    </script>
-</body>
-</html>
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`🚀 Servidor a rodar na porta ${PORT}`);
+});
