@@ -1706,6 +1706,109 @@
                 alert("Falha de conexão com a API.");
             }
         }
+        <!-- ... (todas as tuas 1700 linhas de código) ... -->
+
+    <script>
+        // ... todo o teu código JavaScript antigo ...
+
+
+        // =========================================================
+        // COLA ESTAS TRÊS FUNÇÕES AQUI NO FINAL DO TEU SCRIPT:
+        // =========================================================
+
+        function alterarQuantidadeSacola(index, delta) {
+            if (!carrinho[index]) return;
+
+            carrinho[index].quantidade = (carrinho[index].quantidade || 1) + delta;
+
+            if (carrinho[index].quantidade <= 0) {
+                carrinho.splice(index, 1);
+            }
+
+            localStorage.setItem('fabi_carrinho', JSON.stringify(carrinho));
+            atualizarSacola();
+        }
+
+        function atualizarSacola() {
+            document.getElementById('count-sacola').innerText = carrinho.reduce((sum, i) => sum + (i.quantidade || 1), 0);
+            const container = document.getElementById('itens-sacola');
+            if (!container) return;
+
+            if (carrinho.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#888; padding:20px;">Sua sacola está vazia.</p>';
+                document.getElementById('total-sacola').innerText = 'R$ 0,00';
+                return;
+            }
+
+            let total = 0;
+            container.innerHTML = carrinho.map((item, index) => {
+                const subtotal = (Number(item.preco) || 0) * (item.quantidade || 1);
+                total += subtotal;
+
+                return `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #E8DBCB;">
+                        <div>
+                            <strong>${item.nome || item.marca}</strong><br>
+                            <small style="color:#A47E50;">R$ ${Number(item.preco).toFixed(2).replace('.', ',')} un.</small>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <button class="btn-qtd" onclick="alterarQuantidadeSacola(${index}, -1)" style="background:#FAF8F5; border:1px solid #C09A6B; color:#A47E50; width:28px; height:28px; border-radius:4px; font-weight:bold; cursor:pointer;">-</button>
+                            <span style="font-weight:bold; width:20px; text-align:center;">${item.quantidade || 1}</span>
+                            <button class="btn-qtd" onclick="alterarQuantidadeSacola(${index}, 1)" style="background:#FAF8F5; border:1px solid #C09A6B; color:#A47E50; width:28px; height:28px; border-radius:4px; font-weight:bold; cursor:pointer;">+</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('total-sacola').innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
+        }
+
+        function renderizarVendas(vendas) {
+            const tbody = document.getElementById('tabela-vendas-body');
+            if (!tbody) return;
+
+            if (!vendas || vendas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:#888;">Nenhuma venda registrada.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = vendas.map(venda => {
+                const dataFormatada = venda.created_at ? new Date(venda.created_at).toLocaleString('pt-BR') : 'Data N/D';
+
+                let itensFormatados = '<small style="color:#888;">Itens não detalhados</small>';
+                if (venda.itens) {
+                    try {
+                        const lista = typeof venda.itens === 'string' ? JSON.parse(venda.itens) : venda.itens;
+                        if (Array.isArray(lista) && lista.length > 0) {
+                            itensFormatados = lista.map(i => `• <strong>${i.quantidade || 1}x</strong> ${i.nome || i.marca || 'Perfume'}`).join('<br>');
+                        }
+                    } catch (e) {
+                        itensFormatados = `<small style="color:#666;">${venda.itens}</small>`;
+                    }
+                }
+
+                return `
+                    <tr style="border-bottom: 1px solid #E8DBCB;">
+                        <td style="padding: 12px; font-size:13px;">${dataFormatada}</td>
+                        <td style="padding: 12px;"><span style="background:#EBF5FF; color:#0066CC; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold;">${venda.origem || 'E-COMMERCE'}</span></td>
+                        <td style="padding: 12px; font-weight:bold; font-size:12px;">${venda.metodo_pagamento || 'MERCADO_PAGO'}</td>
+                        <td style="padding: 12px; font-size:12px; line-height:1.4;">
+                            <div><strong>Endereço:</strong> ${venda.endereco_entrega || 'N/A'}</div>
+                            <div style="margin-top:5px; background:#FAF8F5; padding:6px; border-radius:4px; border:1px solid #E8DBCB;">
+                                <strong>Produtos:</strong><br>${itensFormatados}
+                            </div>
+                        </td>
+                        <td style="padding: 12px; text-align:right; font-weight:bold; color:#A47E50; font-size:14px;">
+                            R$ ${Number(venda.total || 0).toFixed(2).replace('.', ',')}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+    </script>
+</body>
+</html>
     </script>
 </body>
 </html>
