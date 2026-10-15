@@ -45,16 +45,26 @@
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
         @keyframes popIn {
-            0% { transform: scale(0.5); opacity: 0; }
-            80% { transform: scale(1.1); }
+            0% { transform: scale(0.8); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
         .animate-pop-in {
-            animation: popIn 0.4s ease-out forwards;
+            animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes toastIn {
+            0% { transform: translateY(-20px) scale(0.9); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        .animate-toast {
+            animation: toastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
     </style>
 </head>
-<body class="h-full flex flex-col font-sans bg-stone-50 text-stone-800 antialiased selection:bg-fabi-500 selection:text-white">
+<body class="h-full flex flex-col font-sans bg-stone-50 text-stone-800 antialiased selection:bg-fabi-500 selection:text-white relative">
+
+    <!-- CONTAINER GLOBAL DE TOASTS/NOTIFICAÇÕES FLUTUANTES -->
+    <div id="toastContainer" class="fixed top-5 right-5 z-[100] flex flex-col space-y-3 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
 
     <!-- BARRA EXCLUSIVA DO GESTOR -->
     <div id="adminTopBar" class="hidden bg-stone-900 text-stone-300 px-4 py-2.5 text-xs flex-wrap justify-between items-center border-b border-stone-800 z-50 sticky top-0 shadow-md">
@@ -229,102 +239,139 @@
         </div>
     </div>
 
-    <!-- MODAL DE CADASTRO E LOGIN DE CLIENTES -->
-    <div id="customerAuthModal" class="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <div class="flex justify-between items-center border-b border-stone-100 pb-3">
-                <h3 class="font-serif font-bold text-stone-900 text-base flex items-center gap-2">
-                    <i class="fa-solid fa-user text-fabi-500"></i> Conta do Cliente
-                </h3>
-                <button onclick="closeCustomerAuthModal()" class="text-stone-400 hover:text-stone-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+    <!-- MODAL DE CADASTRO E LOGIN DE CLIENTES (DESIGN LUXO & PROFISSIONAL) -->
+    <div id="customerAuthModal" class="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-5 border border-stone-100 animate-pop-in relative overflow-hidden">
+            <!-- Detalhe Decorativo Fabi -->
+            <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-fabi-200 via-fabi-500 to-fabi-800"></div>
+
+            <div class="flex justify-between items-center border-b border-stone-100 pb-3.5">
+                <div>
+                    <h3 class="font-serif font-bold text-stone-900 text-lg sm:text-xl flex items-center gap-2">
+                        <i class="fa-solid fa-crown text-fabi-500 text-base"></i> Perfaria Fabi
+                    </h3>
+                    <p class="text-[11px] text-stone-400">Acesse sua conta para uma experiência exclusiva.</p>
+                </div>
+                <button onclick="closeCustomerAuthModal()" class="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-500 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
             </div>
 
             <!-- PERFIL E MEUS PEDIDOS DO CLIENTE LOGADO -->
             <div id="customerLoggedInView" class="space-y-4 hidden">
-                <div class="p-3 bg-stone-50 rounded-xl border border-stone-200 text-xs">
-                    <p class="font-bold text-stone-900 text-sm" id="loggedInUserName">Nome do Cliente</p>
-                    <p class="text-stone-500" id="loggedInUserEmail">email@exemplo.com</p>
+                <div class="p-4 bg-gradient-to-br from-fabi-50 to-stone-50 rounded-2xl border border-fabi-200/60 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-fabi-500 text-white font-serif font-bold text-base flex items-center justify-center shadow-sm">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div>
+                        <p class="font-bold text-stone-900 text-sm leading-tight" id="loggedInUserName">Nome do Cliente</p>
+                        <p class="text-stone-500 text-xs" id="loggedInUserEmail">email@exemplo.com</p>
+                    </div>
                 </div>
 
                 <div class="flex border-b border-stone-200 text-xs font-bold">
-                    <button onclick="switchCustomerPanelTab('profile')" id="tabClientProfile" class="w-1/2 py-2 text-fabi-600 border-b-2 border-fabi-500">Meus Dados</button>
-                    <button onclick="switchCustomerPanelTab('orders'); carregarHistoricoPedidosCliente();" id="tabClientOrders" class="w-1/2 py-2 text-stone-400">Meus Pedidos</button>
+                    <button onclick="switchCustomerPanelTab('profile')" id="tabClientProfile" class="w-1/2 py-2.5 text-fabi-600 border-b-2 border-fabi-500 transition">Meus Dados</button>
+                    <button onclick="switchCustomerPanelTab('orders'); carregarHistoricoPedidosCliente();" id="tabClientOrders" class="w-1/2 py-2.5 text-stone-400 hover:text-stone-700 transition">Meus Pedidos</button>
                 </div>
 
                 <!-- ABA DADOS -->
                 <div id="clientPanelProfile" class="space-y-3 pt-2">
-                    <p class="text-xs text-stone-600">Sua conta está ativa e conectada com sucesso na Fragrâncias Fabi.</p>
-                    <button onclick="fazerLogoutCliente()" class="w-full py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-lg text-xs uppercase tracking-wider transition border border-rose-200">
-                        Sair da Conta
+                    <div class="p-3 bg-stone-50 rounded-xl text-xs text-stone-600 space-y-1">
+                        <p class="font-bold text-stone-800"><i class="fa-solid fa-shield-check text-emerald-500 mr-1.5"></i> Conta Autenticada</p>
+                        <p>Aproveite o acompanhamento de pedidos e suporte prioritário Fabi.</p>
+                    </div>
+                    <button onclick="fazerLogoutCliente()" class="w-full py-3 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs uppercase tracking-wider transition border border-rose-200 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-right-from-bracket"></i> Sair da Conta
                     </button>
                 </div>
 
                 <!-- ABA MEUS PEDIDOS -->
                 <div id="clientPanelOrders" class="space-y-3 pt-2 hidden max-h-64 overflow-y-auto pr-1">
                     <div id="listaMeusPedidosContainer">
-                        <p class="text-xs text-stone-400 text-center py-4">A carregar pedidos...</p>
+                        <p class="text-xs text-stone-400 text-center py-4">Carregando pedidos...</p>
                     </div>
                 </div>
             </div>
 
             <!-- ETAPA 1: CRIAÇÃO DE CONTA OU LOGIN -->
-            <div id="custAuthStep1" class="space-y-3">
-                <div class="flex border-b border-stone-200 text-xs font-bold">
-                    <button onclick="switchCustomerTab('signup')" id="tabCustomerRegister" class="w-1/2 py-2 text-fabi-600 border-b-2 border-fabi-500">Criar Conta</button>
-                    <button onclick="switchCustomerTab('login')" id="tabCustomerLogin" class="w-1/2 py-2 text-stone-400">Já Tenho Conta</button>
+            <div id="custAuthStep1" class="space-y-4">
+                <div class="bg-stone-100 p-1 rounded-2xl flex text-xs font-bold text-stone-500">
+                    <button onclick="switchCustomerTab('signup')" id="tabCustomerRegister" class="w-1/2 py-2.5 rounded-xl bg-white text-stone-900 shadow-xs transition">Criar Nova Conta</button>
+                    <button onclick="switchCustomerTab('login')" id="tabCustomerLogin" class="w-1/2 py-2.5 rounded-xl transition">Já Tenho Conta</button>
                 </div>
 
                 <!-- FORMULÁRIO DE CADASTRO -->
-                <form id="formCustomerRegister" onsubmit="handleCustomerRegister(event)" class="space-y-3">
+                <form id="formCustomerRegister" onsubmit="handleCustomerRegister(event)" class="space-y-3.5">
                     <div>
-                        <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Nome Completo</label>
-                        <input type="text" id="custRegName" required placeholder="Seu nome" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                        <label class="text-[11px] font-bold uppercase tracking-wider text-stone-600 block mb-1">Nome Completo</label>
+                        <div class="relative">
+                            <span class="absolute left-3.5 top-3 text-stone-400 text-xs"><i class="fa-solid fa-user"></i></span>
+                            <input type="text" id="custRegName" required placeholder="Ex: Maria Silva" class="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-fabi-500/30 focus:border-fabi-500 transition">
+                        </div>
                     </div>
                     <div>
-                        <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">E-mail Real</label>
-                        <input type="email" id="custRegEmail" required placeholder="seuemail@exemplo.com" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                        <label class="text-[11px] font-bold uppercase tracking-wider text-stone-600 block mb-1">E-mail Principal</label>
+                        <div class="relative">
+                            <span class="absolute left-3.5 top-3 text-stone-400 text-xs"><i class="fa-solid fa-envelope"></i></span>
+                            <input type="email" id="custRegEmail" required placeholder="seuemail@exemplo.com" class="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-fabi-500/30 focus:border-fabi-500 transition">
+                        </div>
                     </div>
                     <div>
-                        <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Senha</label>
-                        <input type="password" id="custRegPass" minlength="6" required placeholder="••••••••" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                        <label class="text-[11px] font-bold uppercase tracking-wider text-stone-600 block mb-1">Senha Segura</label>
+                        <div class="relative">
+                            <span class="absolute left-3.5 top-3 text-stone-400 text-xs"><i class="fa-solid fa-lock"></i></span>
+                            <input type="password" id="custRegPass" minlength="6" required placeholder="Mínimo 6 caracteres" class="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-fabi-500/30 focus:border-fabi-500 transition">
+                        </div>
                     </div>
-                    <button type="submit" id="btnCustomerSubmit" class="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition">
-                        Enviar Código por E-mail
+                    <button type="submit" id="btnCustomerSubmit" class="w-full py-3.5 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition shadow-md flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-paper-plane text-fabi-400"></i>
+                        <span>Enviar Código por E-mail</span>
                     </button>
                 </form>
 
                 <!-- FORMULÁRIO DE LOGIN -->
-                <form id="formCustomerLogin" onsubmit="handleCustomerLogin(event)" class="space-y-3 hidden">
+                <form id="formCustomerLogin" onsubmit="handleCustomerLogin(event)" class="space-y-3.5 hidden">
                     <div>
-                        <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">E-mail</label>
-                        <input type="email" id="custLogEmail" required placeholder="seuemail@exemplo.com" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                        <label class="text-[11px] font-bold uppercase tracking-wider text-stone-600 block mb-1">E-mail Cadastrado</label>
+                        <div class="relative">
+                            <span class="absolute left-3.5 top-3 text-stone-400 text-xs"><i class="fa-solid fa-envelope"></i></span>
+                            <input type="email" id="custLogEmail" required placeholder="seuemail@exemplo.com" class="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-fabi-500/30 focus:border-fabi-500 transition">
+                        </div>
                     </div>
                     <div>
-                        <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Senha</label>
-                        <input type="password" id="custLogPass" required placeholder="••••••••" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                        <label class="text-[11px] font-bold uppercase tracking-wider text-stone-600 block mb-1">Sua Senha</label>
+                        <div class="relative">
+                            <span class="absolute left-3.5 top-3 text-stone-400 text-xs"><i class="fa-solid fa-lock"></i></span>
+                            <input type="password" id="custLogPass" required placeholder="••••••••" class="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-fabi-500/30 focus:border-fabi-500 transition">
+                        </div>
                     </div>
-                    <button type="submit" class="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition">
-                        Entrar na Minha Conta
+                    <button type="submit" class="w-full py-3.5 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition shadow-md flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-right-to-bracket text-fabi-400"></i>
+                        <span>Entrar na Minha Conta</span>
                     </button>
                 </form>
             </div>
 
             <!-- ETAPA 2: CONFIRMAÇÃO DO CÓDIGO DO E-MAIL -->
-            <div id="custAuthStep2" class="space-y-3 hidden text-center">
-                <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs">
-                    <i class="fa-solid fa-envelope-circle-check text-2xl text-emerald-600 mb-1 block"></i>
-                    Enviamos o código para o e-mail:<br><strong id="verifyEmailText" class="text-stone-900"></strong>
+            <div id="custAuthStep2" class="space-y-4 hidden text-center">
+                <div class="p-4 bg-emerald-50/80 border border-emerald-200/80 text-emerald-900 rounded-2xl text-xs space-y-1">
+                    <i class="fa-solid fa-envelope-circle-check text-3xl text-emerald-600 mb-1 block"></i>
+                    <p class="font-bold">Verifique sua Caixa de Entrada</p>
+                    <p class="text-stone-600 text-[11px]">Enviamos um código de segurança de 6 dígitos para:<br><strong id="verifyEmailText" class="text-stone-900 font-semibold"></strong></p>
                 </div>
 
                 <div>
-                    <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1">Digite o Código de 6 Dígitos</label>
-                    <input type="text" id="custVerifyCodeInput" maxlength="6" placeholder="123456" class="w-full bg-stone-50 border border-stone-300 rounded-lg p-3 text-center text-lg font-mono font-bold tracking-widest text-stone-800 focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                    <label class="text-[11px] font-bold uppercase text-stone-500 block mb-1.5">Código de Verificação</label>
+                    <input type="text" id="custVerifyCodeInput" maxlength="6" placeholder="0 0 0 0 0 0" class="w-full bg-stone-50 border border-stone-300 rounded-xl p-3 text-center text-xl font-mono font-bold tracking-widest text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition">
                 </div>
 
-                <button onclick="confirmEmailVerification()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition">
-                    Confirmar e Ativar Conta
+                <button onclick="confirmEmailVerification()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition shadow-md flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-check"></i>
+                    <span>Confirmar e Ativar Conta</span>
                 </button>
-                <button onclick="backToStep1()" class="w-full text-stone-400 hover:text-stone-600 text-[11px]">Voltar / Alterar E-mail</button>
+                <button onclick="backToStep1()" class="w-full text-stone-400 hover:text-stone-600 text-[11px] font-semibold transition">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> Voltar / Corrigir E-mail
+                </button>
             </div>
         </div>
     </div>
@@ -645,6 +692,44 @@
             activeBrandFilter: 'ALL'
         };
 
+        // --- SISTEMA ELEGANTE DE TOASTS (NOTIFICAÇÕES EM TELA) ---
+        function showToast(message, type = 'success', duration = 4000) {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto flex items-center gap-3 p-4 rounded-2xl shadow-2xl border text-xs font-semibold backdrop-blur-md animate-toast transition-all duration-300`;
+
+            let iconHtml = '';
+            if (type === 'success') {
+                toast.classList.add('bg-stone-900/95', 'text-white', 'border-emerald-500/40');
+                iconHtml = `<div class="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 text-sm"><i class="fa-solid fa-circle-check"></i></div>`;
+            } else if (type === 'error') {
+                toast.classList.add('bg-stone-900/95', 'text-white', 'border-rose-500/40');
+                iconHtml = `<div class="w-7 h-7 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0 text-sm"><i class="fa-solid fa-circle-xmark"></i></div>`;
+            } else if (type === 'warning') {
+                toast.classList.add('bg-stone-900/95', 'text-white', 'border-amber-500/40');
+                iconHtml = `<div class="w-7 h-7 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 text-sm"><i class="fa-solid fa-triangle-exclamation"></i></div>`;
+            } else {
+                toast.classList.add('bg-stone-900/95', 'text-white', 'border-fabi-500/40');
+                iconHtml = `<div class="w-7 h-7 rounded-full bg-fabi-500/20 text-fabi-400 flex items-center justify-center shrink-0 text-sm"><i class="fa-solid fa-circle-info"></i></div>`;
+            }
+
+            toast.innerHTML = `
+                ${iconHtml}
+                <div class="flex-1 leading-snug">${message}</div>
+                <button onclick="this.parentElement.remove()" class="text-stone-400 hover:text-white p-1 transition"><i class="fa-solid fa-xmark"></i></button>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-10px)';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
         window.onload = function() {
             checkPaymentReturn();
             fetchPerfumesFromApi();
@@ -670,14 +755,14 @@
                 renderCartDrawer();
                 localStorage.removeItem('fabi_pending_online_order');
 
-                alert('🎉 Pedido recebido com sucesso! Assim que o pagamento for confirmado pelo seu banco/Mercado Pago, enviaremos o e-mail de confirmação.');
+                showToast('Pedido recebido com sucesso! Enviaremos a confirmação por e-mail.', 'success', 6000);
                 window.history.replaceState({}, document.title, window.location.pathname);
             } else if (status === 'pending') {
                 DB.carrinhoStore = [];
                 renderCartDrawer();
                 localStorage.removeItem('fabi_pending_online_order');
 
-                alert('⏳ Pagamento pendente. Assim que for compensado pelo banco, seu pedido será processado automaticamente!');
+                showToast('Pagamento pendente. Assim que compensado, seu pedido será processado!', 'info', 6000);
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
@@ -714,19 +799,18 @@
             const divOrders = document.getElementById('clientPanelOrders');
 
             if (tab === 'profile') {
-                btnProfile.className = "w-1/2 py-2 text-fabi-600 border-b-2 border-fabi-500";
-                btnOrders.className = "w-1/2 py-2 text-stone-400";
+                btnProfile.className = "w-1/2 py-2.5 text-fabi-600 border-b-2 border-fabi-500 transition";
+                btnOrders.className = "w-1/2 py-2.5 text-stone-400 hover:text-stone-700 transition";
                 divProfile.classList.remove('hidden');
                 divOrders.classList.add('hidden');
             } else {
-                btnOrders.className = "w-1/2 py-2 text-fabi-600 border-b-2 border-fabi-500";
-                btnProfile.className = "w-1/2 py-2 text-stone-400";
+                btnOrders.className = "w-1/2 py-2.5 text-fabi-600 border-b-2 border-fabi-500 transition";
+                btnProfile.className = "w-1/2 py-2.5 text-stone-400 hover:text-stone-700 transition";
                 divOrders.classList.remove('hidden');
                 divProfile.classList.add('hidden');
             }
         }
 
-        // FUNÇÃO AJUSTADA PARA CARREGAR OS PEDIDOS E FILTRAR NO FRONT-END
         async function carregarHistoricoPedidosCliente() {
             const container = document.getElementById('listaMeusPedidosContainer');
             if (!loggedCustomer || !loggedCustomer.email) {
@@ -734,7 +818,7 @@
                 return;
             }
 
-            container.innerHTML = `<p class="text-xs text-stone-400 text-center py-4"><i class="fa-solid fa-circle-notch animate-spin"></i> A carregar seus pedidos...</p>`;
+            container.innerHTML = `<p class="text-xs text-stone-400 text-center py-4"><i class="fa-solid fa-circle-notch animate-spin text-fabi-500 mr-1.5"></i> Carregando seus pedidos...</p>`;
 
             try {
                 const res = await fetch(`${API_URL}/vendas`);
@@ -753,7 +837,7 @@
                     }
 
                     container.innerHTML = pedidos.map(p => `
-                        <div class="p-3 bg-stone-50 border border-stone-200 rounded-xl space-y-1 mb-2 text-left">
+                        <div class="p-3 bg-stone-50 border border-stone-200 rounded-2xl space-y-1 mb-2 text-left">
                             <div class="flex justify-between items-center">
                                 <span class="font-bold text-xs text-stone-900">Pedido #${p.id}</span>
                                 <span class="text-[10px] text-stone-400">${new Date(p.created_at || Date.now()).toLocaleDateString('pt-BR')}</span>
@@ -776,7 +860,7 @@
             localStorage.removeItem('fabi_logged_customer');
             updateCustomerHeaderUI();
             closeCustomerAuthModal();
-            alert('Você saiu da sua conta.');
+            showToast('Você saiu da sua conta com sucesso.', 'info');
         }
 
         function switchCustomerTab(tab) {
@@ -786,13 +870,13 @@
             const formLog = document.getElementById('formCustomerLogin');
 
             if (tab === 'signup') {
-                btnReg.className = "w-1/2 py-2 text-fabi-600 border-b-2 border-fabi-500";
-                btnLog.className = "w-1/2 py-2 text-stone-400";
+                btnReg.className = "w-1/2 py-2.5 rounded-xl bg-white text-stone-900 shadow-xs transition";
+                btnLog.className = "w-1/2 py-2.5 rounded-xl transition text-stone-500";
                 formReg.classList.remove('hidden');
                 formLog.classList.add('hidden');
             } else {
-                btnLog.className = "w-1/2 py-2 text-fabi-600 border-b-2 border-fabi-500";
-                btnReg.className = "w-1/2 py-2 text-stone-400";
+                btnLog.className = "w-1/2 py-2.5 rounded-xl bg-white text-stone-900 shadow-xs transition";
+                btnReg.className = "w-1/2 py-2.5 rounded-xl transition text-stone-500";
                 formLog.classList.remove('hidden');
                 formReg.classList.add('hidden');
             }
@@ -805,7 +889,7 @@
             const pass = document.getElementById('custRegPass').value.trim();
 
             const submitBtn = document.getElementById('btnCustomerSubmit');
-            submitBtn.innerText = 'ENVIANDO E-MAIL...';
+            submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> <span>Enviando...</span>`;
             submitBtn.disabled = true;
 
             const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -832,15 +916,15 @@
                     document.getElementById('verifyEmailText').innerText = email;
                     document.getElementById('custAuthStep1').classList.add('hidden');
                     document.getElementById('custAuthStep2').classList.remove('hidden');
-                    alert(`Código enviado com sucesso! Verifique a caixa de entrada do e-mail: ${email}`);
+                    showToast(`Código enviado para o e-mail: <strong>${email}</strong>`, 'success');
                 } else {
-                    alert('Erro ao enviar e-mail. Certifique-se de que o e-mail digitado está correto.');
+                    showToast('Erro ao enviar e-mail. Verifique se o endereço está correto.', 'error');
                 }
             } catch (err) {
                 console.error('Erro na conexão:', err);
-                alert('Falha ao conectar com o servidor para enviar o e-mail.');
+                showToast('Falha ao conectar com o servidor de e-mail.', 'error');
             } finally {
-                submitBtn.innerText = 'Enviar Código por E-mail';
+                submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane text-fabi-400"></i> <span>Enviar Código por E-mail</span>`;
                 submitBtn.disabled = false;
             }
         }
@@ -859,14 +943,13 @@
                 let savedUsers = JSON.parse(localStorage.getItem('fabi_registered_customers')) || [];
                 savedUsers.push(pendingCustomerVerification);
                 localStorage.setItem('fabi_registered_customers', JSON.stringify(savedUsers));
-
                 localStorage.setItem('fabi_logged_customer', JSON.stringify(loggedCustomer));
 
                 updateCustomerHeaderUI();
                 closeCustomerAuthModal();
-                alert(`E-mail verificado com sucesso! Conta ativada. Bem-vindo(a), ${loggedCustomer.nome}!`);
+                showToast(`E-mail verificado! Conta ativada. Bem-vindo(a), <strong>${loggedCustomer.nome}</strong>!`, 'success', 5000);
             } else {
-                alert("Código de verificação incorreto. Verifique o código recebido no seu e-mail.");
+                showToast('Código de verificação incorreto. Confira no seu e-mail.', 'warning');
             }
         }
 
@@ -883,9 +966,9 @@
                 localStorage.setItem('fabi_logged_customer', JSON.stringify(loggedCustomer));
                 updateCustomerHeaderUI();
                 closeCustomerAuthModal();
-                alert(`Bem-vindo(a) de volta, ${user.nome}!`);
+                showToast(`Bem-vindo(a) de volta, <strong>${user.nome}</strong>!`, 'success');
             } else {
-                alert("E-mail ou senha incorretos.");
+                showToast('E-mail ou senha incorretos.', 'error');
             }
         }
 
@@ -931,8 +1014,9 @@
                 document.getElementById('managerLoginBtn').innerHTML = `<i class="fa-solid fa-user-check text-emerald-500 text-sm"></i> <span class="hidden md:inline font-bold text-emerald-600">Gestor On</span>`;
                 
                 setMode('admin');
+                showToast('Painel do Gestor autenticado!', 'success');
             } else {
-                alert("Usuário ou senha incorretos.");
+                showToast('Usuário ou senha de gestor incorretos.', 'error');
             }
         }
 
@@ -946,7 +1030,7 @@
             document.getElementById('managerLoginBtn').innerHTML = `<i class="fa-solid fa-user-lock text-sm"></i> <span class="hidden md:inline">Área do Gestor</span>`;
             
             setMode('ecommerce');
-            alert("Sessão encerrada com sucesso.");
+            showToast('Sessão do Gestor encerrada.', 'info');
         }
 
         async function fetchPerfumesFromApi() {
@@ -1100,7 +1184,7 @@
             const existing = DB.carrinhoStore.find(x => x.perfume_id === id);
             if (existing) {
                 if (existing.quantidade + 1 > p.estoque) {
-                    alert(`Estoque máximo atingido (${p.estoque} unidades).`);
+                    showToast(`Estoque máximo atingido (${p.estoque} unidades).`, 'warning');
                     return;
                 }
                 existing.quantidade++;
@@ -1119,6 +1203,7 @@
 
             renderCartDrawer();
             toggleCartDrawer(true);
+            showToast(`${p.nome} adicionado à sacola!`, 'success', 2500);
         }
 
         function toggleCartDrawer(open) {
@@ -1133,7 +1218,7 @@
             const p = DB.perfumes.find(x => x.id === item.perfume_id);
 
             if (delta > 0 && p && item.quantidade + 1 > p.estoque) {
-                alert(`Estoque máximo atingido (${p.estoque} unidades).`);
+                showToast(`Estoque máximo atingido (${p.estoque} unidades).`, 'warning');
                 return;
             }
 
@@ -1202,18 +1287,18 @@
             const cidade = document.getElementById('deliveryCity').value.trim();
 
             if (!cep || !rua || !numero || !bairro || !cidade) {
-                alert('Por favor, preencha todos os campos do Endereço de Entrega antes de finalizar.');
+                showToast('Preencha os dados do Endereço de Entrega na sacola.', 'warning');
                 return;
             }
 
             if (!loggedCustomer) {
-                alert('Por favor, faça login ou crie uma conta antes de finalizar o pedido.');
+                showToast('Faça login ou crie uma conta para prosseguir com o pedido.', 'info');
                 openCustomerAuthModal();
                 return;
             }
 
             const btnCheckout = document.getElementById('btnStoreCheckout');
-            btnCheckout.innerText = 'REDIRECIONANDO PARA O PAGAMENTO...';
+            btnCheckout.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> REDIRECIONANDO PARA O PAGAMENTO...`;
             btnCheckout.disabled = true;
 
             const enderecoCompleto = `${rua}, Nº ${numero} - ${bairro}, ${cidade} - CEP: ${cep}`;
@@ -1241,13 +1326,13 @@
                 if (resCheckout.ok && dataCheckout.init_point) {
                     window.location.href = dataCheckout.init_point;
                 } else {
-                    alert('Não foi possível gerar a tela de pagamento. Tente novamente em instantes.');
+                    showToast('Não foi possível iniciar o checkout do Mercado Pago.', 'error');
                     btnCheckout.innerText = 'FINALIZAR PEDIDO (MERCADO PAGO)';
                     btnCheckout.disabled = false;
                 }
             } catch (err) {
                 console.error('Erro no checkout:', err);
-                alert('Erro de conexão ao abrir o pagamento. Tente novamente.');
+                showToast('Erro de conexão ao processar o pagamento.', 'error');
                 btnCheckout.innerText = 'FINALIZAR PEDIDO (MERCADO PAGO)';
                 btnCheckout.disabled = false;
             }
@@ -1277,7 +1362,7 @@
                     addToPdvCart(p.id);
                     e.target.value = '';
                 } else {
-                    alert('Produto não encontrado.');
+                    showToast('Produto não encontrado no leitor.', 'warning');
                 }
             }
         }
@@ -1289,7 +1374,7 @@
             const existing = DB.carrinhoPdv.find(x => (x.perfume_id === id || x.id === id));
             if (existing) {
                 if (existing.quantidade + 1 > p.estoque) {
-                    alert("Estoque insuficiente na loja física.");
+                    showToast('Estoque insuficiente no balcão.', 'warning');
                     return;
                 }
                 existing.quantidade++;
@@ -1398,7 +1483,7 @@
             const recebido = parseFloat(document.getElementById('pdvCashReceivedInput').value) || 0;
 
             if (recebido < total) {
-                alert("O valor entregue pelo cliente é menor do que o total da compra.");
+                showToast('O valor recebido é menor que o total da venda.', 'warning');
                 return;
             }
 
@@ -1423,7 +1508,7 @@
         function confirmCardPdvSale() {
             closePdvCardModal();
             finishPdvSale('CARTÃO');
-            alert('Venda em Cartão confirmada e registrada com sucesso!');
+            showToast('Venda em Cartão registrada e concluída!', 'success');
         }
 
         // --- GERAÇÃO PIX REAL MERCADO PAGO ---
@@ -1532,6 +1617,7 @@
                 navigator.clipboard.writeText(currentPixPayloadGlobal);
                 const btn = document.getElementById('btnCopyPix');
                 btn.innerHTML = `<i class="fa-solid fa-check text-emerald-400"></i> Código PIX Copiado!`;
+                showToast('Código PIX Copia e Cola copiado para a área de transferência!', 'success', 2500);
                 setTimeout(() => {
                     btn.innerHTML = `<i class="fa-solid fa-copy"></i> Copiar Código PIX Copia e Cola`;
                 }, 2500);
@@ -1580,6 +1666,7 @@
                 console.warn('Venda do PDV registrada localmente.');
             }
 
+            showToast(`Venda concluída no valor de <strong>R$ ${subtotalTotal.toFixed(2)}</strong>!`, 'success');
             clearPdvCart();
             await fetchPerfumesFromApi();
         }
@@ -1613,7 +1700,7 @@
 
             const novoEstoque = perfume.estoque + delta;
             if (novoEstoque < 0) {
-                alert("O estoque não pode ser menor que zero.");
+                showToast('O estoque não pode ser negativo.', 'warning');
                 return;
             }
 
@@ -1631,12 +1718,13 @@
 
                 if (res.ok) {
                     localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
+                    showToast(`Estoque de ${perfume.nome} atualizado para ${novoEstoque} un.`, 'info', 2000);
                 } else {
-                    alert('Aviso: Não foi possível salvar a alteração de estoque no servidor.');
+                    showToast('Aviso: Não foi possível salvar o estoque no servidor.', 'warning');
                 }
             } catch (err) {
                 console.error('Erro ao atualizar estoque na API:', err);
-                alert('Erro de conexão ao salvar estoque.');
+                showToast('Erro de conexão ao salvar estoque.', 'error');
             }
         }
 
@@ -1741,15 +1829,15 @@
                 });
 
                 if (res.ok) {
-                    alert("Perfume cadastrado e salvo com sucesso no banco de dados!");
+                    showToast('Novo perfume cadastrado com sucesso!', 'success');
                     closeNewProductModal();
                     await fetchPerfumesFromApi();
                 } else {
-                    alert("Erro ao cadastrar produto na API.");
+                    showToast('Erro ao cadastrar produto na API.', 'error');
                 }
             } catch (err) {
                 console.error("Erro ao cadastrar:", err);
-                alert("Falha de conexão com a API.");
+                showToast('Falha de conexão ao cadastrar produto.', 'error');
             }
         }
     </script>
