@@ -204,8 +204,9 @@
                 <div id="cartDrawerItems" class="p-4 sm:p-6 overflow-y-auto flex-1 divide-y divide-stone-100"></div>
 
                 <div class="px-4 sm:px-6 py-3 bg-stone-100 border-t border-stone-200 space-y-2 text-xs">
-                    <h4 class="font-bold text-stone-800 uppercase tracking-wider text-[11px] mb-1">
-                        <i class="fa-solid fa-truck-fast text-fabi-500 mr-1"></i> Endereço para Entrega
+                    <h4 class="font-bold text-stone-800 uppercase tracking-wider text-[11px] mb-1 flex items-center justify-between">
+                        <span><i class="fa-solid fa-truck-fast text-fabi-500 mr-1"></i> Endereço para Entrega</span>
+                        <span id="savedAddressNotice" class="hidden text-[10px] text-emerald-600 font-semibold"><i class="fa-solid fa-check"></i> Preenchido da Conta</span>
                     </h4>
                     <div class="grid grid-cols-3 gap-2">
                         <input type="text" id="deliveryCep" placeholder="CEP" class="col-span-1 p-2 bg-white border border-stone-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
@@ -239,9 +240,9 @@
         </div>
     </div>
 
-    <!-- MODAL DE CADASTRO E LOGIN DE CLIENTES (DESIGN LUXO & PROFISSIONAL) -->
+    <!-- MODAL DE CADASTRO, LOGIN E ENDEREÇO DO CLIENTE -->
     <div id="customerAuthModal" class="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-5 border border-stone-100 animate-pop-in relative overflow-hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-5 border border-stone-100 animate-pop-in relative overflow-hidden max-h-[90vh] overflow-y-auto">
             <!-- Detalhe Decorativo Fabi -->
             <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-fabi-200 via-fabi-500 to-fabi-800"></div>
 
@@ -257,7 +258,7 @@
                 </button>
             </div>
 
-            <!-- PERFIL E MEUS PEDIDOS DO CLIENTE LOGADO -->
+            <!-- PERFIL, ENDEREÇO E MEUS PEDIDOS DO CLIENTE LOGADO -->
             <div id="customerLoggedInView" class="space-y-4 hidden">
                 <div class="p-4 bg-gradient-to-br from-fabi-50 to-stone-50 rounded-2xl border border-fabi-200/60 flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full bg-fabi-500 text-white font-serif font-bold text-base flex items-center justify-center shadow-sm">
@@ -270,16 +271,38 @@
                 </div>
 
                 <div class="flex border-b border-stone-200 text-xs font-bold">
-                    <button onclick="switchCustomerPanelTab('profile')" id="tabClientProfile" class="w-1/2 py-2.5 text-fabi-600 border-b-2 border-fabi-500 transition">Meus Dados</button>
+                    <button onclick="switchCustomerPanelTab('profile')" id="tabClientProfile" class="w-1/2 py-2.5 text-fabi-600 border-b-2 border-fabi-500 transition">Meus Dados & Endereço</button>
                     <button onclick="switchCustomerPanelTab('orders'); carregarHistoricoPedidosCliente();" id="tabClientOrders" class="w-1/2 py-2.5 text-stone-400 hover:text-stone-700 transition">Meus Pedidos</button>
                 </div>
 
-                <!-- ABA DADOS -->
-                <div id="clientPanelProfile" class="space-y-3 pt-2">
-                    <div class="p-3 bg-stone-50 rounded-xl text-xs text-stone-600 space-y-1">
-                        <p class="font-bold text-stone-800"><i class="fa-solid fa-shield-check text-emerald-500 mr-1.5"></i> Conta Autenticada</p>
-                        <p>Aproveite o acompanhamento de pedidos e suporte prioritário Fabi.</p>
+                <!-- ABA DADOS E ENDEREÇO SALVO -->
+                <div id="clientPanelProfile" class="space-y-4 pt-1">
+                    <div class="p-3.5 bg-stone-50 rounded-2xl border border-stone-200 space-y-3">
+                        <div class="flex items-center justify-between border-b border-stone-200 pb-2">
+                            <h4 class="font-bold text-xs uppercase tracking-wider text-stone-800 flex items-center gap-1.5">
+                                <i class="fa-solid fa-location-dot text-fabi-500"></i> Meu Endereço Padrão
+                            </h4>
+                            <span class="text-[10px] text-stone-400">Usado no checkout</span>
+                        </div>
+
+                        <form id="formSaveAddress" onsubmit="handleSaveAddress(event)" class="space-y-2.5">
+                            <div class="grid grid-cols-3 gap-2">
+                                <input type="text" id="userCep" placeholder="CEP" required class="col-span-1 p-2 bg-white border border-stone-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                                <input type="text" id="userCity" placeholder="Cidade / UF" required class="col-span-2 p-2 bg-white border border-stone-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                            </div>
+                            <input type="text" id="userStreet" placeholder="Rua / Avenida" required class="w-full p-2 bg-white border border-stone-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                            <div class="grid grid-cols-3 gap-2">
+                                <input type="text" id="userNumber" placeholder="Número" required class="col-span-1 p-2 bg-white border border-stone-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                                <input type="text" id="userNeighborhood" placeholder="Bairro" required class="col-span-2 p-2 bg-white border border-stone-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
+                            </div>
+                            <input type="text" id="userComplement" placeholder="Complemento (Apto, Bloco...)" class="w-full p-2 bg-white border border-stone-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-fabi-500">
+
+                            <button type="submit" class="w-full py-2 bg-fabi-600 hover:bg-fabi-500 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition shadow-sm flex items-center justify-center gap-1.5 mt-1">
+                                <i class="fa-solid fa-floppy-disk"></i> Salvar Endereço
+                            </button>
+                        </form>
                     </div>
+
                     <button onclick="fazerLogoutCliente()" class="w-full py-3 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs uppercase tracking-wider transition border border-rose-200 flex items-center justify-center gap-2">
                         <i class="fa-solid fa-right-from-bracket"></i> Sair da Conta
                     </button>
@@ -339,7 +362,12 @@
                         </div>
                     </div>
                     <div>
-                        <label class="text-[11px] font-bold uppercase tracking-wider text-stone-600 block mb-1">Sua Senha</label>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-[11px] font-bold uppercase tracking-wider text-stone-600">Sua Senha</label>
+                            <button type="button" onclick="openForgotPasswordStep()" class="text-[11px] text-fabi-600 hover:text-fabi-800 font-semibold transition">
+                                Esqueci minha senha
+                            </button>
+                        </div>
                         <div class="relative">
                             <span class="absolute left-3.5 top-3 text-stone-400 text-xs"><i class="fa-solid fa-lock"></i></span>
                             <input type="password" id="custLogPass" required placeholder="••••••••" class="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-fabi-500/30 focus:border-fabi-500 transition">
@@ -352,7 +380,7 @@
                 </form>
             </div>
 
-            <!-- ETAPA 2: CONFIRMAÇÃO DO CÓDIGO DO E-MAIL -->
+            <!-- ETAPA 2: CONFIRMAÇÃO DO CÓDIGO DO E-MAIL (CADASTRO) -->
             <div id="custAuthStep2" class="space-y-4 hidden text-center">
                 <div class="p-4 bg-emerald-50/80 border border-emerald-200/80 text-emerald-900 rounded-2xl text-xs space-y-1">
                     <i class="fa-solid fa-envelope-circle-check text-3xl text-emerald-600 mb-1 block"></i>
@@ -372,6 +400,61 @@
                 <button onclick="backToStep1()" class="w-full text-stone-400 hover:text-stone-600 text-[11px] font-semibold transition">
                     <i class="fa-solid fa-arrow-left mr-1"></i> Voltar / Corrigir E-mail
                 </button>
+            </div>
+
+            <!-- ETAPA 3: ESQUECI MINHA SENHA (SOLICITAÇÃO & REDEFINIÇÃO) -->
+            <div id="forgotPasswordStep1" class="space-y-4 hidden">
+                <div class="p-3.5 bg-fabi-50 border border-fabi-200/80 rounded-2xl text-xs text-stone-700 space-y-1">
+                    <p class="font-bold text-stone-900 flex items-center gap-1.5">
+                        <i class="fa-solid fa-key text-fabi-500"></i> Recuperação de Senha
+                    </p>
+                    <p class="text-[11px]">Digite seu e-mail cadastrado. Enviaremos um código de verificação para você cadastrar uma nova senha.</p>
+                </div>
+
+                <form onsubmit="handleSendResetCode(event)" class="space-y-3">
+                    <div>
+                        <label class="text-[11px] font-bold uppercase text-stone-600 block mb-1">E-mail Cadastrado</label>
+                        <div class="relative">
+                            <span class="absolute left-3.5 top-3 text-stone-400 text-xs"><i class="fa-solid fa-envelope"></i></span>
+                            <input type="email" id="forgotEmailInput" required placeholder="seuemail@exemplo.com" class="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-fabi-500/30 focus:border-fabi-500 transition">
+                        </div>
+                    </div>
+                    <button type="submit" id="btnForgotSubmit" class="w-full py-3.5 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition shadow-md flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-paper-plane text-fabi-400"></i>
+                        <span>Enviar Código de Recuperação</span>
+                    </button>
+                    <button type="button" onclick="backToStep1()" class="w-full text-stone-400 hover:text-stone-600 text-[11px] font-semibold transition text-center block">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> Voltar ao Login
+                    </button>
+                </form>
+            </div>
+
+            <div id="forgotPasswordStep2" class="space-y-4 hidden text-center">
+                <div class="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-stone-700 space-y-1">
+                    <p class="font-bold text-emerald-800"><i class="fa-solid fa-shield-halved text-emerald-600 mr-1"></i> Código de Recuperação Enviado</p>
+                    <p class="text-[11px]">Enviamos um código de 6 dígitos para o e-mail: <strong id="resetEmailText" class="text-stone-900"></strong></p>
+                </div>
+
+                <form onsubmit="handleConfirmResetPassword(event)" class="space-y-3 text-left">
+                    <div>
+                        <label class="text-[11px] font-bold uppercase text-stone-600 block mb-1">Código de 6 Dígitos</label>
+                        <input type="text" id="resetCodeInput" maxlength="6" required placeholder="0 0 0 0 0 0" class="w-full bg-stone-50 border border-stone-300 rounded-xl p-2.5 text-center text-lg font-mono font-bold tracking-widest text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition">
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-bold uppercase text-stone-600 block mb-1">Nova Senha</label>
+                        <div class="relative">
+                            <span class="absolute left-3.5 top-3 text-stone-400 text-xs"><i class="fa-solid fa-lock"></i></span>
+                            <input type="password" id="resetNewPass" minlength="6" required placeholder="Nova senha (min. 6 dígitos)" class="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-fabi-500/30 focus:border-fabi-500 transition">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition shadow-md flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-key"></i>
+                        <span>Redefinir Senha e Acessar</span>
+                    </button>
+                    <button type="button" onclick="backToStep1()" class="w-full text-stone-400 hover:text-stone-600 text-[11px] font-semibold transition text-center block">
+                        Cancelar
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -680,6 +763,7 @@
         let isAdminAuthenticated = localStorage.getItem('fabi_admin_auth') === 'true';
         let loggedCustomer = JSON.parse(localStorage.getItem('fabi_logged_customer')) || null;
         let pendingCustomerVerification = null;
+        let pendingResetVerification = null;
 
         let vendasSalvasLocal = JSON.parse(localStorage.getItem('fabi_vendas_salvas')) || [];
         let perfumesSalvosLocal = JSON.parse(localStorage.getItem('fabi_perfumes_local')) || [];
@@ -767,10 +851,12 @@
             }
         }
 
-        // --- AUTENTICAÇÃO DE CLIENTES ---
+        // --- AUTENTICAÇÃO E ENDEREÇO DO CLIENTE ---
         function openCustomerAuthModal() {
             const step1 = document.getElementById('custAuthStep1');
             const step2 = document.getElementById('custAuthStep2');
+            const stepForgot1 = document.getElementById('forgotPasswordStep1');
+            const stepForgot2 = document.getElementById('forgotPasswordStep2');
             const loggedView = document.getElementById('customerLoggedInView');
 
             if (loggedCustomer) {
@@ -779,8 +865,11 @@
                 
                 step1.classList.add('hidden');
                 step2.classList.add('hidden');
+                stepForgot1.classList.add('hidden');
+                stepForgot2.classList.add('hidden');
                 loggedView.classList.remove('hidden');
                 switchCustomerPanelTab('profile');
+                loadSavedCustomerAddress();
             } else {
                 loggedView.classList.add('hidden');
                 backToStep1();
@@ -809,6 +898,58 @@
                 divOrders.classList.remove('hidden');
                 divProfile.classList.add('hidden');
             }
+        }
+
+        function loadSavedCustomerAddress() {
+            if (!loggedCustomer) return;
+            const savedAddresses = JSON.parse(localStorage.getItem('fabi_customer_addresses')) || {};
+            const addr = savedAddresses[loggedCustomer.email.toLowerCase()];
+
+            if (addr) {
+                document.getElementById('userCep').value = addr.cep || '';
+                document.getElementById('userCity').value = addr.cidade || '';
+                document.getElementById('userStreet').value = addr.rua || '';
+                document.getElementById('userNumber').value = addr.numero || '';
+                document.getElementById('userNeighborhood').value = addr.bairro || '';
+                document.getElementById('userComplement').value = addr.complemento || '';
+
+                // Preenche também na Sacola
+                fillCartAddressFromSaved(addr);
+            }
+        }
+
+        function fillCartAddressFromSaved(addr) {
+            if (!addr) return;
+            document.getElementById('deliveryCep').value = addr.cep || '';
+            document.getElementById('deliveryCity').value = addr.cidade || '';
+            document.getElementById('deliveryStreet').value = addr.rua || '';
+            document.getElementById('deliveryNumber').value = addr.numero || '';
+            document.getElementById('deliveryNeighborhood').value = addr.bairro || '';
+            document.getElementById('deliveryComplement').value = addr.complemento || '';
+
+            const notice = document.getElementById('savedAddressNotice');
+            if (notice) notice.classList.remove('hidden');
+        }
+
+        function handleSaveAddress(e) {
+            e.preventDefault();
+            if (!loggedCustomer) return;
+
+            const addr = {
+                cep: document.getElementById('userCep').value.trim(),
+                cidade: document.getElementById('userCity').value.trim(),
+                rua: document.getElementById('userStreet').value.trim(),
+                numero: document.getElementById('userNumber').value.trim(),
+                bairro: document.getElementById('userNeighborhood').value.trim(),
+                complemento: document.getElementById('userComplement').value.trim()
+            };
+
+            let savedAddresses = JSON.parse(localStorage.getItem('fabi_customer_addresses')) || {};
+            savedAddresses[loggedCustomer.email.toLowerCase()] = addr;
+            localStorage.setItem('fabi_customer_addresses', JSON.stringify(savedAddresses));
+
+            fillCartAddressFromSaved(addr);
+            showToast('Endereço salvo com sucesso na sua conta!', 'success');
         }
 
         async function carregarHistoricoPedidosCliente() {
@@ -946,7 +1087,7 @@
                 localStorage.setItem('fabi_logged_customer', JSON.stringify(loggedCustomer));
 
                 updateCustomerHeaderUI();
-                closeCustomerAuthModal();
+                openCustomerAuthModal(); // Abre a tela com Meus Dados & Endereço
                 showToast(`E-mail verificado! Conta ativada. Bem-vindo(a), <strong>${loggedCustomer.nome}</strong>!`, 'success', 5000);
             } else {
                 showToast('Código de verificação incorreto. Confira no seu e-mail.', 'warning');
@@ -965,15 +1106,98 @@
                 loggedCustomer = { nome: user.nome, email: user.email };
                 localStorage.setItem('fabi_logged_customer', JSON.stringify(loggedCustomer));
                 updateCustomerHeaderUI();
-                closeCustomerAuthModal();
+                openCustomerAuthModal();
                 showToast(`Bem-vindo(a) de volta, <strong>${user.nome}</strong>!`, 'success');
             } else {
                 showToast('E-mail ou senha incorretos.', 'error');
             }
         }
 
+        // --- FUNCIONALIDADE ESQUECI MINHA SENHA ---
+        function openForgotPasswordStep() {
+            document.getElementById('custAuthStep1').classList.add('hidden');
+            document.getElementById('custAuthStep2').classList.add('hidden');
+            document.getElementById('forgotPasswordStep2').classList.add('hidden');
+            document.getElementById('forgotPasswordStep1').classList.remove('hidden');
+        }
+
+        async function handleSendResetCode(e) {
+            e.preventDefault();
+            const email = document.getElementById('forgotEmailInput').value.trim();
+
+            let savedUsers = JSON.parse(localStorage.getItem('fabi_registered_customers')) || [];
+            const user = savedUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+
+            if (!user) {
+                showToast('Nenhuma conta encontrada com este e-mail.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btnForgotSubmit');
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> <span>Enviando...</span>`;
+            btn.disabled = true;
+
+            const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
+            pendingResetVerification = { email: email, codigo: generatedCode };
+
+            try {
+                const res = await fetch(`${API_URL}/clientes/enviar-codigo`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: email,
+                        nome: user.nome,
+                        codigo: generatedCode
+                    })
+                });
+
+                if (res.ok) {
+                    document.getElementById('resetEmailText').innerText = email;
+                    document.getElementById('forgotPasswordStep1').classList.add('hidden');
+                    document.getElementById('forgotPasswordStep2').classList.remove('hidden');
+                    showToast(`Código de redefinição enviado para: <strong>${email}</strong>`, 'success');
+                } else {
+                    showToast('Erro ao enviar e-mail. Verifique a conexão.', 'error');
+                }
+            } catch (err) {
+                showToast('Falha ao conectar com o servidor para enviar o código.', 'error');
+            } finally {
+                btn.innerHTML = `<i class="fa-solid fa-paper-plane text-fabi-400"></i> <span>Enviar Código de Recuperação</span>`;
+                btn.disabled = false;
+            }
+        }
+
+        function handleConfirmResetPassword(e) {
+            e.preventDefault();
+            const code = document.getElementById('resetCodeInput').value.trim();
+            const newPass = document.getElementById('resetNewPass').value.trim();
+
+            if (!pendingResetVerification) return;
+
+            if (code === pendingResetVerification.codigo) {
+                let savedUsers = JSON.parse(localStorage.getItem('fabi_registered_customers')) || [];
+                const userIndex = savedUsers.findIndex(u => u.email.toLowerCase() === pendingResetVerification.email.toLowerCase());
+
+                if (userIndex !== -1) {
+                    savedUsers[userIndex].senha = newPass;
+                    localStorage.setItem('fabi_registered_customers', JSON.stringify(savedUsers));
+
+                    loggedCustomer = { nome: savedUsers[userIndex].nome, email: savedUsers[userIndex].email };
+                    localStorage.setItem('fabi_logged_customer', JSON.stringify(loggedCustomer));
+
+                    updateCustomerHeaderUI();
+                    openCustomerAuthModal();
+                    showToast('Senha redefinida com sucesso! Você já está conectado.', 'success', 5000);
+                }
+            } else {
+                showToast('Código de redefinição incorreto.', 'warning');
+            }
+        }
+
         function backToStep1() {
             document.getElementById('custAuthStep2').classList.add('hidden');
+            document.getElementById('forgotPasswordStep1').classList.add('hidden');
+            document.getElementById('forgotPasswordStep2').classList.add('hidden');
             document.getElementById('custAuthStep1').classList.remove('hidden');
         }
 
@@ -981,6 +1205,11 @@
             const btnText = document.getElementById('customerAuthName');
             if (loggedCustomer) {
                 btnText.innerHTML = `<span class="text-emerald-600 font-bold">${loggedCustomer.nome.split(' ')[0]}</span>`;
+                
+                // Se o cliente já tiver endereço salvo, pré-carrega no checkout
+                const savedAddresses = JSON.parse(localStorage.getItem('fabi_customer_addresses')) || {};
+                const addr = savedAddresses[loggedCustomer.email.toLowerCase()];
+                if (addr) fillCartAddressFromSaved(addr);
             } else {
                 btnText.innerText = "Entrar / Criar Conta";
             }
@@ -1208,8 +1437,16 @@
 
         function toggleCartDrawer(open) {
             const drawer = document.getElementById('cartDrawer');
-            if (open) drawer.classList.remove('hidden');
-            else drawer.classList.add('hidden');
+            if (open) {
+                drawer.classList.remove('hidden');
+                if (loggedCustomer) {
+                    const savedAddresses = JSON.parse(localStorage.getItem('fabi_customer_addresses')) || {};
+                    const addr = savedAddresses[loggedCustomer.email.toLowerCase()];
+                    if (addr) fillCartAddressFromSaved(addr);
+                }
+            } else {
+                drawer.classList.add('hidden');
+            }
         }
 
         function changeStoreCartQty(index, delta) {
