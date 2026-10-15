@@ -726,6 +726,7 @@
             }
         }
 
+        // FUNÇÃO AJUSTADA PARA CARREGAR OS PEDIDOS E FILTRAR NO FRONT-END
         async function carregarHistoricoPedidosCliente() {
             const container = document.getElementById('listaMeusPedidosContainer');
             if (!loggedCustomer || !loggedCustomer.email) {
@@ -736,21 +737,28 @@
             container.innerHTML = `<p class="text-xs text-stone-400 text-center py-4"><i class="fa-solid fa-circle-notch animate-spin"></i> A carregar seus pedidos...</p>`;
 
             try {
-                const res = await fetch(`${API_URL}/vendas/cliente/${encodeURIComponent(loggedCustomer.email)}`);
+                const res = await fetch(`${API_URL}/vendas`);
                 if (res.ok) {
-                    const pedidos = await res.json();
+                    const todasVendas = await res.json();
+                    const emailCliente = loggedCustomer.email.toLowerCase().trim();
+
+                    const pedidos = todasVendas.filter(p => {
+                        const emailPedido = (p.email_cliente || p.email || '').toLowerCase().trim();
+                        return emailPedido === emailCliente;
+                    });
+
                     if (!pedidos || pedidos.length === 0) {
                         container.innerHTML = `<p class="text-xs text-stone-500 text-center py-6">Você ainda não possui pedidos pagos/registrados.</p>`;
                         return;
                     }
 
                     container.innerHTML = pedidos.map(p => `
-                        <div class="p-3 bg-stone-50 border border-stone-200 rounded-xl space-y-1 mb-2">
+                        <div class="p-3 bg-stone-50 border border-stone-200 rounded-xl space-y-1 mb-2 text-left">
                             <div class="flex justify-between items-center">
                                 <span class="font-bold text-xs text-stone-900">Pedido #${p.id}</span>
                                 <span class="text-[10px] text-stone-400">${new Date(p.created_at || Date.now()).toLocaleDateString('pt-BR')}</span>
                             </div>
-                            <p class="text-[11px] text-stone-600">Pagamento: <strong>${p.metodo_pagamento}</strong></p>
+                            <p class="text-[11px] text-stone-600">Pagamento: <strong>${p.metodo_pagamento || p.metodo || 'Aprovado'}</strong></p>
                             <p class="text-[11px] text-stone-600">Endereço: ${p.endereco_entrega || p.endereco || 'Loja Física'}</p>
                             <p class="text-xs font-bold text-fabi-600 text-right">R$ ${parseFloat(p.total || p.valor_total || 0).toFixed(2).replace('.', ',')}</p>
                         </div>
@@ -988,6 +996,7 @@
                             const rawTotal = v.total !== undefined ? v.total : (v.valor_total !== undefined ? v.valor_total : 0);
                             return {
                                 id: v.id,
+                                email_cliente: v.email_cliente || v.email || null,
                                 origem: (v.origem || 'E-COMMERCE').toUpperCase(),
                                 metodo_pagamento: v.metodo_pagamento || v.metodo || 'MERCADO_PAGO',
                                 endereco: v.endereco_entrega || v.endereco || 'Venda Presencial (Balcão)',
