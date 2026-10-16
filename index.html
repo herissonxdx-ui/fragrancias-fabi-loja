@@ -343,8 +343,16 @@
                         <label class="text-[11px] font-bold uppercase tracking-wider text-stone-600 block mb-1">Senha Segura</label>
                         <div class="relative">
                             <span class="absolute left-3.5 top-3 text-stone-400 text-xs"><i class="fa-solid fa-lock"></i></span>
-                            <input type="password" id="custRegPass" minlength="6" required placeholder="Mínimo 6 caracteres" class="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-fabi-500/30 focus:border-fabi-500 transition">
+                            <input type="password" id="custRegPass" required placeholder="Min. 8 dígitos com 1 letra maiúscula" class="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-fabi-500/30 focus:border-fabi-500 transition">
                         </div>
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-bold uppercase tracking-wider text-stone-600 block mb-1">Confirmar Senha</label>
+                        <div class="relative">
+                            <span class="absolute left-3.5 top-3 text-stone-400 text-xs"><i class="fa-solid fa-lock font-bold"></i></span>
+                            <input type="password" id="custRegPassConfirm" required placeholder="Repita a senha digitada acima" class="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-fabi-500/30 focus:border-fabi-500 transition">
+                        </div>
+                        <p class="text-[10px] text-stone-400 mt-1"><i class="fa-solid fa-circle-info mr-1"></i> A senha deve ter no mínimo 8 caracteres e 1 letra maiúscula.</p>
                     </div>
                     <button type="submit" id="btnCustomerSubmit" class="w-full py-3.5 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition shadow-md flex items-center justify-center gap-2">
                         <i class="fa-solid fa-paper-plane text-fabi-400"></i>
@@ -385,7 +393,7 @@
                 <div class="p-4 bg-emerald-50/80 border border-emerald-200/80 text-emerald-900 rounded-2xl text-xs space-y-1">
                     <i class="fa-solid fa-envelope-circle-check text-3xl text-emerald-600 mb-1 block"></i>
                     <p class="font-bold">Verifique sua Caixa de Entrada</p>
-                    <p class="text-stone-600 text-[11px]">Enviamos um código de segurança de 6 dígitos para:<br><strong id="verifyEmailText" class="text-stone-900 font-semibold"></strong></p>
+                    <p class="text-stone-600 text-[11px]">Enviamos um código de verificação de 6 dígitos para ativamento da conta para:<br><strong id="verifyEmailText" class="text-stone-900 font-semibold"></strong></p>
                 </div>
 
                 <div>
@@ -402,13 +410,13 @@
                 </button>
             </div>
 
-            <!-- ETAPA 3: ESQUECI MINHA SENHA (SOLICITAÇÃO & REDEFINIÇÃO) -->
+            <!-- ETAPA 3: ESQUECI MINHA SENHA (SOLICITAÇÃO DE CÓDIGO) -->
             <div id="forgotPasswordStep1" class="space-y-4 hidden">
                 <div class="p-3.5 bg-fabi-50 border border-fabi-200/80 rounded-2xl text-xs text-stone-700 space-y-1">
                     <p class="font-bold text-stone-900 flex items-center gap-1.5">
                         <i class="fa-solid fa-key text-fabi-500"></i> Recuperação de Senha
                     </p>
-                    <p class="text-[11px]">Digite seu e-mail cadastrado. Enviaremos um código de verificação para você cadastrar uma nova senha.</p>
+                    <p class="text-[11px]">Digite seu e-mail cadastrado. Enviaremos um código para você redefinir sua senha.</p>
                 </div>
 
                 <form onsubmit="handleSendResetCode(event)" class="space-y-3">
@@ -421,7 +429,7 @@
                     </div>
                     <button type="submit" id="btnForgotSubmit" class="w-full py-3.5 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition shadow-md flex items-center justify-center gap-2">
                         <i class="fa-solid fa-paper-plane text-fabi-400"></i>
-                        <span>Enviar Código de Recuperação</span>
+                        <span>Enviar Código de Redefinição</span>
                     </button>
                     <button type="button" onclick="backToStep1()" class="w-full text-stone-400 hover:text-stone-600 text-[11px] font-semibold transition text-center block">
                         <i class="fa-solid fa-arrow-left mr-1"></i> Voltar ao Login
@@ -429,27 +437,35 @@
                 </form>
             </div>
 
+            <!-- ETAPA 4: REDEFINIÇÃO DE SENHA COM CONFIRMAÇÃO DE SENHA -->
             <div id="forgotPasswordStep2" class="space-y-4 hidden text-center">
-                <div class="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-stone-700 space-y-1">
-                    <p class="font-bold text-emerald-800"><i class="fa-solid fa-shield-halved text-emerald-600 mr-1"></i> Código de Recuperação Enviado</p>
-                    <p class="text-[11px]">Enviamos um código de 6 dígitos para o e-mail: <strong id="resetEmailText" class="text-stone-900"></strong></p>
+                <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-stone-700 space-y-1">
+                    <p class="font-bold text-amber-900"><i class="fa-solid fa-key text-amber-600 mr-1"></i> Redefinição de Senha</p>
+                    <p class="text-[11px]">Enviamos o código de redefinição para o e-mail: <strong id="resetEmailText" class="text-stone-900"></strong></p>
                 </div>
 
                 <form onsubmit="handleConfirmResetPassword(event)" class="space-y-3 text-left">
                     <div>
                         <label class="text-[11px] font-bold uppercase text-stone-600 block mb-1">Código de 6 Dígitos</label>
-                        <input type="text" id="resetCodeInput" maxlength="6" required placeholder="0 0 0 0 0 0" class="w-full bg-stone-50 border border-stone-300 rounded-xl p-2.5 text-center text-lg font-mono font-bold tracking-widest text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition">
+                        <input type="text" id="resetCodeInput" maxlength="6" required placeholder="0 0 0 0 0 0" class="w-full bg-stone-50 border border-stone-300 rounded-xl p-2.5 text-center text-lg font-mono font-bold tracking-widest text-stone-800 focus:outline-none focus:ring-2 focus:ring-fabi-500/30 focus:border-fabi-500 transition">
                     </div>
                     <div>
                         <label class="text-[11px] font-bold uppercase text-stone-600 block mb-1">Nova Senha</label>
                         <div class="relative">
                             <span class="absolute left-3.5 top-3 text-stone-400 text-xs"><i class="fa-solid fa-lock"></i></span>
-                            <input type="password" id="resetNewPass" minlength="6" required placeholder="Nova senha (min. 6 dígitos)" class="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-fabi-500/30 focus:border-fabi-500 transition">
+                            <input type="password" id="resetNewPass" required placeholder="Min. 8 dígitos com 1 letra maiúscula" class="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-fabi-500/30 focus:border-fabi-500 transition">
                         </div>
                     </div>
-                    <button type="submit" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition shadow-md flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-key"></i>
-                        <span>Redefinir Senha e Acessar</span>
+                    <div>
+                        <label class="text-[11px] font-bold uppercase text-stone-600 block mb-1">Confirmar Nova Senha</label>
+                        <div class="relative">
+                            <span class="absolute left-3.5 top-3 text-stone-400 text-xs"><i class="fa-solid fa-lock font-bold"></i></span>
+                            <input type="password" id="resetConfirmNewPass" required placeholder="Repita a nova senha" class="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-fabi-500/30 focus:border-fabi-500 transition">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full py-3.5 bg-fabi-600 hover:bg-fabi-500 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition shadow-md flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-check"></i>
+                        <span>Salvar Nova Senha e Entrar</span>
                     </button>
                     <button type="button" onclick="backToStep1()" class="w-full text-stone-400 hover:text-stone-600 text-[11px] font-semibold transition text-center block">
                         Cancelar
@@ -776,6 +792,17 @@
             activeBrandFilter: 'ALL'
         };
 
+        // VALIDADOR ESTRITO DE SENHA (MÍNIMO 8 CARACTERES E 1 MAIÚSCULA)
+        function validatePasswordRequirements(password) {
+            if (password.length < 8) {
+                return { valid: false, message: 'A senha deve conter no mínimo 8 caracteres.' };
+            }
+            if (!/[A-Z]/.test(password)) {
+                return { valid: false, message: 'A senha deve conter pelo menos 1 letra maiúscula.' };
+            }
+            return { valid: true };
+        }
+
         // --- SISTEMA ELEGANTE DE TOASTS (NOTIFICAÇÕES EM TELA) ---
         function showToast(message, type = 'success', duration = 4000) {
             const container = document.getElementById('toastContainer');
@@ -913,7 +940,6 @@
                 document.getElementById('userNeighborhood').value = addr.bairro || '';
                 document.getElementById('userComplement').value = addr.complemento || '';
 
-                // Preenche também na Sacola
                 fillCartAddressFromSaved(addr);
             }
         }
@@ -1028,6 +1054,18 @@
             const name = document.getElementById('custRegName').value.trim();
             const email = document.getElementById('custRegEmail').value.trim();
             const pass = document.getElementById('custRegPass').value.trim();
+            const passConfirm = document.getElementById('custRegPassConfirm').value.trim();
+
+            if (pass !== passConfirm) {
+                showToast('As senhas digitadas não correspondem. Digite novamente.', 'warning');
+                return;
+            }
+
+            const checkPass = validatePasswordRequirements(pass);
+            if (!checkPass.valid) {
+                showToast(checkPass.message, 'warning');
+                return;
+            }
 
             const submitBtn = document.getElementById('btnCustomerSubmit');
             submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> <span>Enviando...</span>`;
@@ -1049,7 +1087,8 @@
                     body: JSON.stringify({
                         email: email,
                         nome: name,
-                        codigo: generatedCode
+                        codigo: generatedCode,
+                        tipo: 'cadastro'
                     })
                 });
 
@@ -1057,7 +1096,7 @@
                     document.getElementById('verifyEmailText').innerText = email;
                     document.getElementById('custAuthStep1').classList.add('hidden');
                     document.getElementById('custAuthStep2').classList.remove('hidden');
-                    showToast(`Código enviado para o e-mail: <strong>${email}</strong>`, 'success');
+                    showToast(`Código de confirmação de conta enviado para: <strong>${email}</strong>`, 'success');
                 } else {
                     showToast('Erro ao enviar e-mail. Verifique se o endereço está correto.', 'error');
                 }
@@ -1087,7 +1126,7 @@
                 localStorage.setItem('fabi_logged_customer', JSON.stringify(loggedCustomer));
 
                 updateCustomerHeaderUI();
-                openCustomerAuthModal(); // Abre a tela com Meus Dados & Endereço
+                openCustomerAuthModal();
                 showToast(`E-mail verificado! Conta ativada. Bem-vindo(a), <strong>${loggedCustomer.nome}</strong>!`, 'success', 5000);
             } else {
                 showToast('Código de verificação incorreto. Confira no seu e-mail.', 'warning');
@@ -1113,7 +1152,7 @@
             }
         }
 
-        // --- FUNCIONALIDADE ESQUECI MINHA SENHA ---
+        // --- ESQUECI MINHA SENHA ---
         function openForgotPasswordStep() {
             document.getElementById('custAuthStep1').classList.add('hidden');
             document.getElementById('custAuthStep2').classList.add('hidden');
@@ -1147,7 +1186,8 @@
                     body: JSON.stringify({
                         email: email,
                         nome: user.nome,
-                        codigo: generatedCode
+                        codigo: generatedCode,
+                        tipo: 'reset'
                     })
                 });
 
@@ -1155,14 +1195,14 @@
                     document.getElementById('resetEmailText').innerText = email;
                     document.getElementById('forgotPasswordStep1').classList.add('hidden');
                     document.getElementById('forgotPasswordStep2').classList.remove('hidden');
-                    showToast(`Código de redefinição enviado para: <strong>${email}</strong>`, 'success');
+                    showToast(`Código de redefinição de senha enviado para: <strong>${email}</strong>`, 'success');
                 } else {
                     showToast('Erro ao enviar e-mail. Verifique a conexão.', 'error');
                 }
             } catch (err) {
                 showToast('Falha ao conectar com o servidor para enviar o código.', 'error');
             } finally {
-                btn.innerHTML = `<i class="fa-solid fa-paper-plane text-fabi-400"></i> <span>Enviar Código de Recuperação</span>`;
+                btn.innerHTML = `<i class="fa-solid fa-paper-plane text-fabi-400"></i> <span>Enviar Código de Redefinição</span>`;
                 btn.disabled = false;
             }
         }
@@ -1171,8 +1211,20 @@
             e.preventDefault();
             const code = document.getElementById('resetCodeInput').value.trim();
             const newPass = document.getElementById('resetNewPass').value.trim();
+            const confirmNewPass = document.getElementById('resetConfirmNewPass').value.trim();
 
             if (!pendingResetVerification) return;
+
+            if (newPass !== confirmNewPass) {
+                showToast('As senhas digitadas não são iguais.', 'warning');
+                return;
+            }
+
+            const checkPass = validatePasswordRequirements(newPass);
+            if (!checkPass.valid) {
+                showToast(checkPass.message, 'warning');
+                return;
+            }
 
             if (code === pendingResetVerification.codigo) {
                 let savedUsers = JSON.parse(localStorage.getItem('fabi_registered_customers')) || [];
@@ -1206,7 +1258,6 @@
             if (loggedCustomer) {
                 btnText.innerHTML = `<span class="text-emerald-600 font-bold">${loggedCustomer.nome.split(' ')[0]}</span>`;
                 
-                // Se o cliente já tiver endereço salvo, pré-carrega no checkout
                 const savedAddresses = JSON.parse(localStorage.getItem('fabi_customer_addresses')) || {};
                 const addr = savedAddresses[loggedCustomer.email.toLowerCase()];
                 if (addr) fillCartAddressFromSaved(addr);
