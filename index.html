@@ -7,7 +7,1049 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css<!DOCTYPE html>
+<html lang="pt-BR" class="h-full bg-stone-50 text-stone-900">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fragrâncias Fabi — Parfumerie & Cosmetiques</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome 6 Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        fabi: {
+                            50: '#FAF8F5', 100: '#F5EFE6', 200: '#E8DBCB',
+                            500: '#C09A6B', 600: '#A47E50', 800: '#523E27', 900: '#2A1F13',
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['Playfair Display', 'serif'],
+                        sans: ['Plus Jakarta Sans', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c09a6b; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a47e50; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .animate-pop-in { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes toastIn { 0% { transform: translateY(-20px) scale(0.9); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
+        .animate-toast { animation: toastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans bg-stone-50 text-stone-800 antialiased selection:bg-fabi-500 selection:text-white relative">
+
+    <div id="toastContainer" class="fixed top-5 right-5 z-[100] flex flex-col space-y-3 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+    <!-- TELA DE SUCESSO DO PAGAMENTO ONLINE (MERCADO PAGO) -->
+    <div id="onlinePaymentSuccessModal" class="fixed inset-0 z-[200] bg-stone-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-8 text-center space-y-5 shadow-2xl animate-pop-in border border-stone-100">
+            <div class="w-20 h-20 bg-emerald-500 text-white rounded-full flex items-center justify-center text-4xl mx-auto shadow-lg animate-bounce">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <div class="space-y-2">
+                <h3 class="font-serif text-2xl font-bold text-stone-900">Pagamento Aprovado!</h3>
+                <p class="text-xs text-stone-500">Seu pedido foi confirmado com sucesso pelo Mercado Pago e já está sendo preparado.</p>
+            </div>
+            <button onclick="closeOnlineSuccessModal()" class="w-full py-3.5 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition">Continuar na Loja</button>
+        </div>
+    </div>
+
+    <!-- BARRA EXCLUSIVA DO GESTOR -->
+    <div id="adminTopBar" class="hidden bg-stone-900 text-stone-300 px-4 py-2.5 text-xs flex-wrap justify-between items-center border-b border-stone-800 z-50 sticky top-0 shadow-md">
+        <div class="flex items-center space-x-2 my-1">
+            <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="font-bold text-white uppercase tracking-wider text-[11px]">SISTEMA DE GESTÃO ATIVO</span>
+        </div>
+        <div class="flex items-center space-x-1 sm:space-x-2 my-1 overflow-x-auto">
+            <button onclick="setMode('ecommerce')" id="btn-mode-ecommerce" class="px-3 py-1.5 rounded-full font-semibold transition bg-fabi-500 text-white shadow-sm text-[11px] flex items-center gap-1.5 shrink-0"><i class="fa-solid fa-store"></i> <span>Loja Virtual</span></button>
+            <button onclick="setMode('pdv')" id="btn-mode-pdv" class="px-3 py-1.5 rounded-full font-semibold transition hover:bg-stone-800 text-stone-300 text-[11px] flex items-center gap-1.5 shrink-0"><i class="fa-solid fa-cash-register"></i> <span>PDV Balcão</span></button>
+            <button onclick="setMode('admin')" id="btn-mode-admin" class="px-3 py-1.5 rounded-full font-semibold transition hover:bg-stone-800 text-stone-300 text-[11px] flex items-center gap-1.5 shrink-0"><i class="fa-solid fa-chart-pie"></i> <span>Painel Admin</span></button>
+            <button onclick="logoutAdmin()" class="px-3 py-1.5 rounded-full font-semibold transition bg-rose-900/80 hover:bg-rose-800 text-rose-200 text-[11px] flex items-center gap-1.5 ml-2 shrink-0"><i class="fa-solid fa-right-from-bracket"></i> <span>Sair</span></button>
+        </div>
+    </div>
+
+    <!-- 1. VISÃO LOJA VIRTUAL -->
+    <div id="view-ecommerce" class="flex-1 flex flex-col overflow-y-auto">
+        <div class="bg-stone-950 text-stone-300 py-2 text-center text-[10px] sm:text-xs font-medium tracking-widest uppercase border-b border-stone-800 px-2">
+            Frete cortesia nas compras acima de R$300 para todo o Brasil • 100% Originais
+        </div>
+
+        <header class="bg-white border-b border-stone-200 sticky top-0 z-40 shadow-xs">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16 sm:h-20">
+                    <button onclick="toggleMobileNav()" class="lg:hidden text-stone-800 p-2 focus:outline-none"><i class="fa-solid fa-bars text-xl"></i></button>
+                    <div class="flex-shrink-0 cursor-pointer text-center lg:text-left" onclick="filterBrand('ALL')">
+                        <h1 class="font-serif text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-stone-900">FRAGRÂNCIAS <span class="italic text-fabi-500 font-normal">FABI</span></h1>
+                    </div>
+                    <nav class="hidden lg:flex space-x-6 xl:space-x-8 text-xs font-semibold text-stone-700 uppercase tracking-wider">
+                        <a href="#" onclick="event.preventDefault(); filterBrand('ALL')" class="hover:text-fabi-500 transition">Novidades</a>
+                        <a href="#" onclick="event.preventDefault(); filterBrand('Nicho')" class="hover:text-fabi-500 transition">Nicho</a>
+                        <a href="#" onclick="event.preventDefault(); filterBrand('ALL')" class="text-fabi-600 font-bold border-b-2 border-fabi-500 pb-1">Fragrâncias</a>
+                    </nav>
+                    <div class="flex items-center space-x-3 sm:space-x-4">
+                        <button id="customerAuthBtn" onclick="openCustomerAuthModal()" class="text-stone-700 hover:text-fabi-600 text-xs font-semibold flex items-center gap-1.5 transition px-2 py-1 rounded-md hover:bg-stone-100">
+                            <i class="fa-solid fa-user text-sm text-fabi-500"></i>
+                            <span id="customerAuthName" class="hidden md:inline">Entrar / Criar Conta</span>
+                        </button>
+                        <button id="managerLoginBtn" onclick="openLoginModal()" class="text-stone-600 hover:text-fabi-600 text-xs font-semibold flex items-center gap-1.5 transition px-2 py-1 rounded-md hover:bg-stone-100">
+                            <i class="fa-solid fa-user-lock text-sm"></i><span class="hidden md:inline">Área do Gestor</span>
+                        </button>
+                        <button onclick="toggleCartDrawer(true)" class="relative flex items-center bg-stone-900 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-stone-800 transition">
+                            <i class="fa-solid fa-bag-shopping text-sm sm:text-base mr-1.5 sm:mr-2"></i>
+                            <span class="text-xs font-bold uppercase tracking-wider hidden sm:inline">Sacola</span>
+                            <span id="cartCountBadge" class="bg-fabi-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1 sm:ml-2">0</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="mobileNav" class="hidden lg:hidden bg-white border-b border-stone-200 px-4 py-3 space-y-2 text-xs font-semibold uppercase tracking-wider border-t">
+                <a href="#" onclick="toggleMobileNav(); filterBrand('ALL');" class="block py-2 text-stone-800">Início</a>
+                <a href="#" onclick="toggleMobileNav(); openCustomerAuthModal();" class="block py-2 text-stone-700"><i class="fa-solid fa-user mr-1.5 text-fabi-500"></i> Minha Conta</a>
+                <a href="#" onclick="toggleMobileNav(); openLoginModal();" class="block py-2 text-stone-500"><i class="fa-solid fa-lock mr-1.5 text-stone-400"></i> Área do Gestor</a>
+            </div>
+        </header>
+
+        <!-- Filtros por Marca -->
+        <div class="bg-white border-b border-stone-200 py-3 sm:py-4">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center space-x-2 overflow-x-auto hide-scrollbar py-1" id="brandPillsContainer"></div>
+            </div>
+        </div>
+
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full">
+            <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"></div>
+        </main>
+
+        <footer class="bg-stone-900 text-stone-400 border-t border-stone-800 mt-12 py-8 sm:py-12 text-xs">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                <div><h3 class="font-serif text-base font-bold text-white mb-2">Fragrâncias Fabi</h3><p>Ateliê exclusivo de alta perfumaria importada.</p></div>
+                <div><h4 class="font-bold text-white uppercase mb-2">Atendimento</h4><p><i class="fa-brands fa-whatsapp text-emerald-400 mr-1.5"></i> (11) 98888-7777</p></div>
+                <div><h4 class="font-bold text-white uppercase mb-2">Pagamento</h4><p>PIX e Cartão em até 10x via Mercado Pago.</p></div>
+                <div><h4 class="font-bold text-white uppercase mb-2">Garantia</h4><p><i class="fa-solid fa-shield-halved text-fabi-500 mr-1.5"></i> 100% Originais.</p></div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- SACOLA LATERAL (COM CALCULADORA DE FRETE) -->
+    <div id="cartDrawer" class="fixed inset-0 z-50 overflow-hidden hidden">
+        <div onclick="toggleCartDrawer(false)" class="absolute inset-0 bg-stone-900/60 backdrop-blur-xs"></div>
+        <div class="fixed inset-y-0 right-0 max-w-full flex pl-6 sm:pl-10">
+            <div class="w-screen max-w-md bg-white shadow-2xl flex flex-col justify-between">
+                <div class="p-4 sm:p-6 border-b border-stone-200 flex items-center justify-between">
+                    <h2 class="font-serif text-base sm:text-lg font-bold text-stone-900 flex items-center"><i class="fa-solid fa-bag-shopping text-fabi-500 mr-2"></i> Sua Sacola</h2>
+                    <button onclick="toggleCartDrawer(false)" class="text-stone-400 hover:text-stone-600 p-2"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+                
+                <div id="cartDrawerItems" class="p-4 sm:p-6 overflow-y-auto flex-1 divide-y divide-stone-100 max-h-[220px]"></div>
+
+                <!-- ENDEREÇO E CÁLCULO DE FRETE -->
+                <div class="px-4 sm:px-6 py-3 bg-stone-100 border-t border-stone-200 space-y-2 text-xs">
+                    <h4 class="font-bold text-stone-800 uppercase text-[11px] flex justify-between items-center">
+                        <span><i class="fa-solid fa-truck-fast text-fabi-500 mr-1"></i> Endereço & Frete</span>
+                        <span id="savedAddressNotice" class="hidden text-[10px] text-emerald-600 font-semibold"><i class="fa-solid fa-check"></i> Salvo da Conta</span>
+                    </h4>
+                    <div class="flex gap-2">
+                        <input type="text" id="deliveryCep" placeholder="CEP (Ex: 01001-000)" maxlength="9" onblur="calcularFretePorCep()" class="flex-1 p-2 bg-white border border-stone-300 rounded text-xs font-mono">
+                        <button type="button" onclick="calcularFretePorCep()" class="px-3 py-2 bg-stone-900 text-white font-bold rounded text-[10px] uppercase">Calcular</button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <input type="text" id="deliveryCity" placeholder="Cidade / UF" class="col-span-2 p-2 bg-white border border-stone-300 rounded text-xs">
+                        <input type="text" id="deliveryNumber" placeholder="Número" class="col-span-1 p-2 bg-white border border-stone-300 rounded text-xs">
+                    </div>
+                    <input type="text" id="deliveryStreet" placeholder="Rua / Avenida" class="w-full p-2 bg-white border border-stone-300 rounded text-xs">
+                    <input type="text" id="deliveryNeighborhood" placeholder="Bairro" class="w-full p-2 bg-white border border-stone-300 rounded text-xs">
+                </div>
+
+                <!-- TOTAIS E BOTÃO -->
+                <div class="p-4 sm:p-6 border-t border-stone-200 bg-stone-50 space-y-2">
+                    <div class="flex justify-between text-xs text-stone-600"><span>Subtotal dos Produtos:</span><span id="cartSubtotalOnly" class="font-bold">R$ 0,00</span></div>
+                    <div class="flex justify-between text-xs text-stone-600"><span>Frete:</span><span id="cartShippingCost" class="font-bold text-emerald-600">Digite o CEP</span></div>
+                    <div class="flex justify-between text-base font-bold text-stone-900 border-t pt-2"><span>Total Geral:</span><span id="cartDrawerSubtotal" class="font-serif text-lg text-fabi-600">R$ 0,00</span></div>
+                    <button onclick="checkoutStoreOrder()" id="btnStoreCheckout" disabled class="w-full py-3.5 bg-stone-900 hover:bg-stone-800 disabled:opacity-40 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition shadow-md mt-2">Finalizar Pedido (Mercado Pago)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CADASTRO, LOGIN E ENDEREÇO DO CLIENTE -->
+    <div id="customerAuthModal" class="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-5 border border-stone-100 animate-pop-in relative overflow-hidden max-h-[90vh] overflow-y-auto">
+            <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-fabi-200 via-fabi-500 to-fabi-800"></div>
+            <div class="flex justify-between items-center border-b border-stone-100 pb-3.5">
+                <div>
+                    <h3 class="font-serif font-bold text-stone-900 text-lg flex items-center gap-2"><i class="fa-solid fa-crown text-fabi-500"></i> Perfaria Fabi</h3>
+                    <p class="text-[11px] text-stone-400">Área exclusiva do cliente.</p>
+                </div>
+                <button onclick="closeCustomerAuthModal()" class="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-500 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- PERFIL LOGADO -->
+            <div id="customerLoggedInView" class="space-y-4 hidden">
+                <div class="p-4 bg-gradient-to-br from-fabi-50 to-stone-50 rounded-2xl border border-fabi-200/60 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-fabi-500 text-white font-serif font-bold flex items-center justify-center"><i class="fa-solid fa-user"></i></div>
+                    <div><p class="font-bold text-stone-900 text-sm" id="loggedInUserName"></p><p class="text-stone-500 text-xs" id="loggedInUserEmail"></p></div>
+                </div>
+                <div class="flex border-b border-stone-200 text-xs font-bold">
+                    <button onclick="switchCustomerPanelTab('profile')" id="tabClientProfile" class="w-1/2 py-2.5 text-fabi-600 border-b-2 border-fabi-500">Meus Dados & Endereço</button>
+                    <button onclick="switchCustomerPanelTab('orders'); carregarHistoricoPedidosCliente();" id="tabClientOrders" class="w-1/2 py-2.5 text-stone-400">Meus Pedidos</button>
+                </div>
+                <div id="clientPanelProfile" class="space-y-4 pt-1">
+                    <div class="p-3.5 bg-stone-50 rounded-2xl border border-stone-200 space-y-3">
+                        <h4 class="font-bold text-xs uppercase text-stone-800"><i class="fa-solid fa-location-dot text-fabi-500 mr-1"></i> Endereço Padrão</h4>
+                        <form onsubmit="handleSaveAddress(event)" class="space-y-2.5">
+                            <div class="grid grid-cols-3 gap-2">
+                                <input type="text" id="userCep" placeholder="CEP" required class="col-span-1 p-2 bg-white border border-stone-200 rounded-lg text-xs">
+                                <input type="text" id="userCity" placeholder="Cidade / UF" required class="col-span-2 p-2 bg-white border border-stone-200 rounded-lg text-xs">
+                            </div>
+                            <input type="text" id="userStreet" placeholder="Rua / Avenida" required class="w-full p-2 bg-white border border-stone-200 rounded-lg text-xs">
+                            <div class="grid grid-cols-3 gap-2">
+                                <input type="text" id="userNumber" placeholder="Número" required class="col-span-1 p-2 bg-white border border-stone-200 rounded-lg text-xs">
+                                <input type="text" id="userNeighborhood" placeholder="Bairro" required class="col-span-2 p-2 bg-white border border-stone-200 rounded-lg text-xs">
+                            </div>
+                            <input type="text" id="userComplement" placeholder="Complemento" class="w-full p-2 bg-white border border-stone-200 rounded-lg text-xs">
+                            <button type="submit" class="w-full py-2 bg-fabi-600 hover:bg-fabi-500 text-white font-bold rounded-lg text-xs uppercase">Salvar Endereço</button>
+                        </form>
+                    </div>
+                    <button onclick="fazerLogoutCliente()" class="w-full py-3 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs uppercase border border-rose-200"><i class="fa-solid fa-right-from-bracket mr-1"></i> Sair da Conta</button>
+                </div>
+                <div id="clientPanelOrders" class="space-y-3 pt-2 hidden max-h-64 overflow-y-auto pr-1">
+                    <div id="listaMeusPedidosContainer"><p class="text-xs text-stone-400 text-center py-4">Carregando...</p></div>
+                </div>
+            </div>
+
+            <!-- ETAPA 1: LOGIN / CADASTRO -->
+            <div id="custAuthStep1" class="space-y-4">
+                <div class="bg-stone-100 p-1 rounded-2xl flex text-xs font-bold text-stone-500">
+                    <button onclick="switchCustomerTab('signup')" id="tabCustomerRegister" class="w-1/2 py-2.5 rounded-xl bg-white text-stone-900 shadow-xs">Criar Nova Conta</button>
+                    <button onclick="switchCustomerTab('login')" id="tabCustomerLogin" class="w-1/2 py-2.5 rounded-xl">Já Tenho Conta</button>
+                </div>
+                <!-- CADASTRO COM CONFIRMAÇÃO DE SENHA -->
+                <form id="formCustomerRegister" onsubmit="handleCustomerRegister(event)" class="space-y-3.5">
+                    <div>
+                        <label class="text-[11px] font-bold uppercase text-stone-600 block mb-1">Nome Completo</label>
+                        <input type="text" id="custRegName" required placeholder="Maria Silva" class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs">
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-bold uppercase text-stone-600 block mb-1">E-mail</label>
+                        <input type="email" id="custRegEmail" required placeholder="seuemail@exemplo.com" class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs">
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-bold uppercase text-stone-600 block mb-1">Senha (Mín. 8 chars, 1 Maiúscula)</label>
+                        <input type="password" id="custRegPass" required placeholder="••••••••" class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs">
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-bold uppercase text-stone-600 block mb-1">Confirmar Senha</label>
+                        <input type="password" id="custRegPassConfirm" required placeholder="Repita a senha" class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs">
+                    </div>
+                    <button type="submit" id="btnCustomerSubmit" class="w-full py-3.5 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-xl text-xs uppercase">Enviar Código por E-mail</button>
+                </form>
+                <!-- LOGIN -->
+                <form id="formCustomerLogin" onsubmit="handleCustomerLogin(event)" class="space-y-3.5 hidden">
+                    <div>
+                        <label class="text-[11px] font-bold uppercase text-stone-600 block mb-1">E-mail</label>
+                        <input type="email" id="custLogEmail" required class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs">
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-[11px] font-bold uppercase text-stone-600">Senha</label>
+                            <button type="button" onclick="openForgotPasswordStep()" class="text-[11px] text-fabi-600 font-semibold">Esqueci minha senha</button>
+                        </div>
+                        <input type="password" id="custLogPass" required class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs">
+                    </div>
+                    <button type="submit" class="w-full py-3.5 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-xl text-xs uppercase">Entrar na Conta</button>
+                </form>
+            </div>
+
+            <!-- ETAPA 2: CÓDIGO EMAIL (CADASTRO) -->
+            <div id="custAuthStep2" class="space-y-4 hidden text-center">
+                <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-2xl text-xs space-y-1">
+                    <i class="fa-solid fa-envelope-circle-check text-3xl text-emerald-600 mb-1"></i>
+                    <p class="font-bold">Verifique sua Caixa de Entrada</p>
+                    <p class="text-stone-600 text-[11px]">Enviamos um código de 6 dígitos para <strong id="verifyEmailText"></strong></p>
+                </div>
+                <input type="text" id="custVerifyCodeInput" maxlength="6" placeholder="0 0 0 0 0 0" class="w-full bg-stone-50 border border-stone-300 rounded-xl p-3 text-center text-xl font-mono font-bold tracking-widest">
+                <button onclick="confirmEmailVerification()" class="w-full py-3.5 bg-emerald-600 text-white font-bold rounded-xl text-xs uppercase">Confirmar e Ativar Conta</button>
+                <button onclick="backToStep1()" class="w-full text-stone-400 text-[11px]">Voltar</button>
+            </div>
+
+            <!-- ESQUECI SENHA 1 -->
+            <div id="forgotPasswordStep1" class="space-y-4 hidden">
+                <p class="text-xs text-stone-600">Digite seu e-mail cadastrado para redefinir a senha.</p>
+                <form onsubmit="handleSendResetCode(event)" class="space-y-3">
+                    <input type="email" id="forgotEmailInput" required placeholder="seuemail@exemplo.com" class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs">
+                    <button type="submit" id="btnForgotSubmit" class="w-full py-3 bg-stone-900 text-white font-bold rounded-xl text-xs uppercase">Enviar Código</button>
+                    <button type="button" onclick="backToStep1()" class="w-full text-stone-400 text-[11px]">Voltar ao Login</button>
+                </form>
+            </div>
+
+            <!-- ESQUECI SENHA 2 (NOVA SENHA + CONFIRMAÇÃO) -->
+            <div id="forgotPasswordStep2" class="space-y-4 hidden text-center">
+                <p class="text-xs text-stone-600">Código enviado para <strong id="resetEmailText"></strong></p>
+                <form onsubmit="handleConfirmResetPassword(event)" class="space-y-3 text-left">
+                    <input type="text" id="resetCodeInput" maxlength="6" required placeholder="000000" class="w-full bg-stone-50 border border-stone-300 rounded-xl p-2.5 text-center text-lg font-mono font-bold tracking-widest">
+                    <input type="password" id="resetNewPass" required placeholder="Nova Senha (Min. 8 chars, 1 Maiúscula)" class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs">
+                    <input type="password" id="resetConfirmNewPass" required placeholder="Confirmar Nova Senha" class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs">
+                    <button type="submit" class="w-full py-3 bg-fabi-600 text-white font-bold rounded-xl text-xs uppercase">Salvar Nova Senha</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL GESTOR ADMIN -->
+    <div id="loginModal" class="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-stone-100 pb-3">
+                <h3 class="font-serif font-bold text-stone-900 text-base"><i class="fa-solid fa-user-shield text-fabi-500 mr-2"></i> Gestor</h3>
+                <button onclick="closeLoginModal()" class="text-stone-400"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="handleAdminLogin(event)" class="space-y-3">
+                <input type="text" id="loginUser" required placeholder="Usuário" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs">
+                <input type="password" id="loginPass" required placeholder="Senha" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs">
+                <button type="submit" class="w-full py-3 bg-stone-900 text-white font-bold rounded-lg text-xs uppercase">Entrar no Painel</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAIS PDV (DINHEIRO, CARTÃO, PIX MAQUININHA) -->
+    <div id="pdvCashModal" class="fixed inset-0 z-50 bg-stone-900/80 hidden flex items-center justify-center p-4">
+        <div class="bg-stone-800 border border-stone-700 rounded-2xl max-w-sm w-full p-6 space-y-4 text-stone-100">
+            <h3 class="font-bold text-fabi-400">Dinheiro e Troco</h3>
+            <p class="text-xs">Total: <span id="pdvCashTotalText" class="font-mono font-bold"></span></p>
+            <input type="number" id="pdvCashReceivedInput" step="0.01" oninput="calculatePdvChange()" placeholder="Valor recebido" class="w-full bg-stone-950 border border-stone-700 rounded-lg p-2.5 text-sm font-mono text-white">
+            <div id="pdvChangeDisplay" class="p-3 bg-stone-900 rounded-lg text-center font-bold text-sm">Troco: R$ 0,00</div>
+            <button onclick="confirmCashPdvSale()" class="w-full py-2.5 bg-emerald-600 text-white font-bold rounded-lg text-xs uppercase">Confirmar Venda</button>
+            <button onclick="closePdvCashModal()" class="w-full text-stone-400 text-xs">Cancelar</button>
+        </div>
+    </div>
+
+    <div id="pdvCardModal" class="fixed inset-0 z-50 bg-stone-900/80 hidden flex items-center justify-center p-4">
+        <div class="bg-stone-800 border border-stone-700 rounded-2xl max-w-sm w-full p-6 space-y-4 text-stone-100 text-center">
+            <h3 class="font-bold text-fabi-400">Maquininha de Cartão</h3>
+            <p id="pdvCardTotalText" class="text-2xl font-bold font-serif text-fabi-300">R$ 0,00</p>
+            <button onclick="confirmCardPdvSale()" class="w-full py-3 bg-fabi-600 text-white font-bold rounded-lg text-xs uppercase">Aprovado na Maquininha</button>
+            <button onclick="closePdvCardModal()" class="w-full text-stone-400 text-xs">Cancelar</button>
+        </div>
+    </div>
+
+    <div id="pdvPixModal" class="fixed inset-0 z-50 bg-stone-900/80 hidden flex items-center justify-center p-4">
+        <div class="bg-stone-800 border border-stone-700 rounded-2xl max-w-sm w-full p-6 space-y-4 text-stone-100 text-center relative overflow-hidden">
+            <h3 class="font-bold text-teal-400">PIX Maquininha</h3>
+            <p id="pdvPixTotalText" class="text-2xl font-bold font-serif text-teal-300">R$ 0,00</p>
+            <p class="text-xs text-stone-300">Insira ou digite o valor na maquininha física</p>
+            <button onclick="confirmPixPdvSale()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition">Aprovado na Maquininha</button>
+            <button onclick="closePdvPixModal()" class="w-full text-stone-400 text-xs">Cancelar</button>
+
+            <!-- TELA DE SUCESSO DO PIX -->
+            <div id="pdvPixSuccessOverlay" class="absolute inset-0 bg-stone-900/95 flex flex-col items-center justify-center p-6 space-y-4 hidden animate-pop-in">
+                <div class="w-16 h-16 bg-emerald-500 text-white rounded-full flex items-center justify-center text-3xl shadow-lg"><i class="fa-solid fa-check"></i></div>
+                <h3 class="font-serif text-xl font-bold text-emerald-400">PIX Aprovado com Sucesso!</h3>
+                <p class="text-xs text-stone-300">Venda registrada e estoque atualizado no sistema.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. VISÃO PDV BALCÃO -->
+    <div id="view-pdv" class="flex-1 flex flex-col hidden bg-stone-900 text-stone-100 p-4 sm:p-6 overflow-y-auto">
+        <div class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 space-y-4">
+                <div class="bg-stone-800 border border-stone-700 p-4 rounded-2xl">
+                    <label class="text-[10px] uppercase font-bold text-fabi-400">Leitor / Busca Balcão</label>
+                    <input type="text" id="pdvBarcodeBar" onkeydown="handlePdvBarcodeScan(event)" placeholder="Bipe o código..." class="w-full bg-stone-950 border border-stone-700 rounded-xl p-2.5 text-xs text-fabi-300 mt-1">
+                </div>
+                <div class="bg-stone-800 border border-stone-700 rounded-2xl p-4">
+                    <h3 class="font-bold text-xs mb-3">Catálogo Rápido</h3>
+                    <div id="pdvQuickGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-[400px] overflow-y-auto"></div>
+                </div>
+            </div>
+            <div class="bg-stone-800 border border-stone-700 rounded-2xl p-4 flex flex-col justify-between h-[520px]">
+                <div>
+                    <h2 class="font-bold text-sm mb-3">Caixa Balcão #01</h2>
+                    <div id="pdvCartItems" class="space-y-2 overflow-y-auto h-[260px] divide-y divide-stone-700"></div>
+                </div>
+                <div class="border-t border-stone-700 pt-3 space-y-2 bg-stone-900/60 p-3 rounded-xl">
+                    <div class="flex justify-between text-sm font-bold text-fabi-400"><span>TOTAL:</span><span id="pdvTotal" class="font-serif">R$ 0,00</span></div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="openPdvCashModal()" id="btnPdvCash" disabled class="py-2.5 bg-emerald-700 disabled:opacity-40 text-white font-bold text-[10px] rounded uppercase">Dinheiro</button>
+                        <button onclick="openPdvPixModal()" id="btnPdvPix" disabled class="py-2.5 bg-teal-700 disabled:opacity-40 text-white font-bold text-[10px] rounded uppercase">PIX</button>
+                        <button onclick="openPdvCardModal()" id="btnPdvCard" disabled class="py-2.5 bg-fabi-600 disabled:opacity-40 text-white font-bold text-[10px] rounded uppercase">Cartão</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. PAINEL ADMIN -->
+    <div id="view-admin" class="flex-1 flex flex-col hidden bg-stone-100 p-4 sm:p-6 overflow-y-auto">
+        <div class="max-w-7xl mx-auto w-full space-y-6">
+            <div class="flex justify-between items-center">
+                <h1 class="font-serif text-xl font-bold">Gestão & Estoque</h1>
+                <button onclick="openNewProductModal()" class="px-4 py-2 bg-stone-900 text-white font-bold text-xs rounded uppercase">Novo Perfume</button>
+            </div>
+            <div class="bg-white rounded-2xl border border-stone-200 p-4 shadow-xs overflow-x-auto">
+                <h3 class="font-bold text-sm mb-3">Estoque</h3>
+                <table class="w-full text-left text-xs"><tbody id="adminInventoryTable"></tbody></table>
+            </div>
+            <div class="bg-white rounded-2xl border border-stone-200 p-4 shadow-xs overflow-x-auto">
+                <h3 class="font-bold text-sm mb-3">Histórico de Vendas (com Segundos e Detalhes)</h3>
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="border-b text-stone-400 uppercase text-[10px]">
+                            <th class="p-2">Data / Hora</th>
+                            <th class="p-2">Origem</th>
+                            <th class="p-2">Pagamento</th>
+                            <th class="p-2">Itens / Quantidade</th>
+                            <th class="p-2 text-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminSalesTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL NOVO PRODUTO -->
+    <div id="newProductModal" class="fixed inset-0 z-50 bg-stone-900/60 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4">
+            <h3 class="font-bold">Cadastrar Perfume</h3>
+            <form onsubmit="handleCreateProduct(event)" class="space-y-3">
+                <input type="text" id="newProdName" required placeholder="Nome" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
+                <input type="text" id="newProdBrand" required placeholder="Marca" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" step="0.01" id="newProdPrice" required placeholder="Preço" class="p-2.5 bg-stone-50 border rounded text-xs">
+                    <input type="number" id="newProdStock" required placeholder="Estoque" class="p-2.5 bg-stone-50 border rounded text-xs">
+                </div>
+                <input type="text" id="newProdBarcode" required placeholder="Código de Barras" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
+                <input type="url" id="newProdImage" placeholder="URL Imagem" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
+                <button type="submit" class="w-full py-3 bg-stone-900 text-white font-bold rounded text-xs uppercase">Salvar</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://fragrancias-fabi-api.onrender.com/api';
+        
+        let isAdminAuthenticated = localStorage.getItem('fabi_admin_auth') === 'true';
+        let loggedCustomer = JSON.parse(localStorage.getItem('fabi_logged_customer')) || null;
+        let pendingCustomerVerification = null, pendingResetVerification = null;
+        let currentShippingCost = 0;
+
+        const DB = {
+            perfumes: JSON.parse(localStorage.getItem('fabi_perfumes_local')) || [],
+            carrinhoStore: [], carrinhoPdv: [],
+            vendas: JSON.parse(localStorage.getItem('fabi_vendas_salvas')) || [],
+            activeBrandFilter: 'ALL'
+        };
+
+        function validatePasswordRequirements(pwd) {
+            if (pwd.length < 8) return { valid: false, message: 'Mínimo de 8 caracteres.' };
+            if (!/[A-Z]/.test(pwd)) return { valid: false, message: 'Necessário 1 letra maiúscula.' };
+            return { valid: true };
+        }
+
+        function showToast(message, type = 'success', duration = 4000) {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto flex items-center gap-3 p-4 rounded-2xl shadow-2xl border text-xs font-semibold backdrop-blur-md animate-toast bg-stone-900/95 text-white border-${type==='success'?'emerald':type==='error'?'rose':'fabi'}-500/40`;
+            toast.innerHTML = `<div class="flex-1">${message}</div><button onclick="this.parentElement.remove()" class="text-stone-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), duration);
+        }
+
+        window.onload = function() {
+            checkPaymentReturn();
+            fetchPerfumesFromApi();
+            renderSalesLog();
+            updateCustomerHeaderUI();
+            if (isAdminAuthenticated) {
+                document.getElementById('adminTopBar').classList.remove('hidden');
+                document.getElementById('adminTopBar').classList.add('flex');
+                setMode(localStorage.getItem('fabi_active_mode') || 'admin');
+            }
+        };
+
+        function checkPaymentReturn() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const status = urlParams.get('status');
+            
+            if (status) {
+                if (status === 'success' || status === 'approved') {
+                    DB.carrinhoStore = []; 
+                    renderCartDrawer(); 
+                    localStorage.removeItem('fabi_pending_online_order');
+                    document.getElementById('onlinePaymentSuccessModal').classList.remove('hidden');
+                } else if (status === 'pending') {
+                    showToast('Pagamento pendente ou em análise.', 'info', 6000);
+                } else if (status === 'failure') {
+                    showToast('O pagamento não foi aprovado.', 'error', 6000);
+                }
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+
+        function closeOnlineSuccessModal() {
+            document.getElementById('onlinePaymentSuccessModal').classList.add('hidden');
+        }
+
+        // --- CÁLCULO DE FRETE AUTOMÁTICO (Frete Grátis acima de R$ 300) ---
+        async function calcularFretePorCep() {
+            const cepInput = document.getElementById('deliveryCep').value.replace(/\D/g, '');
+            if (cepInput.length !== 8) {
+                if(cepInput.length > 0) showToast('Digite um CEP válido com 8 dígitos.', 'warning');
+                return;
+            }
+
+            try {
+                const res = await fetch(`https://viacep.com.br/ws/${cepInput}/json/`);
+                const data = await res.json();
+                if (data.erro) {
+                    showToast('CEP não encontrado.', 'error');
+                    return;
+                }
+
+                document.getElementById('deliveryStreet').value = data.logradouro || '';
+                document.getElementById('deliveryNeighborhood').value = data.bairro || '';
+                document.getElementById('deliveryCity').value = `${data.localidade} / ${data.uf}`;
+
+                const subtotal = DB.carrinhoStore.reduce((a, b) => a + (b.preco_unitario * b.quantidade), 0);
+                
+                if (subtotal >= 300) {
+                    currentShippingCost = 0;
+                    document.getElementById('cartShippingCost').innerHTML = '<span class="text-emerald-600 font-bold">GRÁTIS (Acima de R$300)</span>';
+                } else {
+                    const uf = data.uf;
+                    currentShippingCost = ['SP', 'RJ', 'MG', 'ES'].includes(uf) ? 22.00 : 38.00;
+                    document.getElementById('cartShippingCost').innerText = `R$ ${currentShippingCost.toFixed(2).replace('.', ',')}`;
+                }
+
+                renderCartDrawer();
+                showToast('Frete calculado com sucesso!', 'success');
+            } catch(e) {
+                showToast('Erro ao consultar o CEP.', 'error');
+            }
+        }
+
+        // --- AUTH CLIENTE ---
+        function openCustomerAuthModal() {
+            if (loggedCustomer) {
+                document.getElementById('loggedInUserName').innerText = loggedCustomer.nome;
+                document.getElementById('loggedInUserEmail').innerText = loggedCustomer.email;
+                ['custAuthStep1','custAuthStep2','forgotPasswordStep1','forgotPasswordStep2'].forEach(id => document.getElementById(id).classList.add('hidden'));
+                document.getElementById('customerLoggedInView').classList.remove('hidden');
+                loadSavedCustomerAddress();
+            } else {
+                document.getElementById('customerLoggedInView').classList.add('hidden');
+                backToStep1();
+            }
+            document.getElementById('customerAuthModal').classList.remove('hidden');
+        }
+        function closeCustomerAuthModal() { document.getElementById('customerAuthModal').classList.add('hidden'); }
+
+        function switchCustomerPanelTab(tab) {
+            const isProf = tab === 'profile';
+            document.getElementById('tabClientProfile').className = `w-1/2 py-2.5 ${isProf ? 'text-fabi-600 border-b-2 border-fabi-500' : 'text-stone-400'}`;
+            document.getElementById('tabClientOrders').className = `w-1/2 py-2.5 ${!isProf ? 'text-fabi-600 border-b-2 border-fabi-500' : 'text-stone-400'}`;
+            document.getElementById('clientPanelProfile').classList.toggle('hidden', !isProf);
+            document.getElementById('clientPanelOrders').classList.toggle('hidden', isProf);
+        }
+
+        function loadSavedCustomerAddress() {
+            if (!loggedCustomer) return;
+            const addr = (JSON.parse(localStorage.getItem('fabi_customer_addresses')) || {})[loggedCustomer.email.toLowerCase()];
+            if (addr) {
+                ['Cep','City','Street','Number','Neighborhood','Complement'].forEach(k => {
+                    const el = document.getElementById('user'+k);
+                    if(el) el.value = addr[k.toLowerCase()] || '';
+                });
+                fillCartAddressFromSaved(addr);
+            }
+        }
+
+        function fillCartAddressFromSaved(addr) {
+            if (!addr) return;
+            document.getElementById('deliveryCep').value = addr.cep || '';
+            document.getElementById('deliveryCity').value = addr.cidade || '';
+            document.getElementById('deliveryStreet').value = addr.rua || '';
+            document.getElementById('deliveryNumber').value = addr.numero || '';
+            document.getElementById('deliveryNeighborhood').value = addr.bairro || '';
+            document.getElementById('savedAddressNotice').classList.remove('hidden');
+            calcularFretePorCep();
+        }
+
+        function handleSaveAddress(e) {
+            e.preventDefault();
+            if (!loggedCustomer) return;
+            const addr = { cep: userCep.value, cidade: userCity.value, rua: userStreet.value, numero: userNumber.value, bairro: userNeighborhood.value, complemento: userComplement.value };
+            let saved = JSON.parse(localStorage.getItem('fabi_customer_addresses')) || {};
+            saved[loggedCustomer.email.toLowerCase()] = addr;
+            localStorage.setItem('fabi_customer_addresses', JSON.stringify(saved));
+            fillCartAddressFromSaved(addr);
+            showToast('Endereço salvo!', 'success');
+        }
+
+        async function carregarHistoricoPedidosCliente() {
+            const container = document.getElementById('listaMeusPedidosContainer');
+            const pedidos = DB.vendas.filter(p => (p.email_cliente || p.email || '').toLowerCase() === loggedCustomer.email.toLowerCase());
+            container.innerHTML = pedidos.length ? pedidos.map(p => `
+                <div class="p-3 bg-stone-50 border border-stone-200 rounded-xl space-y-1 text-xs">
+                    <div class="flex justify-between font-bold"><span>#${p.id}</span><span>R$ ${parseFloat(p.total||p.valor_total||0).toFixed(2)}</span></div>
+                    <p class="text-[11px] text-stone-600">Pagamento: ${p.metodo_pagamento || p.metodo}</p>
+                </div>
+            `).join('') : '<p class="text-xs text-stone-400 text-center py-4">Nenhum pedido encontrado.</p>';
+        }
+
+        function fazerLogoutCliente() {
+            loggedCustomer = null; localStorage.removeItem('fabi_logged_customer');
+            updateCustomerHeaderUI(); closeCustomerAuthModal(); showToast('Desconectado.', 'info');
+        }
+
+        function switchCustomerTab(signup) {
+            const isUp = signup === 'signup' || signup === true;
+            document.getElementById('tabCustomerRegister').className = `w-1/2 py-2.5 rounded-xl ${isUp ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-500'}`;
+            document.getElementById('tabCustomerLogin').className = `w-1/2 py-2.5 rounded-xl ${!isUp ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-500'}`;
+            document.getElementById('formCustomerRegister').classList.toggle('hidden', !isUp);
+            document.getElementById('formCustomerLogin').classList.toggle('hidden', isUp);
+        }
+
+        async function handleCustomerRegister(e) {
+            e.preventDefault();
+            const name = custRegName.value.trim(), email = custRegEmail.value.trim(), pass = custRegPass.value.trim();
+            if (pass !== custRegPassConfirm.value.trim()) { showToast('As senhas não conferem.', 'warning'); return; }
+            const check = validatePasswordRequirements(pass);
+            if (!check.valid) { showToast(check.message, 'warning'); return; }
+
+            const code = Math.floor(100000 + Math.random() * 900000).toString();
+            pendingCustomerVerification = { nome: name, email, senha: pass, codigo: code };
+            
+            try {
+                const res = await fetch(`${API_URL}/clientes/enviar-codigo`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ email, nome: name, codigo: code, tipo: 'cadastro' })
+                });
+                if (res.ok) {
+                    verifyEmailText.innerText = email;
+                    custAuthStep1.classList.add('hidden'); custAuthStep2.classList.remove('hidden');
+                    showToast('Código enviado para seu e-mail!', 'success');
+                } else { showToast('Erro ao enviar e-mail.', 'error'); }
+            } catch(err) { showToast('Falha na conexão.', 'error'); }
+        }
+
+        function confirmEmailVerification() {
+            if (custVerifyCodeInput.value.trim() === pendingCustomerVerification.codigo) {
+                loggedCustomer = { nome: pendingCustomerVerification.nome, email: pendingCustomerVerification.email };
+                let users = JSON.parse(localStorage.getItem('fabi_registered_customers')) || [];
+                users.push(pendingCustomerVerification);
+                localStorage.setItem('fabi_registered_customers', JSON.stringify(users));
+                localStorage.setItem('fabi_logged_customer', JSON.stringify(loggedCustomer));
+                updateCustomerHeaderUI(); openCustomerAuthModal();
+                showToast(`Conta ativada! Bem-vindo(a), ${loggedCustomer.nome}`, 'success');
+            } else { showToast('Código incorreto.', 'warning'); }
+        }
+
+        function handleCustomerLogin(e) {
+            e.preventDefault();
+            const email = custLogEmail.value.trim(), pass = custLogPass.value.trim();
+            const user = (JSON.parse(localStorage.getItem('fabi_registered_customers')) || []).find(u => u.email.toLowerCase() === email.toLowerCase() && u.senha === pass);
+            if (user) {
+                loggedCustomer = { nome: user.nome, email: user.email };
+                localStorage.setItem('fabi_logged_customer', JSON.stringify(loggedCustomer));
+                updateCustomerHeaderUI(); openCustomerAuthModal();
+                showToast(`Bem-vindo(a) de volta, ${user.nome}!`, 'success');
+            } else { showToast('E-mail ou senha incorretos.', 'error'); }
+        }
+
+        function openForgotPasswordStep() {
+            ['custAuthStep1','custAuthStep2','forgotPasswordStep2'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            forgotPasswordStep1.classList.remove('hidden');
+        }
+
+        async function handleSendResetCode(e) {
+            e.preventDefault();
+            const email = forgotEmailInput.value.trim();
+            const user = (JSON.parse(localStorage.getItem('fabi_registered_customers')) || []).find(u => u.email.toLowerCase() === email.toLowerCase());
+            if (!user) { showToast('E-mail não cadastrado.', 'error'); return; }
+            const code = Math.floor(100000 + Math.random() * 900000).toString();
+            pendingResetVerification = { email, codigo: code };
+            await fetch(`${API_URL}/clientes/enviar-codigo`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ email, nome: user.nome, codigo: code, tipo: 'reset' })
+            });
+            resetEmailText.innerText = email;
+            forgotPasswordStep1.classList.add('hidden'); forgotPasswordStep2.classList.remove('hidden');
+            showToast('Código de redefinição enviado!', 'success');
+        }
+
+        function handleConfirmResetPassword(e) {
+            e.preventDefault();
+            if (resetNewPass.value !== resetConfirmNewPass.value) { showToast('As senhas não coincidem.', 'warning'); return; }
+            const check = validatePasswordRequirements(resetNewPass.value);
+            if (!check.valid) { showToast(check.message, 'warning'); return; }
+
+            if (resetCodeInput.value.trim() === pendingResetVerification.codigo) {
+                let users = JSON.parse(localStorage.getItem('fabi_registered_customers')) || [];
+                const idx = users.findIndex(u => u.email.toLowerCase() === pendingResetVerification.email.toLowerCase());
+                if (idx !== -1) {
+                    users[idx].senha = resetNewPass.value;
+                    localStorage.setItem('fabi_registered_customers', JSON.stringify(users));
+                    loggedCustomer = { nome: users[idx].nome, email: users[idx].email };
+                    localStorage.setItem('fabi_logged_customer', JSON.stringify(loggedCustomer));
+                    updateCustomerHeaderUI(); openCustomerAuthModal();
+                    showToast('Senha redefinida com sucesso!', 'success');
+                }
+            } else { showToast('Código inválido.', 'warning'); }
+        }
+
+        function backToStep1() {
+            ['custAuthStep2','forgotPasswordStep1','forgotPasswordStep2'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            custAuthStep1.classList.remove('hidden');
+        }
+
+        function updateCustomerHeaderUI() {
+            const btn = document.getElementById('customerAuthName');
+            if (loggedCustomer) {
+                btn.innerHTML = `<span class="text-emerald-600 font-bold">${loggedCustomer.nome.split(' ')[0]}</span>`;
+                const addr = (JSON.parse(localStorage.getItem('fabi_customer_addresses')) || {})[loggedCustomer.email.toLowerCase()];
+                if (addr) fillCartAddressFromSaved(addr);
+            } else { btn.innerText = "Entrar / Criar Conta"; }
+        }
+
+        // --- LOJA & GESTOR ---
+        function toggleMobileNav() { mobileNav.classList.toggle('hidden'); }
+        function openLoginModal() { loginModal.classList.remove('hidden'); }
+        function closeLoginModal() { loginModal.classList.add('hidden'); }
+
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            if (loginUser.value === 'admin' && loginPass.value === 'fabi2026') {
+                isAdminAuthenticated = true; localStorage.setItem('fabi_admin_auth', 'true');
+                closeLoginModal(); adminTopBar.classList.remove('hidden'); adminTopBar.classList.add('flex');
+                setMode('admin'); showToast('Gestor autenticado!', 'success');
+            } else { showToast('Credenciais inválidas.', 'error'); }
+        }
+
+        function logoutAdmin() {
+            isAdminAuthenticated = false; localStorage.removeItem('fabi_admin_auth'); localStorage.removeItem('fabi_active_mode');
+            adminTopBar.classList.add('hidden'); setMode('ecommerce'); showToast('Sessão encerrada.', 'info');
+        }
+
+        async function fetchPerfumesFromApi() {
+            try {
+                const res = await fetch(`${API_URL}/perfumes`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data?.length) {
+                        DB.perfumes = data.map(p => ({ id: p.id, marca: p.marca||'Importado', nome: p.nome, preco: parseFloat(p.preco), estoque: p.estoque_atual??0, codigo_barras: p.codigo_barras||'789'+p.id, imagem: p.imagem_url||'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400' }));
+                        localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
+                    }
+                }
+            } catch(e) {}
+            renderStoreGrid(); renderPdvQuickGrid(); renderAdminInventory(); renderBrandPills();
+        }
+
+        function setMode(mode) {
+            ['ecommerce','pdv','admin'].forEach(m => document.getElementById('view-'+m).classList.toggle('hidden', m !== mode));
+            ['ecommerce','pdv','admin'].forEach(m => {
+                const btn = document.getElementById('btn-mode-'+m);
+                if(btn) btn.className = `px-3 py-1.5 rounded-full font-semibold transition text-[11px] flex items-center gap-1.5 shrink-0 ${m===mode?'bg-fabi-500 text-white shadow-sm':'hover:bg-stone-800 text-stone-300'}`;
+            });
+            if(mode==='admin') { renderSalesLog(); fetchPerfumesFromApi(); }
+            if(isAdminAuthenticated) localStorage.setItem('fabi_active_mode', mode);
+        }
+
+        function renderBrandPills() {
+            const brands = ['ALL', ...new Set(DB.perfumes.map(p => p.marca))];
+            brandPillsContainer.innerHTML = brands.map(b => `
+                <button onclick="filterBrand('${b}')" id="pill-${b}" class="brand-pill px-4 py-2 ${DB.activeBrandFilter===b?'bg-stone-900 text-white font-bold':'bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold'} text-xs rounded-md uppercase tracking-wider shrink-0 transition">${b==='ALL'?'Todos':b}</button>
+            `).join('');
+        }
+
+        function filterBrand(brand) {
+            DB.activeBrandFilter = brand;
+            renderBrandPills();
+            renderStoreGrid();
+        }
+
+        function renderStoreGrid() {
+            const filtered = DB.perfumes.filter(p => DB.activeBrandFilter === 'ALL' || p.marca.toLowerCase().includes(DB.activeBrandFilter.toLowerCase()));
+            productGrid.innerHTML = filtered.map(p => `
+                <div class="bg-white rounded-xl border border-stone-200 overflow-hidden flex flex-col justify-between group hover:shadow-xl transition">
+                    <div class="h-48 bg-stone-50 flex items-center justify-center p-4 relative overflow-hidden">
+                        <img src="${p.imagem}" class="max-h-full object-contain group-hover:scale-105 transition">
+                    </div>
+                    <div class="p-3 space-y-1">
+                        <h3 class="font-bold text-[11px] uppercase text-stone-900">${p.marca}</h3>
+                        <p class="text-xs text-stone-500 line-clamp-2">${p.nome}</p>
+                    </div>
+                    <div class="p-3 pt-0 space-y-2">
+                        <span class="text-sm font-bold text-stone-900">R$ ${p.preco.toFixed(2).replace('.', ',')}</span>
+                        <button onclick="addToStoreCart(${p.id})" ${p.estoque===0?'disabled':''} class="w-full py-2 bg-stone-900 hover:bg-stone-800 disabled:opacity-30 text-white font-bold text-[10px] uppercase rounded-lg">Adicionar</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addToStoreCart(id) {
+            const p = DB.perfumes.find(x => x.id === id);
+            if (!p || p.estoque <= 0) return;
+            const item = DB.carrinhoStore.find(x => x.perfume_id === id);
+            if (item) item.quantidade++; else DB.carrinhoStore.push({ perfume_id: p.id, marca: p.marca, nome: p.nome, preco_unitario: p.preco, quantidade: 1, imagem: p.imagem });
+            renderCartDrawer(); toggleCartDrawer(true);
+            showToast(`${p.nome} adicionado!`, 'success');
+        }
+
+        function toggleCartDrawer(open) { cartDrawer.classList.toggle('hidden', !open); }
+
+        function renderCartDrawer() {
+            cartCountBadge.innerText = DB.carrinhoStore.reduce((a, b) => a + b.quantidade, 0);
+            if (!DB.carrinhoStore.length) {
+                cartDrawerItems.innerHTML = '<p class="text-xs text-stone-400 text-center py-10">Sacola vazia.</p>';
+                cartSubtotalOnly.innerText = 'R$ 0,00';
+                cartDrawerSubtotal.innerText = 'R$ 0,00'; 
+                btnStoreCheckout.disabled = true; 
+                return;
+            }
+            let sub = 0;
+            cartDrawerItems.innerHTML = DB.carrinhoStore.map((i, idx) => {
+                sub += i.preco_unitario * i.quantidade;
+                return `
+                    <div class="py-3 flex items-center justify-between text-xs">
+                        <img src="${i.imagem}" class="w-10 h-10 object-contain rounded bg-stone-50 p-1 border">
+                        <div class="flex-1 px-3 truncate"><p class="font-bold">${i.marca}</p><p class="text-stone-500">${i.nome}</p></div>
+                        <div class="flex items-center gap-1 font-bold"><span>${i.quantidade}x</span></div>
+                        <button onclick="DB.carrinhoStore.splice(${idx},1); renderCartDrawer();" class="text-stone-400 hover:text-rose-500 ml-2"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `;
+            }).join('');
+
+            cartSubtotalOnly.innerText = `R$ ${sub.toFixed(2).replace('.', ',')}`;
+            
+            // Regra de Frete Grátis acima de R$ 300
+            if (sub >= 300) {
+                currentShippingCost = 0;
+                document.getElementById('cartShippingCost').innerHTML = '<span class="text-emerald-600 font-bold">GRÁTIS</span>';
+            }
+
+            const totalGeral = sub + currentShippingCost;
+            cartDrawerSubtotal.innerText = `R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
+            btnStoreCheckout.disabled = false;
+        }
+
+        async function checkoutStoreOrder() {
+            if (!loggedCustomer) { showToast('Faça login para continuar.', 'info'); openCustomerAuthModal(); return; }
+            const cep = deliveryCep.value, rua = deliveryStreet.value, num = deliveryNumber.value, cid = deliveryCity.value;
+            if (!cep || !rua || !num || !cid) { showToast('Preencha o CEP e endereço completo.', 'warning'); return; }
+            
+            const subtotal = DB.carrinhoStore.reduce((a, b) => a + (b.preco_unitario * b.quantidade), 0);
+            const totalComFrete = subtotal + currentShippingCost;
+
+            try {
+                const res = await fetch(`${API_URL}/pagamento/checkout`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        itens: DB.carrinhoStore, 
+                        emailCliente: loggedCustomer.email, 
+                        frete: currentShippingCost,
+                        valorTotal: totalComFrete,
+                        endereco: `${rua}, ${num} - ${cid} - CEP: ${cep}` 
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.init_point) window.location.href = data.init_point;
+                else showToast('Erro ao iniciar pagamento.', 'error');
+            } catch(e) { showToast('Erro de conexão.', 'error'); }
+        }
+
+        // --- PDV BALCÃO ---
+        function renderPdvQuickGrid() {
+            pdvQuickGrid.innerHTML = DB.perfumes.map(p => `
+                <button onclick="addToPdvCart(${p.id})" ${p.estoque===0?'disabled':''} class="p-2.5 bg-stone-900 hover:bg-stone-950 disabled:opacity-30 border border-stone-700 text-left rounded-xl flex flex-col justify-between h-20">
+                    <div><p class="text-[9px] uppercase font-bold text-fabi-400">${p.marca}</p><p class="text-[11px] font-bold text-stone-200 truncate">${p.nome}</p></div>
+                    <div class="flex justify-between items-center text-xs"><span class="font-bold text-stone-100">R$ ${p.preco.toFixed(2)}</span><span class="text-[9px] bg-stone-800 text-stone-300 px-1 rounded">${p.estoque} un</span></div>
+                </button>
+            `).join('');
+        }
+
+        function handlePdvBarcodeScan(e) {
+            if (e.key === 'Enter') {
+                const term = e.target.value.toLowerCase();
+                const p = DB.perfumes.find(x => x.codigo_barras === term || x.nome.toLowerCase().includes(term));
+                if (p) { addToPdvCart(p.id); e.target.value = ''; } else showToast('Não encontrado.', 'warning');
+            }
+        }
+
+        function addToPdvCart(id) {
+            const p = DB.perfumes.find(x => x.id === id);
+            if (!p) return;
+            const item = DB.carrinhoPdv.find(x => x.id === id);
+            const qtdAtual = item ? item.quantidade : 0;
+            
+            if (qtdAtual + 1 > p.estoque) {
+                showToast(`Estoque insuficiente! Disponível: ${p.estoque} un.`, 'error');
+                return;
+            }
+
+            if (item) item.quantidade++; 
+            else DB.carrinhoPdv.push({ id: p.id, marca: p.marca, nome: p.nome, preco: p.preco, quantidade: 1 });
+            renderPdvCart();
+        }
+
+        function renderPdvCart() {
+            const total = DB.carrinhoPdv.reduce((a, b) => a + (b.preco * b.quantidade), 0);
+            pdvCartItems.innerHTML = DB.carrinhoPdv.length ? DB.carrinhoPdv.map((i, idx) => `
+                <div class="py-2 flex justify-between items-center text-xs">
+                    <div><p class="font-bold text-stone-100">${i.marca}</p><p class="text-[10px] text-stone-400">${i.nome}</p></div>
+                    <div class="flex items-center space-x-2"><span class="font-mono text-fabi-300">R$ ${(i.preco*i.quantidade).toFixed(2)} (${i.quantidade}x)</span><button onclick="DB.carrinhoPdv.splice(${idx},1); renderPdvCart();" class="text-rose-400"><i class="fa-solid fa-xmark"></i></button></div>
+                </div>
+            `).join('') : '<p class="text-xs text-stone-500 text-center py-10">Caixa vazio.</p>';
+            pdvTotal.innerText = `R$ ${total.toFixed(2)}`;
+            ['btnPdvCash','btnPdvPix','btnPdvCard'].forEach(id => document.getElementById(id).disabled = !DB.carrinhoPdv.length);
+        }
+
+        function openPdvCashModal() {
+            pdvCashTotalText.innerText = pdvTotal.innerText;
+            pdvCashReceivedInput.value = ''; pdvChangeDisplay.innerText = 'Troco: R$ 0,00';
+            pdvCashModal.classList.remove('hidden');
+        }
+        function closePdvCashModal() { pdvCashModal.classList.add('hidden'); }
+        function calculatePdvChange() {
+            const tot = DB.carrinhoPdv.reduce((a, b) => a + (b.preco * b.quantidade), 0);
+            const troco = (parseFloat(pdvCashReceivedInput.value) || 0) - tot;
+            pdvChangeDisplay.innerText = troco >= 0 ? `Troco: R$ ${troco.toFixed(2)}` : `Faltam: R$ ${Math.abs(troco).toFixed(2)}`;
+        }
+        function confirmCashPdvSale() { closePdvCashModal(); finishPdvSale('DINHEIRO'); }
+
+        function openPdvCardModal() { 
+            pdvCardTotalText.innerText = pdvTotal.innerText; 
+            pdvCardModal.classList.remove('hidden'); 
+        }
+        function closePdvCardModal() { pdvCardModal.classList.add('hidden'); }
+        function confirmCardPdvSale() { closePdvCardModal(); finishPdvSale('CARTÃO'); }
+
+        function openPdvPixModal() { 
+            pdvPixTotalText.innerText = pdvTotal.innerText; 
+            document.getElementById('pdvPixSuccessOverlay').classList.add('hidden');
+            pdvPixModal.classList.remove('hidden'); 
+        }
+        function closePdvPixModal() { pdvPixModal.classList.add('hidden'); }
+        function confirmPixPdvSale() { 
+            document.getElementById('pdvPixSuccessOverlay').classList.remove('hidden');
+            setTimeout(() => {
+                closePdvPixModal();
+                finishPdvSale('PIX');
+            }, 1800);
+        }
+
+        function finishPdvSale(metodo) {
+            const tot = DB.carrinhoPdv.reduce((a, b) => a + (b.preco * b.quantidade), 0);
+            
+            DB.carrinhoPdv.forEach(itemCart => {
+                const prod = DB.perfumes.find(p => p.id === itemCart.id);
+                if (prod) {
+                    prod.estoque = Math.max(0, prod.estoque - itemCart.quantidade);
+                }
+            });
+            localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
+
+            const novaVenda = { 
+                id: Date.now(), 
+                origem: 'LOJA_FISICA', 
+                metodo_pagamento: metodo, 
+                endereco: 'Balcão', 
+                total: tot, 
+                itens: JSON.parse(JSON.stringify(DB.carrinhoPdv)), 
+                created_at: new Date().toISOString() 
+            };
+            
+            DB.vendas.unshift(novaVenda);
+            localStorage.setItem('fabi_vendas_salvas', JSON.stringify(DB.vendas));
+            
+            renderSalesLog(); 
+            renderAdminInventory();
+            renderPdvQuickGrid();
+            DB.carrinhoPdv = []; 
+            renderPdvCart();
+            
+            showToast('Venda concluída e registrada no painel!', 'success');
+        }
+
+        // --- ADMIN ---
+        function renderAdminInventory() {
+            adminInventoryTable.innerHTML = DB.perfumes.map(p => `
+                <tr class="border-b"><td class="p-2 font-bold">${p.nome}</td><td class="p-2">${p.marca}</td><td class="p-2 text-right">R$ ${p.preco.toFixed(2)}</td><td class="p-2 text-center font-bold">${p.estoque} un</td><td class="p-2 text-center"><button onclick="changeStock(${p.id}, -1)" class="px-2 py-0.5 bg-rose-100 text-rose-700 font-bold rounded">-</button> <button onclick="changeStock(${p.id}, 1)" class="px-2 py-0.5 bg-emerald-100 text-emerald-700 font-bold rounded">+</button></td></tr>
+            `).join('');
+        }
+
+        async function changeStock(id, delta) {
+            const p = DB.perfumes.find(x => x.id === id);
+            if (!p || p.estoque + delta < 0) return;
+            p.estoque += delta;
+            renderAdminInventory(); renderStoreGrid(); renderPdvQuickGrid();
+            try {
+                await fetch(`${API_URL}/perfumes/${id}`, { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ estoque_atual: p.estoque }) });
+            } catch(e) {}
+            localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
+        }
+
+        function renderSalesLog() {
+            adminSalesTable.innerHTML = DB.vendas.length ? DB.vendas.map(v => {
+                let itensArray = [];
+                try {
+                    itensArray = typeof v.itens === 'string' ? JSON.parse(v.itens) : (v.itens || []);
+                } catch(e) { itensArray = []; }
+
+                const itensFormatados = itensArray.length ? itensArray.map(i => `<span class="bg-stone-100 text-stone-800 px-1.5 py-0.5 rounded mr-1 inline-block mb-1">${i.quantidade}x ${i.nome || i.marca}</span>`).join('') : '<span class="text-stone-400">Itens não detalhados</span>';
+                
+                const dataHora = new Date(v.created_at || v.id).toLocaleString('pt-BR', {
+                    day: '2-digit', month: '2-digit', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit', second: '2-digit'
+                });
+
+                return `
+                    <tr class="border-b hover:bg-stone-50 transition">
+                        <td class="p-2 font-mono text-[11px] text-stone-600">${dataHora}</td>
+                        <td class="p-2 font-bold">${v.origem}</td>
+                        <td class="p-2">${v.metodo_pagamento}</td>
+                        <td class="p-2 max-w-xs">${itensFormatados}</td>
+                        <td class="p-2 text-right font-bold text-stone-900">R$ ${parseFloat(v.total || v.valor_total || 0).toFixed(2)}</td>
+                    </tr>
+                `;
+            }).join('') : '<tr><td colspan="5" class="p-4 text-center text-stone-400">Nenhuma venda registrada.</td></tr>';
+        }
+
+        function openNewProductModal() { newProductModal.classList.remove('hidden'); }
+        async function handleCreateProduct(e) {
+            e.preventDefault();
+            const novo = { id: Date.now(), nome: newProdName.value, marca: newProdBrand.value, preco: parseFloat(newProdPrice.value), estoque: parseInt(newProdStock.value), codigo_barras: newProdBarcode.value, imagem: newProdImage.value || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400' };
+            DB.perfumes.push(novo);
+            localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
+            try {
+                await fetch(`${API_URL}/perfumes`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ nome: novo.nome, marca: novo.marca, preco: novo.preco, estoque_atual: novo.estoque, codigo_barras: novo.codigo_barras, imagem_url: novo.imagem })
+                });
+            } catch(e) {}
+            newProductModal.classList.add('hidden'); fetchPerfumesFromApi(); showToast('Perfume cadastrado!', 'success');
+        }
+    </script>
+</body>
+</html>">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
