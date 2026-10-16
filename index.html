@@ -474,21 +474,26 @@
             }
         };
 
-        // SINCRONIZAÇÃO AUTOMÁTICA AO RETORNAR DO MERCADO PAGO
+        // SINCRONIZAÇÃO AUTOMÁTICA COM PROTEÇÃO ANTI-DUPLICAÇÃO (IDEMPOTÊNCIA)
         async function checkPaymentReturn() {
             const urlParams = new URLSearchParams(window.location.search);
             const status = urlParams.get('status');
-            const paymentId = urlParams.get('payment_id');
+            const paymentId = urlParams.get('payment_id') || urlParams.get('collection_id');
             
             if (status === 'success' || status === 'approved') {
                 if (paymentId) {
-                    try {
-                        await fetch(`${API_URL}/pagamento/sincronizar`, {
-                            method: 'POST',
-                            headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({ payment_id: paymentId })
-                        });
-                    } catch(e) {}
+                    const syncedPayments = JSON.parse(localStorage.getItem('fabi_synced_payments') || '[]');
+                    if (!syncedPayments.includes(paymentId)) {
+                        try {
+                            await fetch(`${API_URL}/pagamento/sincronizar`, {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json'},
+                                body: JSON.stringify({ payment_id: paymentId })
+                            });
+                            syncedPayments.push(paymentId);
+                            localStorage.setItem('fabi_synced_payments', JSON.stringify(syncedPayments));
+                        } catch(e) {}
+                    }
                 }
                 DB.carrinhoStore = []; 
                 renderCartDrawer(); 
