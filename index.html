@@ -298,7 +298,7 @@
         </div>
     </div>
 
-    <!-- MODAIS PDV (DINHEIRO, CARTÃO, PIX) -->
+    <!-- MODAIS PDV (DINHEIRO, CARTÃO, PIX MAQUININHA) -->
     <div id="pdvCashModal" class="fixed inset-0 z-50 bg-stone-900/80 hidden flex items-center justify-center p-4">
         <div class="bg-stone-800 border border-stone-700 rounded-2xl max-w-sm w-full p-6 space-y-4 text-stone-100">
             <h3 class="font-bold text-fabi-400">Dinheiro e Troco</h3>
@@ -320,13 +320,19 @@
     </div>
 
     <div id="pdvPixModal" class="fixed inset-0 z-50 bg-stone-900/80 hidden flex items-center justify-center p-4">
-        <div class="bg-stone-800 border border-stone-700 rounded-2xl max-w-sm w-full p-6 space-y-4 text-stone-100 text-center">
-            <h3 class="font-bold text-teal-400">PIX Balcão</h3>
-            <p id="pdvPixStatusText" class="text-xs text-stone-300">Escaneie o QR Code com seu banco</p>
-            <div id="pdvPixQrContainer" class="bg-white p-3 rounded-xl inline-block mx-auto min-h-[200px] flex items-center justify-center w-full"></div>
-            <button onclick="copyPixPayload()" id="btnCopyPix" class="w-full py-2 bg-stone-700 text-stone-200 font-bold rounded-lg text-xs uppercase">Copiar PIX Copia e Cola</button>
-            <button onclick="confirmPixPdvSaleManually()" class="w-full py-2 bg-emerald-700 text-white font-bold rounded-lg text-xs uppercase">Confirmar Pagamento Recebido</button>
-            <button onclick="closePdvPixModal()" class="w-full text-stone-400 text-xs">Fechar</button>
+        <div class="bg-stone-800 border border-stone-700 rounded-2xl max-w-sm w-full p-6 space-y-4 text-stone-100 text-center relative overflow-hidden">
+            <h3 class="font-bold text-teal-400">PIX Maquininha</h3>
+            <p id="pdvPixTotalText" class="text-2xl font-bold font-serif text-teal-300">R$ 0,00</p>
+            <p class="text-xs text-stone-300">Insira ou digite o valor na maquininha física</p>
+            <button onclick="confirmPixPdvSale()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition">Aprovado na Maquininha</button>
+            <button onclick="closePdvPixModal()" class="w-full text-stone-400 text-xs">Cancelar</button>
+
+            <!-- TELA DE SUCESSO DO PIX -->
+            <div id="pdvPixSuccessOverlay" class="absolute inset-0 bg-stone-900/95 flex flex-col items-center justify-center p-6 space-y-4 hidden animate-pop-in">
+                <div class="w-16 h-16 bg-emerald-500 text-white rounded-full flex items-center justify-center text-3xl shadow-lg"><i class="fa-solid fa-check"></i></div>
+                <h3 class="font-serif text-xl font-bold text-emerald-400">PIX Aprovado com Sucesso!</h3>
+                <p class="text-xs text-stone-300">Venda registrada e estoque atualizado no sistema.</p>
+            </div>
         </div>
     </div>
 
@@ -399,13 +405,6 @@
     <script>
         const API_URL = 'https://fragrancias-fabi-api.onrender.com/api';
         
-        // =========================================================================
-        // CHAVE PIX FIXA DA LOJA (Segura contra alterações por funcionários)
-        // Substitua abaixo a string pelo seu CNPJ, E-mail, Telefone ou Chave Aleatória real
-        // =========================================================================
-        const CONFIG_CHAVE_PIX = "4b9e4c04-c442-4eae-9fe1-a00982224f77"; 
-
-        let currentPixPayloadGlobal = "";
         let isAdminAuthenticated = localStorage.getItem('fabi_admin_auth') === 'true';
         let loggedCustomer = JSON.parse(localStorage.getItem('fabi_logged_customer')) || null;
         let pendingCustomerVerification = null, pendingResetVerification = null;
@@ -819,66 +818,26 @@
             pdvChangeDisplay.innerText = troco >= 0 ? `Troco: R$ ${troco.toFixed(2)}` : `Faltam: R$ ${Math.abs(troco).toFixed(2)}`;
         }
         function confirmCashPdvSale() { closePdvCashModal(); finishPdvSale('DINHEIRO'); }
-        function openPdvCardModal() { pdvCardTotalText.innerText = pdvTotal.innerText; pdvCardModal.classList.remove('hidden'); }
+
+        function openPdvCardModal() { 
+            pdvCardTotalText.innerText = pdvTotal.innerText; 
+            pdvCardModal.classList.remove('hidden'); 
+        }
         function closePdvCardModal() { pdvCardModal.classList.add('hidden'); }
         function confirmCardPdvSale() { closePdvCardModal(); finishPdvSale('CARTÃO'); }
 
-        // GERADOR REAL DE PIX EMV (OFICIAL BANCO CENTRAL)
-        function gerarPayloadPixReal(chave, valor, nomeRecebedor, cidade) {
-            function formatField(id, value) {
-                const len = String(value.length).padStart(2, '0');
-                return `${id}${len}${value}`;
-            }
-            
-            const payloadFormatIndicator = "000201";
-            const merchantAccountInfoGui = formatField("00", "br.gov.bcb.pix");
-            const merchantAccountInfoKey = formatField("01", chave);
-            const merchantAccountInfo = formatField("26", merchantAccountInfoGui + merchantAccountInfoKey);
-            
-            const mcc = formatField("52", "0000");
-            const currency = formatField("53", "986");
-            const formattedAmount = formatField("54", valor.toFixed(2));
-            const country = formatField("55", "BR");
-            const merchantName = formatField("59", nomeRecebedor.substring(0, 25));
-            const merchantCity = formatField("60", cidade.substring(0, 15));
-            const additionalDataTemplate = formatField("62", formatField("05", "***"));
-            
-            let payloadWithoutCRC = payloadFormatIndicator + merchantAccountInfo + mcc + currency + formattedAmount + country + merchantName + merchantCity + additionalDataTemplate + "6304";
-            
-            // Cálculo CRC16 CCITT
-            let crc = 0xFFFF;
-            for (let c = 0; c < payloadWithoutCRC.length; c++) {
-                crc ^= payloadWithoutCRC.charCodeAt(c) << 8;
-                for (let i = 0; i < 8; i++) {
-                    if (crc & 0x8000) crc = (crc << 1) ^ 0x1021;
-                    else crc = crc << 1;
-                }
-            }
-            let hexCrc = (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
-            return payloadWithoutCRC + hexCrc;
+        function openPdvPixModal() { 
+            pdvPixTotalText.innerText = pdvTotal.innerText; 
+            document.getElementById('pdvPixSuccessOverlay').classList.add('hidden');
+            pdvPixModal.classList.remove('hidden'); 
         }
-
-        function openPdvPixModal() {
-            const tot = DB.carrinhoPdv.reduce((a, b) => a + (b.preco * b.quantidade), 0);
-            pdvPixModal.classList.remove('hidden');
-            pdvPixStatusText.innerText = `Total: R$ ${tot.toFixed(2)}`;
-            
-            currentPixPayloadGlobal = gerarPayloadPixReal(CONFIG_CHAVE_PIX, tot, "Fragrancias Fabi", "Sao Paulo");
-            pdvPixQrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentPixPayloadGlobal)}" class="w-48 h-48 mx-auto rounded-lg shadow-sm">`;
-        }
-
-        function copyPixPayload() {
-            navigator.clipboard.writeText(currentPixPayloadGlobal);
-            showToast('Código PIX Copia e Cola copiado!', 'success');
-        }
-
-        function confirmPixPdvSaleManually() {
-            closePdvPixModal();
-            finishPdvSale('PIX');
-        }
-
-        function closePdvPixModal() {
-            pdvPixModal.classList.add('hidden');
+        function closePdvPixModal() { pdvPixModal.classList.add('hidden'); }
+        function confirmPixPdvSale() { 
+            document.getElementById('pdvPixSuccessOverlay').classList.remove('hidden');
+            setTimeout(() => {
+                closePdvPixModal();
+                finishPdvSale('PIX');
+            }, 1800);
         }
 
         function finishPdvSale(metodo) {
