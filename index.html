@@ -335,19 +335,12 @@
         <div class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 space-y-4">
                 <div class="bg-stone-800 border border-stone-700 p-4 rounded-2xl">
-                    <label class="text-[10px] uppercase font-bold text-fabi-400">Configurar Chave PIX da Loja</label>
-                    <div class="flex gap-2 mt-1">
-                        <input type="text" id="configMerchantPixKey" placeholder="Digite sua chave PIX (CPF, CNPJ, E-mail ou Tel)" class="flex-1 bg-stone-950 border border-stone-700 rounded-xl p-2.5 text-xs text-white">
-                        <button onclick="salvarChavePixLocal()" class="px-4 py-2 bg-fabi-600 hover:bg-fabi-500 text-white text-xs font-bold rounded-xl">Salvar Chave</button>
-                    </div>
-                </div>
-                <div class="bg-stone-800 border border-stone-700 p-4 rounded-2xl">
                     <label class="text-[10px] uppercase font-bold text-fabi-400">Leitor / Busca Balcão</label>
                     <input type="text" id="pdvBarcodeBar" onkeydown="handlePdvBarcodeScan(event)" placeholder="Bipe o código..." class="w-full bg-stone-950 border border-stone-700 rounded-xl p-2.5 text-xs text-fabi-300 mt-1">
                 </div>
                 <div class="bg-stone-800 border border-stone-700 rounded-2xl p-4">
                     <h3 class="font-bold text-xs mb-3">Catálogo Rápido</h3>
-                    <div id="pdvQuickGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-[340px] overflow-y-auto"></div>
+                    <div id="pdvQuickGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-[400px] overflow-y-auto"></div>
                 </div>
             </div>
             <div class="bg-stone-800 border border-stone-700 rounded-2xl p-4 flex flex-col justify-between h-[520px]">
@@ -405,6 +398,13 @@
 
     <script>
         const API_URL = 'https://fragrancias-fabi-api.onrender.com/api';
+        
+        // =========================================================================
+        // CHAVE PIX FIXA DA LOJA (Segura contra alterações por funcionários)
+        // Substitua abaixo a string pelo seu CNPJ, E-mail, Telefone ou Chave Aleatória real
+        // =========================================================================
+        const CONFIG_CHAVE_PIX = "4b9e4c04-c442-4eae-9fe1-a00982224f77"; 
+
         let currentPixPayloadGlobal = "";
         let isAdminAuthenticated = localStorage.getItem('fabi_admin_auth') === 'true';
         let loggedCustomer = JSON.parse(localStorage.getItem('fabi_logged_customer')) || null;
@@ -438,25 +438,12 @@
             fetchPerfumesFromApi();
             renderSalesLog();
             updateCustomerHeaderUI();
-            
-            const savedKey = localStorage.getItem('fabi_merchant_pix_key');
-            if(savedKey && document.getElementById('configMerchantPixKey')) {
-                document.getElementById('configMerchantPixKey').value = savedKey;
-            }
-
             if (isAdminAuthenticated) {
                 document.getElementById('adminTopBar').classList.remove('hidden');
                 document.getElementById('adminTopBar').classList.add('flex');
                 setMode(localStorage.getItem('fabi_active_mode') || 'admin');
             }
         };
-
-        function salvarChavePixLocal() {
-            const key = document.getElementById('configMerchantPixKey').value.trim();
-            if(!key) { showToast('Digite uma chave PIX válida.', 'warning'); return; }
-            localStorage.setItem('fabi_merchant_pix_key', key);
-            showToast('Chave PIX salva com sucesso!', 'success');
-        }
 
         function checkPaymentReturn() {
             const status = new URLSearchParams(window.location.search).get('status');
@@ -872,16 +859,11 @@
         }
 
         function openPdvPixModal() {
-            const pixKey = localStorage.getItem('fabi_merchant_pix_key');
-            if(!pixKey) {
-                showToast('Cadastre sua Chave PIX no campo acima primeiro!', 'warning');
-                return;
-            }
             const tot = DB.carrinhoPdv.reduce((a, b) => a + (b.preco * b.quantidade), 0);
             pdvPixModal.classList.remove('hidden');
-            pdvPixStatusText.innerText = `Chave: ${pixKey} | Total: R$ ${tot.toFixed(2)}`;
+            pdvPixStatusText.innerText = `Total: R$ ${tot.toFixed(2)}`;
             
-            currentPixPayloadGlobal = gerarPayloadPixReal(pixKey, tot, "Fragrancias Fabi", "Sao Paulo");
+            currentPixPayloadGlobal = gerarPayloadPixReal(CONFIG_CHAVE_PIX, tot, "Fragrancias Fabi", "Sao Paulo");
             pdvPixQrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentPixPayloadGlobal)}" class="w-48 h-48 mx-auto rounded-lg shadow-sm">`;
         }
 
