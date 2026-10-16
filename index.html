@@ -138,7 +138,7 @@
         </footer>
     </div>
 
-    <!-- SACOLA LATERAL -->
+    <!-- SACOLA LATERAL (COM CONTROLES DE QUANTIDADE + E -) -->
     <div id="cartDrawer" class="fixed inset-0 z-50 overflow-hidden hidden">
         <div onclick="toggleCartDrawer(false)" class="absolute inset-0 bg-stone-900/60 backdrop-blur-xs"></div>
         <div class="fixed inset-y-0 right-0 max-w-full flex pl-6 sm:pl-10">
@@ -441,7 +441,8 @@
 
         const DB = {
             perfumes: JSON.parse(localStorage.getItem('fabi_perfumes_local')) || [],
-            carrinhoStore: [], carrinhoPdv: [],
+            carrinhoStore: JSON.parse(localStorage.getItem('fabi_carrinho_store')) || [], 
+            carrinhoPdv: [],
             vendas: [],
             activeBrandFilter: 'ALL'
         };
@@ -467,10 +468,11 @@
             await fetchPerfumesFromApi();
             await renderSalesLog();
             updateCustomerHeaderUI();
+            renderCartDrawer();
             if (isAdminAuthenticated) {
                 document.getElementById('adminTopBar').classList.remove('hidden');
                 document.getElementById('adminTopBar').classList.add('flex');
-                setMode(localStorage.getItem('fabi_active_mode') || 'admin');
+                setMode(localStorage.getItem('fabi_active_mode') || 'ecommerce');
             }
         };
 
@@ -496,6 +498,7 @@
                     }
                 }
                 DB.carrinhoStore = []; 
+                localStorage.removeItem('fabi_carrinho_store');
                 renderCartDrawer(); 
                 localStorage.removeItem('fabi_pending_online_order');
                 document.getElementById('onlinePaymentSuccessModal').classList.remove('hidden');
@@ -819,6 +822,7 @@
             if (!p || p.estoque <= 0) return;
             const item = DB.carrinhoStore.find(x => x.perfume_id === id);
             if (item) item.quantidade++; else DB.carrinhoStore.push({ perfume_id: p.id, marca: p.marca, nome: p.nome, preco_unitario: p.preco, quantidade: 1, imagem: p.imagem });
+            localStorage.setItem('fabi_carrinho_store', JSON.stringify(DB.carrinhoStore));
             renderCartDrawer(); toggleCartDrawer(true);
             showToast(`${p.nome} adicionado!`, 'success');
         }
@@ -841,21 +845,32 @@
                     <div class="py-3 flex items-center justify-between text-xs">
                         <img src="${i.imagem}" class="w-10 h-10 object-contain rounded bg-stone-50 p-1 border">
                         <div class="flex-1 px-3 truncate"><p class="font-bold">${i.marca}</p><p class="text-stone-500">${i.nome}</p></div>
-                        <div class="flex items-center gap-1 font-bold"><span>${i.quantidade}x</span></div>
-                        <button onclick="DB.carrinhoStore.splice(${idx},1); renderCartDrawer();" class="text-stone-400 hover:text-rose-500 ml-2"><i class="fa-solid fa-trash"></i></button>
+                        <div class="flex items-center space-x-1.5 font-bold">
+                            <button onclick="mudarQtdItemCarrinho(${idx}, -1)" class="w-6 h-6 bg-stone-200 rounded text-stone-700 hover:bg-stone-300 flex items-center justify-center">-</button>
+                            <span class="w-5 text-center">${i.quantidade}</span>
+                            <button onclick="mudarQtdItemCarrinho(${idx}, 1)" class="w-6 h-6 bg-stone-200 rounded text-stone-700 hover:bg-stone-300 flex items-center justify-center">+</button>
+                        </div>
+                        <button onclick="DB.carrinhoStore.splice(${idx},1); localStorage.setItem('fabi_carrinho_store', JSON.stringify(DB.carrinhoStore)); renderCartDrawer();" class="text-stone-400 hover:text-rose-500 ml-2"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 `;
             }).join('');
 
             cartSubtotalOnly.innerText = `R$ ${sub.toFixed(2).replace('.', ',')}`;
-            
-            // Frete sempre grátis
             currentShippingCost = 0;
             document.getElementById('cartShippingCost').innerHTML = '<span class="text-emerald-600 font-bold">GRÁTIS</span>';
 
             const totalGeral = sub + currentShippingCost;
             cartDrawerSubtotal.innerText = `R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
             btnStoreCheckout.disabled = false;
+        }
+
+        function mudarQtdItemCarrinho(index, delta) {
+            DB.carrinhoStore[index].quantidade += delta;
+            if (DB.carrinhoStore[index].quantidade <= 0) {
+                DB.carrinhoStore.splice(index, 1);
+            }
+            localStorage.setItem('fabi_carrinho_store', JSON.stringify(DB.carrinhoStore));
+            renderCartDrawer();
         }
 
         async function checkoutStoreOrder() {
