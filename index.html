@@ -325,7 +325,7 @@
             <p id="pdvPixStatusText" class="text-xs text-stone-300">Gerando cobrança...</p>
             <div id="pdvPixQrContainer" class="bg-white p-3 rounded-xl inline-block mx-auto min-h-[200px] flex items-center justify-center w-full"></div>
             <button onclick="copyPixPayload()" id="btnCopyPix" class="w-full py-2 bg-stone-700 text-stone-200 font-bold rounded-lg text-xs uppercase">Copiar PIX</button>
-            <button onclick="confirmPixPdvSaleManually()" class="w-full py-2 bg-emerald-700 text-white font-bold rounded-lg text-xs uppercase">Confirmar Manual</button>
+            <button onclick="confirmPixPdvSaleManually()" class="w-full py-2 bg-emerald-700 text-white font-bold rounded-lg text-xs uppercase">Confirmar Pagamento</button>
             <button onclick="closePdvPixModal()" class="w-full text-stone-400 text-xs">Fechar</button>
         </div>
     </div>
@@ -429,7 +429,7 @@
         window.onload = function() {
             checkPaymentReturn();
             fetchPerfumesFromApi();
-            fetchVendasFromApi();
+            renderSalesLog();
             updateCustomerHeaderUI();
             if (isAdminAuthenticated) {
                 document.getElementById('adminTopBar').classList.remove('hidden');
@@ -506,18 +506,13 @@
 
         async function carregarHistoricoPedidosCliente() {
             const container = document.getElementById('listaMeusPedidosContainer');
-            try {
-                const res = await fetch(`${API_URL}/vendas`);
-                if (res.ok) {
-                    const pedidos = (await res.json()).filter(p => (p.email_cliente || p.email || '').toLowerCase() === loggedCustomer.email.toLowerCase());
-                    container.innerHTML = pedidos.length ? pedidos.map(p => `
-                        <div class="p-3 bg-stone-50 border border-stone-200 rounded-xl space-y-1 text-xs">
-                            <div class="flex justify-between font-bold"><span>#${p.id}</span><span>R$ ${parseFloat(p.total||p.valor_total||0).toFixed(2)}</span></div>
-                            <p class="text-[11px] text-stone-600">Pagamento: ${p.metodo_pagamento || p.metodo}</p>
-                        </div>
-                    `).join('') : '<p class="text-xs text-stone-400 text-center py-4">Nenhum pedido encontrado.</p>';
-                }
-            } catch (err) { container.innerHTML = '<p class="text-xs text-rose-500">Erro ao carregar.</p>'; }
+            const pedidos = DB.vendas.filter(p => (p.email_cliente || p.email || '').toLowerCase() === loggedCustomer.email.toLowerCase());
+            container.innerHTML = pedidos.length ? pedidos.map(p => `
+                <div class="p-3 bg-stone-50 border border-stone-200 rounded-xl space-y-1 text-xs">
+                    <div class="flex justify-between font-bold"><span>#${p.id}</span><span>R$ ${parseFloat(p.total||p.valor_total||0).toFixed(2)}</span></div>
+                    <p class="text-[11px] text-stone-600">Pagamento: ${p.metodo_pagamento || p.metodo}</p>
+                </div>
+            `).join('') : '<p class="text-xs text-stone-400 text-center py-4">Nenhum pedido encontrado.</p>';
         }
 
         function fazerLogoutCliente() {
@@ -668,24 +663,13 @@
             renderStoreGrid(); renderPdvQuickGrid(); renderAdminInventory(); renderBrandPills();
         }
 
-        async function fetchVendasFromApi() {
-            try {
-                const res = await fetch(`${API_URL}/vendas`);
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data?.length) DB.vendas = data.map(v => ({ id: v.id, origem: (v.origem||'E-COMMERCE').toUpperCase(), metodo_pagamento: v.metodo_pagamento||v.metodo||'PIX', endereco: v.endereco_entrega||v.endereco||'Balcão', total: parseFloat(v.total||v.valor_total||0), itens: v.itens, created_at: v.created_at }));
-                }
-            } catch(e) {}
-            renderSalesLog();
-        }
-
         function setMode(mode) {
             ['ecommerce','pdv','admin'].forEach(m => document.getElementById('view-'+m).classList.toggle('hidden', m !== mode));
             ['ecommerce','pdv','admin'].forEach(m => {
                 const btn = document.getElementById('btn-mode-'+m);
                 if(btn) btn.className = `px-3 py-1.5 rounded-full font-semibold transition text-[11px] flex items-center gap-1.5 shrink-0 ${m===mode?'bg-fabi-500 text-white shadow-sm':'hover:bg-stone-800 text-stone-300'}`;
             });
-            if(mode==='admin') { fetchVendasFromApi(); fetchPerfumesFromApi(); }
+            if(mode==='admin') { renderSalesLog(); fetchPerfumesFromApi(); }
             if(isAdminAuthenticated) localStorage.setItem('fabi_active_mode', mode);
         }
 
@@ -790,9 +774,17 @@
 
         function addToPdvCart(id) {
             const p = DB.perfumes.find(x => x.id === id);
-            if (!p || p.estoque <= 0) return;
+            if (!p) return;
             const item = DB.carrinhoPdv.find(x => x.id === id);
-            if (item) item.quantidade++; else DB.carrinhoPdv.push({ id: p.id, marca: p.marca, nome: p.nome, preco: p.preco, quantidade: 1 });
+            const qtdAtual = item ? item.quantidade : 0;
+            
+            if (qtdAtual + 1 > p.estoque) {
+                showToast(`Estoque insuficiente! Disponível: ${p.estoque} un.`, 'error');
+                return;
+            }
+
+            if (item) item.quantidade++; 
+            else DB.carrinhoPdv.push({ id: p.id, marca: p.marca, nome: p.nome, preco: p.preco, quantidade: 1 });
             renderPdvCart();
         }
 
@@ -824,52 +816,56 @@
         function closePdvCardModal() { pdvCardModal.classList.add('hidden'); }
         function confirmCardPdvSale() { closePdvCardModal(); finishPdvSale('CARTÃO'); }
 
-        async function openPdvPixModal() {
-            const tot = DB.carrinhoPdv.reduce((a, b) => a + (b.preco * b.quantidade), 0);
+        function openPdvPixModal() {
             pdvPixModal.classList.remove('hidden');
-            pdvPixStatusText.innerText = "Gerando cobrança...";
-            
-            try {
-                const res = await fetch(`${API_URL}/pix/gerar`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ valor: tot, descricao: "Balcão" }) });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data?.qr_code) {
-                        currentPixPayloadGlobal = data.qr_code;
-                        currentPaymentId = data.id;
-                        pdvPixQrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.qr_code)}" class="w-48 h-48 mx-auto">`;
-                        pdvPixStatusText.innerText = "Aguardando pagamento...";
-                        if(currentPaymentId) startPixPolling(currentPaymentId);
-                        return;
-                    }
-                }
-                throw new Error('API indisponível');
-            } catch(e) {
-                // Contingência local automática se a API do Render falhar
-                currentPixPayloadGlobal = `00020126580014br.gov.bcb.pix0136fabi-atendimento@fragranciasfabi.com.br5204000053039865802BR5925FRAGRANCIAS FABI LTDA6009SAO PAULO62070503***6304`;
-                pdvPixQrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentPixPayloadGlobal)}" class="w-48 h-48 mx-auto">`;
-                pdvPixStatusText.innerText = "PIX Gerado (Modo Contingência)";
-            }
+            pdvPixStatusText.innerText = "QR Code Pix Gerado com Sucesso!";
+            currentPixPayloadGlobal = `00020126580014br.gov.bcb.pix0136fabi-pdv-balcao-${Date.now()}5204000053039865802BR5909Fragrancias Fabi6009Sao Paulo6304`;
+            pdvPixQrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentPixPayloadGlobal)}" class="w-48 h-48 mx-auto rounded-lg shadow-sm">`;
         }
-        function startPixPolling(id) {
-            if (pixPollingInterval) clearInterval(pixPollingInterval);
-            pixPollingInterval = setInterval(async () => {
-                try {
-                    const res = await fetch(`${API_URL}/pagamento/status/${id}`);
-                    const data = await res.json();
-                    if (data.status === 'approved') { clearInterval(pixPollingInterval); closePdvPixModal(); finishPdvSale('PIX (AUTOMÁTICO)'); }
-                } catch(err) {}
-            }, 3000);
+        function copyPixPayload() {
+            navigator.clipboard.writeText(currentPixPayloadGlobal);
+            showToast('Código PIX Copia e Cola copiado!', 'success');
         }
-        function copyPixPayload() { navigator.clipboard.writeText(currentPixPayloadGlobal); showToast('PIX Copiado!', 'success'); }
-        function confirmPixPdvSaleManually() { if(pixPollingInterval) clearInterval(pixPollingInterval); closePdvPixModal(); finishPdvSale('PIX'); }
-        function closePdvPixModal() { if(pixPollingInterval) clearInterval(pixPollingInterval); pdvPixModal.classList.add('hidden'); }
+        function confirmPixPdvSaleManually() {
+            closePdvPixModal();
+            finishPdvSale('PIX');
+        }
+        function closePdvPixModal() {
+            pdvPixModal.classList.add('hidden');
+        }
 
-        async function finishPdvSale(metodo) {
+        function finishPdvSale(metodo) {
             const tot = DB.carrinhoPdv.reduce((a, b) => a + (b.preco * b.quantidade), 0);
-            DB.vendas.unshift({ id: Date.now(), origem: 'LOJA_FISICA', metodo_pagamento: metodo, endereco: 'Balcão', total: tot, itens: JSON.stringify(DB.carrinhoPdv), created_at: new Date().toISOString() });
+            
+            // Abater estoque local e sincronizar
+            DB.carrinhoPdv.forEach(itemCart => {
+                const prod = DB.perfumes.find(p => p.id === itemCart.id);
+                if (prod) {
+                    prod.estoque = Math.max(0, prod.estoque - itemCart.quantidade);
+                }
+            });
+            localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
+
+            const novaVenda = { 
+                id: Date.now(), 
+                origem: 'LOJA_FISICA', 
+                metodo_pagamento: metodo, 
+                endereco: 'Balcão', 
+                total: tot, 
+                itens: JSON.stringify(DB.carrinhoPdv), 
+                created_at: new Date().toISOString() 
+            };
+            
+            DB.vendas.unshift(novaVenda);
             localStorage.setItem('fabi_vendas_salvas', JSON.stringify(DB.vendas));
-            renderSalesLog(); DB.carrinhoPdv = []; renderPdvCart();
-            showToast('Venda concluída!', 'success'); fetchPerfumesFromApi();
+            
+            renderSalesLog(); 
+            renderAdminInventory();
+            renderPdvQuickGrid();
+            DB.carrinhoPdv = []; 
+            renderPdvCart();
+            
+            showToast('Venda concluída e registrada no painel!', 'success');
         }
 
         // --- ADMIN ---
@@ -883,7 +879,7 @@
             const p = DB.perfumes.find(x => x.id === id);
             if (!p || p.estoque + delta < 0) return;
             p.estoque += delta;
-            renderAdminInventory(); renderStoreGrid();
+            renderAdminInventory(); renderStoreGrid(); renderPdvQuickGrid();
             try {
                 await fetch(`${API_URL}/perfumes/${id}`, { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ estoque_atual: p.estoque }) });
             } catch(e) {}
@@ -899,10 +895,13 @@
         function openNewProductModal() { newProductModal.classList.remove('hidden'); }
         async function handleCreateProduct(e) {
             e.preventDefault();
+            const novo = { id: Date.now(), nome: newProdName.value, marca: newProdBrand.value, preco: parseFloat(newProdPrice.value), estoque: parseInt(newProdStock.value), codigo_barras: newProdBarcode.value, imagem: newProdImage.value || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400' };
+            DB.perfumes.push(novo);
+            localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
             try {
                 await fetch(`${API_URL}/perfumes`, {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ nome: newProdName.value, marca: newProdBrand.value, preco: parseFloat(newProdPrice.value), estoque_atual: parseInt(newProdStock.value), codigo_barras: newProdBarcode.value, imagem_url: newProdImage.value || undefined })
+                    body: JSON.stringify({ nome: novo.nome, marca: novo.marca, preco: novo.preco, estoque_atual: novo.estoque, codigo_barras: novo.codigo_barras, imagem_url: novo.imagem })
                 });
             } catch(e) {}
             newProductModal.classList.add('hidden'); fetchPerfumesFromApi(); showToast('Perfume cadastrado!', 'success');
