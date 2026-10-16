@@ -378,8 +378,19 @@
                 <table class="w-full text-left text-xs"><tbody id="adminInventoryTable"></tbody></table>
             </div>
             <div class="bg-white rounded-2xl border border-stone-200 p-4 shadow-xs overflow-x-auto">
-                <h3 class="font-bold text-sm mb-3">Histórico de Vendas</h3>
-                <table class="w-full text-left text-xs"><tbody id="adminSalesTable"></tbody></table>
+                <h3 class="font-bold text-sm mb-3">Histórico de Vendas (com Segundos e Detalhes)</h3>
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="border-b text-stone-400 uppercase text-[10px]">
+                            <th class="p-2">Data / Hora</th>
+                            <th class="p-2">Origem</th>
+                            <th class="p-2">Pagamento</th>
+                            <th class="p-2">Itens / Quantidade</th>
+                            <th class="p-2 text-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminSalesTable"></tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -445,10 +456,21 @@
         };
 
         function checkPaymentReturn() {
-            const status = new URLSearchParams(window.location.search).get('status');
-            if (status === 'success' || status === 'approved') {
-                DB.carrinhoStore = []; renderCartDrawer(); localStorage.removeItem('fabi_pending_online_order');
-                showToast('Pedido recebido com sucesso!', 'success', 6000);
+            const urlParams = new URLSearchParams(window.location.search);
+            const status = urlParams.get('status');
+            
+            if (status) {
+                if (status === 'success' || status === 'approved') {
+                    DB.carrinhoStore = []; 
+                    renderCartDrawer(); 
+                    localStorage.removeItem('fabi_pending_online_order');
+                    showToast('Pedido recebido com sucesso!', 'success', 6000);
+                } else if (status === 'pending') {
+                    showToast('Pagamento pendente ou em análise.', 'info', 6000);
+                } else if (status === 'failure') {
+                    showToast('O pagamento não foi aprovado.', 'error', 6000);
+                }
+                window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
 
@@ -857,7 +879,7 @@
                 metodo_pagamento: metodo, 
                 endereco: 'Balcão', 
                 total: tot, 
-                itens: JSON.stringify(DB.carrinhoPdv), 
+                itens: JSON.parse(JSON.stringify(DB.carrinhoPdv)), 
                 created_at: new Date().toISOString() 
             };
             
@@ -892,9 +914,29 @@
         }
 
         function renderSalesLog() {
-            adminSalesTable.innerHTML = DB.vendas.length ? DB.vendas.map(v => `
-                <tr class="border-b"><td class="p-2">${new Date(v.created_at||v.id).toLocaleDateString()}</td><td class="p-2 font-bold">${v.origem}</td><td class="p-2">${v.metodo_pagamento}</td><td class="p-2 text-right font-bold">R$ ${v.total.toFixed(2)}</td></tr>
-            `).join('') : '<tr><td colspan="4" class="p-3 text-center text-stone-400">Nenhuma venda.</td></tr>';
+            adminSalesTable.innerHTML = DB.vendas.length ? DB.vendas.map(v => {
+                let itensArray = [];
+                try {
+                    itensArray = typeof v.itens === 'string' ? JSON.parse(v.itens) : (v.itens || []);
+                } catch(e) { itensArray = []; }
+
+                const itensFormatados = itensArray.length ? itensArray.map(i => `<span class="bg-stone-100 text-stone-800 px-1.5 py-0.5 rounded mr-1 inline-block mb-1">${i.quantidade}x ${i.nome || i.marca}</span>`).join('') : '<span class="text-stone-400">Itens não detalhados</span>';
+                
+                const dataHora = new Date(v.created_at || v.id).toLocaleString('pt-BR', {
+                    day: '2-digit', month: '2-digit', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit', second: '2-digit'
+                });
+
+                return `
+                    <tr class="border-b hover:bg-stone-50 transition">
+                        <td class="p-2 font-mono text-[11px] text-stone-600">${dataHora}</td>
+                        <td class="p-2 font-bold">${v.origem}</td>
+                        <td class="p-2">${v.metodo_pagamento}</td>
+                        <td class="p-2 max-w-xs">${itensFormatados}</td>
+                        <td class="p-2 text-right font-bold text-stone-900">R$ ${parseFloat(v.total || v.valor_total || 0).toFixed(2)}</td>
+                    </tr>
+                `;
+            }).join('') : '<tr><td colspan="5" class="p-4 text-center text-stone-400">Nenhuma venda registrada.</td></tr>';
         }
 
         function openNewProductModal() { newProductModal.classList.remove('hidden'); }
