@@ -477,17 +477,17 @@
             }
         };
 
-        // VALIDAÇÃO EXTREMAMENTE RIGOROSA DO PAGAMENTO
+        // VALIDAÇÃO BLINDADA: SÓ MOSTRA SE HOUVER UM PAYMENT_ID REAL E ÚNICO
         async function checkPaymentReturn() {
             const urlParams = new URLSearchParams(window.location.search);
             const status = urlParams.get('status') || urlParams.get('collection_status');
             const paymentId = urlParams.get('payment_id') || urlParams.get('collection_id');
             
-            // SÓ ABRE O SUCESSO SE O STATUS FOR APROVADO E HOUVER UM PAYMENT_ID VÁLIDO
-            const isApproved = (status === 'success' || status === 'approved');
-            const hasPaymentId = paymentId && paymentId !== 'null' && paymentId !== 'undefined' && paymentId.trim() !== '';
+            const hasValidId = paymentId && paymentId !== 'null' && paymentId !== 'undefined' && paymentId.trim() !== '';
+            const isApprovedStatus = (status === 'success' || status === 'approved');
 
-            if (isApproved && hasPaymentId) {
+            // Garante que se não tiver o ID real ou não estiver aprovado, o modal NUNCA abre
+            if (isApprovedStatus && hasValidId) {
                 const syncedPayments = JSON.parse(localStorage.getItem('fabi_synced_payments') || '[]');
                 if (!syncedPayments.includes(paymentId)) {
                     const enderecoSalvo = document.getElementById('deliveryStreet')?.value || 'Entrega via Correios';
@@ -506,13 +506,17 @@
                 renderCartDrawer(); 
                 localStorage.removeItem('fabi_pending_online_order');
                 document.getElementById('onlinePaymentSuccessModal').classList.remove('hidden');
-            } else if (status === 'pending') {
-                showToast('Pagamento pendente ou em análise.', 'info', 6000);
-            } else if (status === 'failure' || status === 'rejected') {
-                showToast('O pagamento não foi aprovado.', 'error', 6000);
+            } else {
+                // Força o fechamento caso qualquer parâmetro falso tente exibi-lo
+                document.getElementById('onlinePaymentSuccessModal').classList.add('hidden');
+                if (status === 'pending') {
+                    showToast('Pagamento pendente ou em análise.', 'info', 6000);
+                } else if (status === 'failure' || status === 'rejected') {
+                    showToast('O pagamento não foi aprovado.', 'error', 6000);
+                }
             }
 
-            // Limpa a URL em qualquer cenário de retorno para evitar reativação acidental ao atualizar
+            // Limpa a URL imediatamente para evitar reexibição ao atualizar a página
             if (urlParams.has('status') || urlParams.has('payment_id') || urlParams.has('collection_id') || urlParams.has('collection_status')) {
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
