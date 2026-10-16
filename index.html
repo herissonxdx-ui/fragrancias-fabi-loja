@@ -470,6 +470,10 @@
                 } else if (status === 'failure') {
                     showToast('O pagamento não foi aprovado.', 'error', 6000);
                 }
+            }
+
+            // Limpa imediatamente a URL para evitar que o aviso volte ao dar F5
+            if (window.location.search) {
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
