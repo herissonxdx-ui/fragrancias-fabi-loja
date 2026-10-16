@@ -138,7 +138,7 @@
         </footer>
     </div>
 
-    <!-- SACOLA LATERAL (COM CONTROLES DE QUANTIDADE + E -) -->
+    <!-- SACOLA LATERAL -->
     <div id="cartDrawer" class="fixed inset-0 z-50 overflow-hidden hidden">
         <div onclick="toggleCartDrawer(false)" class="absolute inset-0 bg-stone-900/60 backdrop-blur-xs"></div>
         <div class="fixed inset-y-0 right-0 max-w-full flex pl-6 sm:pl-10">
@@ -477,12 +477,13 @@
             }
         };
 
-        // SINCRONIZAÇÃO AUTOMÁTICA COM PROTEÇÃO ANTI-DUPLICAÇÃO (IDEMPOTÊNCIA)
+        // VALIDAÇÃO RIGOROSA DO RETORNO DO PAGAMENTO (APENAS SUCESSO/APROVADO REAL)
         async function checkPaymentReturn() {
             const urlParams = new URLSearchParams(window.location.search);
-            const status = urlParams.get('status');
+            const status = urlParams.get('status') || urlParams.get('collection_status');
             const paymentId = urlParams.get('payment_id') || urlParams.get('collection_id');
             
+            // Só considera sucesso absoluto se o status for explicitamente 'approved' ou 'success'
             if (status === 'success' || status === 'approved') {
                 if (paymentId) {
                     const syncedPayments = JSON.parse(localStorage.getItem('fabi_synced_payments') || '[]');
@@ -507,8 +508,13 @@
                 window.history.replaceState({}, document.title, window.location.pathname);
             } else if (status === 'pending') {
                 showToast('Pagamento pendente ou em análise.', 'info', 6000);
-            } else if (status === 'failure') {
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else if (status === 'failure' || status === 'rejected') {
                 showToast('O pagamento não foi aprovado.', 'error', 6000);
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else if (urlParams.has('status') || urlParams.has('payment_id')) {
+                // Caso retorne da URL sem aprovação explícita
+                window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
 
@@ -819,13 +825,31 @@
             `).join('');
         }
 
+        // VALIDAÇÃO RIGOROSA DE ESTOQUE AO ADICIONAR NA SACOLA
         function addToStoreCart(id) {
             const p = DB.perfumes.find(x => x.id === id);
-            if (!p || p.estoque <= 0) return;
+            if (!p || p.estoque <= 0) {
+                showToast('Produto esgotado.', 'error');
+                return;
+            }
+
             const item = DB.carrinhoStore.find(x => x.perfume_id === id);
-            if (item) item.quantidade++; else DB.carrinhoStore.push({ perfume_id: p.id, marca: p.marca, nome: p.nome, preco_unitario: p.preco, quantidade: 1, imagem: p.imagem });
+            const qtdAtual = item ? item.quantidade : 0;
+
+            if (qtdAtual + 1 > p.estoque) {
+                showToast(`Quantidade máxima em estoque atingida (${p.estoque} un).`, 'warning');
+                return;
+            }
+
+            if (item) {
+                item.quantidade++;
+            } else {
+                DB.carrinhoStore.push({ perfume_id: p.id, marca: p.marca, nome: p.nome, preco_unitario: p.preco, quantidade: 1, imagem: p.imagem });
+            }
+
             localStorage.setItem('fabi_carrinho_store', JSON.stringify(DB.carrinhoStore));
-            renderCartDrawer(); toggleCartDrawer(true);
+            renderCartDrawer(); 
+            toggleCartDrawer(true);
             showToast(`${p.nome} adicionado!`, 'success');
         }
 
@@ -866,9 +890,18 @@
             btnStoreCheckout.disabled = false;
         }
 
+        // VALIDAÇÃO DE ESTOQUE NO BOTÃO + DA SACOLA
         function mudarQtdItemCarrinho(index, delta) {
-            DB.carrinhoStore[index].quantidade += delta;
-            if (DB.carrinhoStore[index].quantidade <= 0) {
+            const item = DB.carrinhoStore[index];
+            const p = DB.perfumes.find(x => x.id === item.perfume_id);
+            
+            if (delta > 0 && p && item.quantidade + delta > p.estoque) {
+                showToast(`Estoque máximo disponível: ${p.estoque} un.`, 'warning');
+                return;
+            }
+
+            item.quantidade += delta;
+            if (item.quantidade <= 0) {
                 DB.carrinhoStore.splice(index, 1);
             }
             localStorage.setItem('fabi_carrinho_store', JSON.stringify(DB.carrinhoStore));
@@ -1009,7 +1042,6 @@
             localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
         }
 
-        // HISTÓRICO DE VENDAS DO PAINEL ADMIN COM ENDEREÇO DE ENTREGA
         async function renderSalesLog() {
             const adminSalesTable = document.getElementById('adminSalesTable');
             if (!adminSalesTable) return;
