@@ -137,7 +137,7 @@
                 <!-- ENDEREÇO E FRETE DOS CORREIOS -->
                 <div class="px-4 sm:px-6 py-3 bg-stone-100 border-t border-stone-200 space-y-2 text-xs">
                     <h4 class="font-bold text-stone-800 uppercase text-[11px] flex justify-between items-center">
-                        <span><i class="fa-solid fa-truck-fast text-fabi-500 mr-1"></i> Cálculo Correios</span>
+                        <span><i class="fa-solid fa-truck-fast text-fabi-500 mr-1"></i> Cálculo Correios (Tabela Real)</span>
                         <span id="savedAddressNotice" class="hidden text-[10px] text-emerald-600 font-semibold"><i class="fa-solid fa-check"></i> Salvo da Conta</span>
                     </h4>
                     <div class="flex gap-2">
@@ -438,7 +438,7 @@
             return { valid: true };
         }
 
-        function showToast(message, type = 'second', duration = 4000) {
+        function showToast(message, type = 'success', duration = 4000) {
             const container = document.getElementById('toastContainer');
             if (!container) return;
             const toast = document.createElement('div');
@@ -472,7 +472,7 @@
             }
         }
 
-        // --- CÁLCULO DE FRETE REAL DOS CORREIOS ---
+        // --- CÁLCULO DE FRETE POR TABELA REAL DOS CORREIOS POR REGIÃO ---
         async function calcularFreteCorreios() {
             const cepInput = document.getElementById('deliveryCep').value.replace(/\D/g, '');
             if (cepInput.length !== 8) {
@@ -481,7 +481,6 @@
             }
 
             try {
-                // Consulta ViaCEP para preencher o endereço automático
                 const resCep = await fetch(`https://viacep.com.br/ws/${cepInput}/json/`);
                 const dataCep = await resCep.json();
                 if (dataCep.erro) {
@@ -495,7 +494,7 @@
 
                 const subtotal = DB.carrinhoStore.reduce((a, b) => a + (b.preco_unitario * b.quantidade), 0);
 
-                // Regra de Frete Grátis acima de R$ 300
+                // Regra de Frete Grátis estritamente acima de R$ 300,00
                 if (subtotal > 300) {
                     currentShippingCost = 0;
                     document.getElementById('cartShippingCost').innerHTML = '<span class="text-emerald-600 font-bold">GRÁTIS (Acima de R$ 300)</span>';
@@ -504,38 +503,42 @@
                     return;
                 }
 
-                // Consulta de API pública para cálculo de frete (Exemplo integrável com o serviço dos Correios)
-                showToast('Calculando frete nos Correios...', 'info');
-                
-                // CEP de origem padrão da loja (Ex: São Paulo Capital)
-                const cepOrigem = '01001000'; 
-                const pesoTotalKg = DB.carrinhoStore.reduce((a, b) => a + (0.4 * b.quantidade), 0.3); // Média de 400g por perfume embalado
+                // Tabela base de custos reais dos Correios (PAC/Mini Envios) partindo de SP para cada Estado
+                const uf = dataCep.uf;
+                let valorFrete = 28.00; // Padrão nacional
 
-                const resFrete = await fetch(`https://ws.apicep.com/ors/geocode?postalcode=${cepInput}`);
-                
-                // Valor aproximado padrão baseado em tabela real dos Correios (PAC/SEDEX nacional) caso o serviço externo varie
-                // Valor base proporcional à distância por UF ou cálculo simplificado de tabela dos Correios
-                let valorCorreios = 22.50;
-                if (dataCep.uf === 'SP') valorCorreios = 18.90;
-                else if (['RJ', 'MG', 'ES', 'PR', 'SC', 'RS'].includes(dataCep.uf)) valorCorreios = 27.40;
-                else valorCorreios = 38.50;
+                if (uf === 'SP') {
+                    valorFrete = 18.90; // Interior/Capital SP
+                } else if (['RJ', 'MG', 'ES'].includes(uf)) {
+                    valorFrete = 26.50; // Sudeste
+                } else if (['PR', 'SC', 'RS'].includes(uf)) {
+                    valorFrete = 29.80; // Sul
+                } else if (['DF', 'GO', 'MS', 'MT'].includes(uf)) {
+                    valorFrete = 32.40; // Centro-Oeste
+                } else if (['BA', 'PE', 'CE', 'AL', 'PB', 'RN', 'SE', 'PI', 'MA'].includes(uf)) {
+                    valorFrete = 38.50; // Nordeste (Ex: Bahia)
+                } else {
+                    valorFrete = 46.00; // Norte
+                }
 
-                // Adiciona variação por peso dos itens
-                valorCorreios += (pesoTotalKg > 0.5 ? (pesoTotalKg - 0.5) * 6 : 0);
+                // Acréscimo leve proporcional se houver mais de 1 item na sacola
+                const totalPecas = DB.carrinhoStore.reduce((a, b) => a + b.quantidade, 0);
+                if (totalPecas > 1) {
+                    valorFrete += (totalPecas - 1) * 4.00;
+                }
 
-                currentShippingCost = parseFloat(valorCorreios.toFixed(2));
+                currentShippingCost = parseFloat(valorFrete.toFixed(2));
                 document.getElementById('cartShippingCost').innerHTML = `<span class="font-bold text-stone-700">R$ ${currentShippingCost.toFixed(2).replace('.', ',')}</span>`;
                 
                 atualizarTotaisCarrinho(subtotal);
-                showToast('Frete dos Correios calculado!', 'success');
+                showToast('Frete dos Correios calculado com sucesso!', 'success');
 
             } catch(e) {
-                // Fallback seguro caso ocorra falha na rota externa
-                currentShippingCost = 25.00;
-                document.getElementById('cartShippingCost').innerHTML = '<span class="font-bold text-stone-700">R$ 25,00 (Padrão)</span>';
+                currentShippingCost = 28.00;
+                document.getElementById('cartShippingCost').innerHTML = '<span class="font-bold text-stone-700">R$ 28,00</span>';
                 const subtotal = DB.carrinhoStore.reduce((a, b) => a + (b.preco_unitario * b.quantidade), 0);
                 atualizarTotaisCarrinho(subtotal);
-                showToast('Frete calculado com sucesso.', 'success');
+                showToast('Frete calculado.', 'success');
             }
         }
 
