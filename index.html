@@ -112,15 +112,46 @@
             <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"></div>
         </main>
 
-        <footer class="bg-stone-900 text-stone-400 border-t border-stone-800 mt-12 py-8 sm:py-12 text-xs">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-                <div><h3 class="font-serif text-base font-bold text-white mb-2">Fragrâncias Fabi</h3><p>Ateliê exclusivo de alta perfumaria importada.</p></div>
-                <div>
-                    <h4 class="font-bold text-white uppercase mb-2">Atendimento</h4>
-                    <p><a href="https://wa.me/5511948698377" target="_blank" class="hover:text-white transition flex items-center gap-1.5"><i class="fa-brands fa-whatsapp text-emerald-400 text-sm"></i> (11) 94869-8377</a></p>
+        <footer class="bg-stone-900 text-stone-400 border-t border-stone-800 mt-12 py-10 sm:py-16 text-xs">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+                <!-- Grid Principal do Rodapé -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                    <div>
+                        <h3 class="font-serif text-base font-bold text-white mb-2">Fragrâncias Fabi</h3>
+                        <p class="text-stone-400 leading-relaxed">Ateliê exclusivo de alta perfumaria importada e 100% original.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-white uppercase mb-2 tracking-wider text-[11px]">Atendimento</h4>
+                        <p><a href="https://wa.me/5511948698377" target="_blank" class="hover:text-white transition flex items-center gap-1.5"><i class="fa-brands fa-whatsapp text-emerald-400 text-sm"></i> (11) 94869-8377</a></p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-white uppercase mb-2 tracking-wider text-[11px]">Pagamento</h4>
+                        <p class="text-stone-400">PIX e Cartão em até 10x com segurança via Mercado Pago.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-white uppercase mb-2 tracking-wider text-[11px]">Garantia</h4>
+                        <p class="text-stone-400"><i class="fa-solid fa-shield-halved text-fabi-500 mr-1.5"></i> Procedência garantida em todos os perfumes.</p>
+                    </div>
                 </div>
-                <div><h4 class="font-bold text-white uppercase mb-2">Pagamento</h4><p>PIX e Cartão em até 10x via Mercado Pago.</p></div>
-                <div><h4 class="font-bold text-white uppercase mb-2">Garantia</h4><p><i class="fa-solid fa-shield-halved text-fabi-500 mr-1.5"></i> 100% Originais.</p></div>
+
+                <!-- Seção de Política de Trocas no Rodapé -->
+                <div class="border-t border-stone-800 pt-8">
+                    <button onclick="toggleFooterExchangePolicy()" class="w-full flex justify-between items-center text-left text-white font-bold uppercase tracking-wider text-[11px] group focus:outline-none">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-rotate text-fabi-500"></i> Política de Trocas e Devoluções (CDC 7 Dias)</span>
+                        <i id="exchangePolicyIcon" class="fa-solid fa-chevron-down text-stone-500 group-hover:text-white transition"></i>
+                    </button>
+                    <div id="footerExchangeContent" class="hidden mt-4 p-5 bg-stone-950/60 border border-stone-800 rounded-2xl text-stone-300 text-[11px] space-y-3 leading-relaxed">
+                        <p><strong>1. Prazo de Arrependimento:</strong> Conforme o Código de Defesa do Consumidor, você tem até 7 (sete) dias corridos após o recebimento para solicitar a devolução de compras virtuais.</p>
+                        <p><strong>2. Condições do Produto:</strong> O perfume deve ser devolvido na embalagem original lacrada, sem violação do celofane ou sinais de uso, acompanhado da nota fiscal.</p>
+                        <p><strong>3. Defeitos ou Avarias:</strong> Em caso de frasco avariado no transporte, comunique em até 30 dias com fotos através do WhatsApp <a href="https://wa.me/5511948698377" target="_blank" class="text-emerald-400 underline font-semibold">(11) 94869-8377</a>.</p>
+                        <p><strong>4. Reembolso:</strong> Restituição via PIX ou estorno no cartão de crédito processados após a chegada e conferência do item em nosso ateliê.</p>
+                    </div>
+                </div>
+
+                <!-- Copyright -->
+                <div class="border-t border-stone-800/60 pt-6 text-center text-stone-500 text-[10px]">
+                    © 2026 Fragrâncias Fabi. Todos os direitos reservados.
+                </div>
             </div>
         </footer>
     </div>
@@ -463,6 +494,13 @@
                 setMode(localStorage.getItem('fabi_active_mode') || 'ecommerce');
             }
         };
+
+        function toggleFooterExchangePolicy() {
+            const content = document.getElementById('footerExchangeContent');
+            const icon = document.getElementById('exchangePolicyIcon');
+            content.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
+        }
 
         function limparUrlRetornoPagamento() {
             const urlParams = new URLSearchParams(window.location.search);
