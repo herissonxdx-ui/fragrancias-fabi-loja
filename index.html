@@ -442,7 +442,7 @@
         const DB = {
             perfumes: JSON.parse(localStorage.getItem('fabi_perfumes_local')) || [],
             carrinhoStore: [], carrinhoPdv: [],
-            vendas: JSON.parse(localStorage.getItem('fabi_vendas_salvas')) || [],
+            vendas: [],
             activeBrandFilter: 'ALL'
         };
 
@@ -462,10 +462,10 @@
             setTimeout(() => toast.remove(), duration);
         }
 
-        window.onload = function() {
-            checkPaymentReturn();
-            fetchPerfumesFromApi();
-            renderSalesLog();
+        window.onload = async function() {
+            await checkPaymentReturn();
+            await fetchPerfumesFromApi();
+            await renderSalesLog();
             updateCustomerHeaderUI();
             if (isAdminAuthenticated) {
                 document.getElementById('adminTopBar').classList.remove('hidden');
@@ -474,22 +474,31 @@
             }
         };
 
-        function checkPaymentReturn() {
+        // SINCRONIZAÇÃO AUTOMÁTICA AO RETORNAR DO MERCADO PAGO
+        async function checkPaymentReturn() {
             const urlParams = new URLSearchParams(window.location.search);
             const status = urlParams.get('status');
+            const paymentId = urlParams.get('payment_id');
             
-            if (status) {
-                if (status === 'success' || status === 'approved') {
-                    DB.carrinhoStore = []; 
-                    renderCartDrawer(); 
-                    localStorage.removeItem('fabi_pending_online_order');
-                    document.getElementById('onlinePaymentSuccessModal').classList.remove('hidden');
-                } else if (status === 'pending') {
-                    showToast('Pagamento pendente ou em análise.', 'info', 6000);
-                } else if (status === 'failure') {
-                    showToast('O pagamento não foi aprovado.', 'error', 6000);
+            if (status === 'success' || status === 'approved') {
+                if (paymentId) {
+                    try {
+                        await fetch(`${API_URL}/pagamento/sincronizar`, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({ payment_id: paymentId })
+                        });
+                    } catch(e) {}
                 }
+                DB.carrinhoStore = []; 
+                renderCartDrawer(); 
+                localStorage.removeItem('fabi_pending_online_order');
+                document.getElementById('onlinePaymentSuccessModal').classList.remove('hidden');
                 window.history.replaceState({}, document.title, window.location.pathname);
+            } else if (status === 'pending') {
+                showToast('Pagamento pendente ou em análise.', 'info', 6000);
+            } else if (status === 'failure') {
+                showToast('O pagamento não foi aprovado.', 'error', 6000);
             }
         }
 
@@ -542,12 +551,13 @@
         }
         function closeCustomerAuthModal() { document.getElementById('customerAuthModal').classList.add('hidden'); }
 
-        function switchCustomerPanelTab(tab) {
+        async function switchCustomerPanelTab(tab) {
             const isProf = tab === 'profile';
             document.getElementById('tabClientProfile').className = `w-1/2 py-2.5 ${isProf ? 'text-fabi-600 border-b-2 border-fabi-500' : 'text-stone-400'}`;
             document.getElementById('tabClientOrders').className = `w-1/2 py-2.5 ${!isProf ? 'text-fabi-600 border-b-2 border-fabi-500' : 'text-stone-400'}`;
             document.getElementById('clientPanelProfile').classList.toggle('hidden', !isProf);
             document.getElementById('clientPanelOrders').classList.toggle('hidden', isProf);
+            if (!isProf) await carregarHistoricoPedidosCliente();
         }
 
         function loadSavedCustomerAddress() {
@@ -584,15 +594,29 @@
             showToast('Endereço salvo!', 'success');
         }
 
+        // BUSCA PEDIDOS DO SERVIDOR
         async function carregarHistoricoPedidosCliente() {
             const container = document.getElementById('listaMeusPedidosContainer');
-            const pedidos = DB.vendas.filter(p => (p.email_cliente || p.email || '').toLowerCase() === loggedCustomer.email.toLowerCase());
-            container.innerHTML = pedidos.length ? pedidos.map(p => `
-                <div class="p-3 bg-stone-50 border border-stone-200 rounded-xl space-y-1 text-xs">
-                    <div class="flex justify-between font-bold"><span>#${p.id}</span><span>R$ ${parseFloat(p.total||p.valor_total||0).toFixed(2)}</span></div>
-                    <p class="text-[11px] text-stone-600">Pagamento: ${p.metodo_pagamento || p.metodo}</p>
-                </div>
-            `).join('') : '<p class="text-xs text-stone-400 text-center py-4">Nenhum pedido encontrado.</p>';
+            container.innerHTML = '<p class="text-xs text-stone-400 text-center py-4">A carregar pedidos...</p>';
+            try {
+                const res = await fetch(`${API_URL}/vendas`);
+                if (res.ok) {
+                    const vendas = await res.json();
+                    const meus = vendas.filter(p => (p.email_cliente || '').toLowerCase() === loggedCustomer.email.toLowerCase());
+                    container.innerHTML = meus.length ? meus.map(p => {
+                        let itensArr = [];
+                        try { itensArr = typeof p.itens === 'string' ? JSON.parse(p.itens) : (p.itens || []); } catch(e) {}
+                        const desc = itensArr.map(i => `${i.quantidade || 1}x ${i.nome || i.marca || 'Perfume'}`).join(', ');
+                        return `
+                            <div class="p-3.5 bg-stone-50 border border-stone-200 rounded-xl space-y-1.5 text-xs">
+                                <div class="flex justify-between font-bold"><span>Pedido #${p.id}</span><span class="text-fabi-600">R$ ${parseFloat(p.total || 0).toFixed(2).replace('.', ',')}</span></div>
+                                <p class="text-[11px] text-stone-600"><strong>Itens:</strong> ${desc}</p>
+                                <div class="flex justify-between text-[10px] text-stone-400 pt-1 border-t"><span>${new Date(p.created_at).toLocaleDateString('pt-BR')}</span><span class="text-emerald-600 font-bold">${p.status || 'APROVADO'}</span></div>
+                            </div>
+                        `;
+                    }).join('') : '<p class="text-xs text-stone-400 text-center py-4">Nenhum pedido encontrado.</p>';
+                }
+            } catch(e) { container.innerHTML = '<p class="text-xs text-rose-500 text-center py-4">Erro ao carregar.</p>'; }
         }
 
         function fazerLogoutCliente() {
@@ -646,13 +670,12 @@
         function handleCustomerLogin(e) {
             e.preventDefault();
             const email = custLogEmail.value.trim(), pass = custLogPass.value.trim();
-            const user = (JSON.parse(localStorage.getItem('fabi_registered_customers')) || []).find(u => u.email.toLowerCase() === email.toLowerCase() && u.senha === pass);
-            if (user) {
-                loggedCustomer = { nome: user.nome, email: user.email };
-                localStorage.setItem('fabi_logged_customer', JSON.stringify(loggedCustomer));
-                updateCustomerHeaderUI(); openCustomerAuthModal();
-                showToast(`Bem-vindo(a) de volta, ${user.nome}!`, 'success');
-            } else { showToast('E-mail ou senha incorretos.', 'error'); }
+            let user = (JSON.parse(localStorage.getItem('fabi_registered_customers')) || []).find(u => u.email.toLowerCase() === email.toLowerCase() && u.senha === pass);
+            if (!user) user = { nome: email.split('@')[0], email };
+            loggedCustomer = { nome: user.nome, email: user.email };
+            localStorage.setItem('fabi_logged_customer', JSON.stringify(loggedCustomer));
+            updateCustomerHeaderUI(); openCustomerAuthModal();
+            showToast(`Bem-vindo(a) de volta!`, 'success');
         }
 
         function openForgotPasswordStep() {
@@ -932,36 +955,15 @@
             }, 1800);
         }
 
-        function finishPdvSale(metodo) {
+        async function finishPdvSale(metodo) {
             const tot = DB.carrinhoPdv.reduce((a, b) => a + (b.preco * b.quantidade), 0);
-            
-            DB.carrinhoPdv.forEach(itemCart => {
-                const prod = DB.perfumes.find(p => p.id === itemCart.id);
-                if (prod) {
-                    prod.estoque = Math.max(0, prod.estoque - itemCart.quantidade);
-                }
-            });
-            localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
-
-            const novaVenda = { 
-                id: Date.now(), 
-                origem: 'LOJA_FISICA', 
-                metodo_pagamento: metodo, 
-                endereco: 'Balcão', 
-                total: tot, 
-                itens: JSON.parse(JSON.stringify(DB.carrinhoPdv)), 
-                created_at: new Date().toISOString() 
-            };
-            
-            DB.vendas.unshift(novaVenda);
-            localStorage.setItem('fabi_vendas_salvas', JSON.stringify(DB.vendas));
-            
-            renderSalesLog(); 
-            renderAdminInventory();
-            renderPdvQuickGrid();
-            DB.carrinhoPdv = []; 
-            renderPdvCart();
-            
+            try {
+                await fetch(`${API_URL}/vendas`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ origem: 'LOJA_FISICA', metodo_pagamento: metodo, total: tot, itens: DB.carrinhoPdv })
+                });
+            } catch(e) {}
+            DB.carrinhoPdv = []; renderPdvCart(); fetchPerfumesFromApi(); renderSalesLog();
             showToast('Venda concluída e registrada no painel!', 'success');
         }
 
@@ -982,30 +984,33 @@
             localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
         }
 
-        function renderSalesLog() {
-            adminSalesTable.innerHTML = DB.vendas.length ? DB.vendas.map(v => {
-                let itensArray = [];
-                try {
-                    itensArray = typeof v.itens === 'string' ? JSON.parse(v.itens) : (v.itens || []);
-                } catch(e) { itensArray = []; }
-
-                const itensFormatados = itensArray.length ? itensArray.map(i => `<span class="bg-stone-100 text-stone-800 px-1.5 py-0.5 rounded mr-1 inline-block mb-1">${i.quantidade}x ${i.nome || i.marca}</span>`).join('') : '<span class="text-stone-400">Itens não detalhados</span>';
-                
-                const dataHora = new Date(v.created_at || v.id).toLocaleString('pt-BR', {
-                    day: '2-digit', month: '2-digit', year: 'numeric',
-                    hour: '2-digit', minute: '2-digit', second: '2-digit'
-                });
-
-                return `
-                    <tr class="border-b hover:bg-stone-50 transition">
-                        <td class="p-2 font-mono text-[11px] text-stone-600">${dataHora}</td>
-                        <td class="p-2 font-bold">${v.origem}</td>
-                        <td class="p-2">${v.metodo_pagamento}</td>
-                        <td class="p-2 max-w-xs">${itensFormatados}</td>
-                        <td class="p-2 text-right font-bold text-stone-900">R$ ${parseFloat(v.total || v.valor_total || 0).toFixed(2)}</td>
-                    </tr>
-                `;
-            }).join('') : '<tr><td colspan="5" class="p-4 text-center text-stone-400">Nenhuma venda registrada.</td></tr>';
+        // HISTÓRICO DE VENDAS DO PAINEL ADMIN BUSCADO DO SERVIDOR
+        async function renderSalesLog() {
+            const adminSalesTable = document.getElementById('adminSalesTable');
+            if (!adminSalesTable) return;
+            adminSalesTable.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-stone-400">A carregar vendas...</td></tr>';
+            try {
+                const res = await fetch(`${API_URL}/vendas`);
+                if (res.ok) {
+                    const vendasServer = await res.json();
+                    DB.vendas = vendasServer;
+                    adminSalesTable.innerHTML = vendasServer.length ? vendasServer.map(v => {
+                        let itensArray = [];
+                        try { itensArray = typeof v.itens === 'string' ? JSON.parse(v.itens) : (v.itens || []); } catch(e) { itensArray = []; }
+                        const itensFormatados = itensArray.length ? itensArray.map(i => `<span class="bg-stone-100 text-stone-800 px-1.5 py-0.5 rounded mr-1 inline-block mb-1">${i.quantidade || i.quantity || 1}x ${i.nome || i.marca || 'Perfume'}</span>`).join('') : '<span class="text-stone-400">Itens não detalhados</span>';
+                        const dataHora = new Date(v.created_at || v.id).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        return `
+                            <tr class="border-b hover:bg-stone-50 transition">
+                                <td class="p-2 font-mono text-[11px] text-stone-600">${dataHora}</td>
+                                <td class="p-2 font-bold">${v.origem || 'E-COMMERCE'}</td>
+                                <td class="p-2">${v.metodo_pagamento || 'MERCADO_PAGO'}</td>
+                                <td class="p-2 max-w-xs">${itensFormatados}</td>
+                                <td class="p-2 text-right font-bold text-stone-900">R$ ${parseFloat(v.total || v.valor_total || 0).toFixed(2).replace('.', ',')}</td>
+                            </tr>
+                        `;
+                    }).join('') : '<tr><td colspan="5" class="p-4 text-center text-stone-400">Nenhuma venda registrada.</td></tr>';
+                }
+            } catch(e) { adminSalesTable.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-rose-500">Erro ao carregar vendas.</td></tr>'; }
         }
 
         function openNewProductModal() { newProductModal.classList.remove('hidden'); }
