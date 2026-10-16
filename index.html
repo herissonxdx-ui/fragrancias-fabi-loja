@@ -477,43 +477,43 @@
             }
         };
 
-        // VALIDAÇÃO RIGOROSA DO RETORNO DO PAGAMENTO (APENAS SUCESSO/APROVADO REAL)
+        // VALIDAÇÃO EXTREMAMENTE RIGOROSA DO PAGAMENTO
         async function checkPaymentReturn() {
             const urlParams = new URLSearchParams(window.location.search);
             const status = urlParams.get('status') || urlParams.get('collection_status');
             const paymentId = urlParams.get('payment_id') || urlParams.get('collection_id');
             
-            // Só considera sucesso absoluto se o status for explicitamente 'approved' ou 'success'
-            if (status === 'success' || status === 'approved') {
-                if (paymentId) {
-                    const syncedPayments = JSON.parse(localStorage.getItem('fabi_synced_payments') || '[]');
-                    if (!syncedPayments.includes(paymentId)) {
-                        const enderecoSalvo = document.getElementById('deliveryStreet')?.value || 'Entrega via Correios';
-                        try {
-                            await fetch(`${API_URL}/pagamento/sincronizar`, {
-                                method: 'POST',
-                                headers: {'Content-Type': 'application/json'},
-                                body: JSON.stringify({ payment_id: paymentId, endereco: enderecoSalvo })
-                            });
-                            syncedPayments.push(paymentId);
-                            localStorage.setItem('fabi_synced_payments', JSON.stringify(syncedPayments));
-                        } catch(e) {}
-                    }
+            // SÓ ABRE O SUCESSO SE O STATUS FOR APROVADO E HOUVER UM PAYMENT_ID VÁLIDO
+            const isApproved = (status === 'success' || status === 'approved');
+            const hasPaymentId = paymentId && paymentId !== 'null' && paymentId !== 'undefined' && paymentId.trim() !== '';
+
+            if (isApproved && hasPaymentId) {
+                const syncedPayments = JSON.parse(localStorage.getItem('fabi_synced_payments') || '[]');
+                if (!syncedPayments.includes(paymentId)) {
+                    const enderecoSalvo = document.getElementById('deliveryStreet')?.value || 'Entrega via Correios';
+                    try {
+                        await fetch(`${API_URL}/pagamento/sincronizar`, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({ payment_id: paymentId, endereco: enderecoSalvo })
+                        });
+                        syncedPayments.push(paymentId);
+                        localStorage.setItem('fabi_synced_payments', JSON.stringify(syncedPayments));
+                    } catch(e) {}
                 }
                 DB.carrinhoStore = []; 
                 localStorage.removeItem('fabi_carrinho_store');
                 renderCartDrawer(); 
                 localStorage.removeItem('fabi_pending_online_order');
                 document.getElementById('onlinePaymentSuccessModal').classList.remove('hidden');
-                window.history.replaceState({}, document.title, window.location.pathname);
             } else if (status === 'pending') {
                 showToast('Pagamento pendente ou em análise.', 'info', 6000);
-                window.history.replaceState({}, document.title, window.location.pathname);
             } else if (status === 'failure' || status === 'rejected') {
                 showToast('O pagamento não foi aprovado.', 'error', 6000);
-                window.history.replaceState({}, document.title, window.location.pathname);
-            } else if (urlParams.has('status') || urlParams.has('payment_id')) {
-                // Caso retorne da URL sem aprovação explícita
+            }
+
+            // Limpa a URL em qualquer cenário de retorno para evitar reativação acidental ao atualizar
+            if (urlParams.has('status') || urlParams.has('payment_id') || urlParams.has('collection_id') || urlParams.has('collection_status')) {
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
