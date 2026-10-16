@@ -396,13 +396,14 @@
                 <table class="w-full text-left text-xs"><tbody id="adminInventoryTable"></tbody></table>
             </div>
             <div class="bg-white rounded-2xl border border-stone-200 p-4 shadow-xs overflow-x-auto">
-                <h3 class="font-bold text-sm mb-3">Histórico de Vendas</h3>
+                <h3 class="font-bold text-sm mb-3">Histórico de Vendas (Com Endereço de Entrega)</h3>
                 <table class="w-full text-left text-xs">
                     <thead>
                         <tr class="border-b text-stone-400 uppercase text-[10px]">
                             <th class="p-2">Data / Hora</th>
                             <th class="p-2">Origem</th>
                             <th class="p-2">Pagamento</th>
+                            <th class="p-2">Endereço de Entrega</th>
                             <th class="p-2">Itens / Quantidade</th>
                             <th class="p-2 text-right">Total</th>
                         </tr>
@@ -486,11 +487,12 @@
                 if (paymentId) {
                     const syncedPayments = JSON.parse(localStorage.getItem('fabi_synced_payments') || '[]');
                     if (!syncedPayments.includes(paymentId)) {
+                        const enderecoSalvo = document.getElementById('deliveryStreet')?.value || 'Entrega via Correios';
                         try {
                             await fetch(`${API_URL}/pagamento/sincronizar`, {
                                 method: 'POST',
                                 headers: {'Content-Type': 'application/json'},
-                                body: JSON.stringify({ payment_id: paymentId })
+                                body: JSON.stringify({ payment_id: paymentId, endereco: enderecoSalvo })
                             });
                             syncedPayments.push(paymentId);
                             localStorage.setItem('fabi_synced_payments', JSON.stringify(syncedPayments));
@@ -602,7 +604,6 @@
             showToast('Endereço salvo!', 'success');
         }
 
-        // BUSCA PEDIDOS DO SERVIDOR
         async function carregarHistoricoPedidosCliente() {
             const container = document.getElementById('listaMeusPedidosContainer');
             container.innerHTML = '<p class="text-xs text-stone-400 text-center py-4">A carregar pedidos...</p>';
@@ -618,6 +619,7 @@
                         return `
                             <div class="p-3.5 bg-stone-50 border border-stone-200 rounded-xl space-y-1.5 text-xs">
                                 <div class="flex justify-between font-bold"><span>Pedido #${p.id}</span><span class="text-fabi-600">R$ ${parseFloat(p.total || 0).toFixed(2).replace('.', ',')}</span></div>
+                                <p class="text-[11px] text-stone-600"><strong>Endereço:</strong> ${p.endereco_entrega || 'Balcão'}</p>
                                 <p class="text-[11px] text-stone-600"><strong>Itens:</strong> ${desc}</p>
                                 <div class="flex justify-between text-[10px] text-stone-400 pt-1 border-t"><span>${new Date(p.created_at).toLocaleDateString('pt-BR')}</span><span class="text-emerald-600 font-bold">${p.status || 'APROVADO'}</span></div>
                             </div>
@@ -875,9 +877,10 @@
 
         async function checkoutStoreOrder() {
             if (!loggedCustomer) { showToast('Faça login para continuar.', 'info'); openCustomerAuthModal(); return; }
-            const cep = deliveryCep.value, rua = deliveryStreet.value, num = deliveryNumber.value, cid = deliveryCity.value;
+            const cep = deliveryCep.value, rua = deliveryStreet.value, num = deliveryNumber.value, cid = deliveryCity.value, bairro = deliveryNeighborhood.value;
             if (!cep || !rua || !num || !cid) { showToast('Preencha o CEP e endereço completo.', 'warning'); return; }
             
+            const enderecoCompleto = `${rua}, ${num} - ${bairro} - ${cid} - CEP: ${cep}`;
             const subtotal = DB.carrinhoStore.reduce((a, b) => a + (b.preco_unitario * b.quantidade), 0);
             const totalComFrete = subtotal + currentShippingCost;
 
@@ -889,7 +892,7 @@
                         emailCliente: loggedCustomer.email, 
                         frete: currentShippingCost,
                         valorTotal: totalComFrete,
-                        endereco: `${rua}, ${num} - ${cid} - CEP: ${cep}` 
+                        endereco: enderecoCompleto 
                     })
                 });
                 const data = await res.json();
@@ -982,7 +985,7 @@
             try {
                 await fetch(`${API_URL}/vendas`, {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ origem: 'LOJA_FISICA', metodo_pagamento: metodo, total: tot, itens: DB.carrinhoPdv })
+                    body: JSON.stringify({ origem: 'LOJA_FISICA', metodo_pagamento: metodo, total: tot, itens: DB.carrinhoPdv, endereco_entrega: 'Retirada no Balcão' })
                 });
             } catch(e) {}
             DB.carrinhoPdv = []; renderPdvCart(); fetchPerfumesFromApi(); renderSalesLog();
@@ -1006,11 +1009,11 @@
             localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
         }
 
-        // HISTÓRICO DE VENDAS DO PAINEL ADMIN BUSCADO DO SERVIDOR
+        // HISTÓRICO DE VENDAS DO PAINEL ADMIN COM ENDEREÇO DE ENTREGA
         async function renderSalesLog() {
             const adminSalesTable = document.getElementById('adminSalesTable');
             if (!adminSalesTable) return;
-            adminSalesTable.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-stone-400">A carregar vendas...</td></tr>';
+            adminSalesTable.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-stone-400">A carregar vendas...</td></tr>';
             try {
                 const res = await fetch(`${API_URL}/vendas`);
                 if (res.ok) {
@@ -1026,13 +1029,14 @@
                                 <td class="p-2 font-mono text-[11px] text-stone-600">${dataHora}</td>
                                 <td class="p-2 font-bold">${v.origem || 'E-COMMERCE'}</td>
                                 <td class="p-2">${v.metodo_pagamento || 'MERCADO_PAGO'}</td>
+                                <td class="p-2 text-stone-700"><i class="fa-solid fa-location-dot text-fabi-500 mr-1"></i> ${v.endereco_entrega || 'Balcão / Retirada'}</td>
                                 <td class="p-2 max-w-xs">${itensFormatados}</td>
                                 <td class="p-2 text-right font-bold text-stone-900">R$ ${parseFloat(v.total || v.valor_total || 0).toFixed(2).replace('.', ',')}</td>
                             </tr>
                         `;
-                    }).join('') : '<tr><td colspan="5" class="p-4 text-center text-stone-400">Nenhuma venda registrada.</td></tr>';
+                    }).join('') : '<tr><td colspan="6" class="p-4 text-center text-stone-400">Nenhuma venda registrada.</td></tr>';
                 }
-            } catch(e) { adminSalesTable.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-rose-500">Erro ao carregar vendas.</td></tr>'; }
+            } catch(e) { adminSalesTable.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-rose-500">Erro ao carregar vendas.</td></tr>'; }
         }
 
         function openNewProductModal() { newProductModal.classList.remove('hidden'); }
