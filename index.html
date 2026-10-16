@@ -806,7 +806,9 @@
                     </div>
                     <div class="p-3 pt-0 space-y-2">
                         <span class="text-sm font-bold text-stone-900">R$ ${p.preco.toFixed(2).replace('.', ',')}</span>
-                        <button onclick="addToStoreCart(${p.id})" ${p.estoque===0?'disabled':''} class="w-full py-2 bg-stone-900 hover:bg-stone-800 disabled:opacity-30 text-white font-bold text-[10px] uppercase rounded-lg">Adicionar</button>
+                        <button onclick="addToStoreCart(${p.id})" ${p.estoque===0?'disabled':''} class="w-full py-2 ${p.estoque===0?'bg-stone-300 text-stone-500 cursor-not-allowed':'bg-stone-900 hover:bg-stone-800 text-white'} font-bold text-[10px] uppercase rounded-lg transition">
+                            ${p.estoque===0?'Esgotado':'Adicionar'}
+                        </button>
                     </div>
                 </div>
             `).join('');
