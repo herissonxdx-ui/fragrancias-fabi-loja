@@ -124,7 +124,7 @@
         </footer>
     </div>
 
-    <!-- SACOLA LATERAL -->
+    <!-- SACOLA LATERAL (COM CALCULADORA DE FRETE) -->
     <div id="cartDrawer" class="fixed inset-0 z-50 overflow-hidden hidden">
         <div onclick="toggleCartDrawer(false)" class="absolute inset-0 bg-stone-900/60 backdrop-blur-xs"></div>
         <div class="fixed inset-y-0 right-0 max-w-full flex pl-6 sm:pl-10">
@@ -133,27 +133,33 @@
                     <h2 class="font-serif text-base sm:text-lg font-bold text-stone-900 flex items-center"><i class="fa-solid fa-bag-shopping text-fabi-500 mr-2"></i> Sua Sacola</h2>
                     <button onclick="toggleCartDrawer(false)" class="text-stone-400 hover:text-stone-600 p-2"><i class="fa-solid fa-xmark text-lg"></i></button>
                 </div>
-                <div id="cartDrawerItems" class="p-4 sm:p-6 overflow-y-auto flex-1 divide-y divide-stone-100"></div>
+                
+                <div id="cartDrawerItems" class="p-4 sm:p-6 overflow-y-auto flex-1 divide-y divide-stone-100 max-h-[220px]"></div>
+
+                <!-- ENDEREÇO E CÁLCULO DE FRETE -->
                 <div class="px-4 sm:px-6 py-3 bg-stone-100 border-t border-stone-200 space-y-2 text-xs">
-                    <h4 class="font-bold text-stone-800 uppercase text-[11px] flex justify-between">
-                        <span><i class="fa-solid fa-truck-fast text-fabi-500 mr-1"></i> Endereço para Entrega</span>
+                    <h4 class="font-bold text-stone-800 uppercase text-[11px] flex justify-between items-center">
+                        <span><i class="fa-solid fa-truck-fast text-fabi-500 mr-1"></i> Endereço & Frete</span>
                         <span id="savedAddressNotice" class="hidden text-[10px] text-emerald-600 font-semibold"><i class="fa-solid fa-check"></i> Salvo da Conta</span>
                     </h4>
+                    <div class="flex gap-2">
+                        <input type="text" id="deliveryCep" placeholder="CEP (Ex: 01001-000)" maxlength="9" onblur="calcularFretePorCep()" class="flex-1 p-2 bg-white border border-stone-300 rounded text-xs font-mono">
+                        <button type="button" onclick="calcularFretePorCep()" class="px-3 py-2 bg-stone-900 text-white font-bold rounded text-[10px] uppercase">Calcular</button>
+                    </div>
                     <div class="grid grid-cols-3 gap-2">
-                        <input type="text" id="deliveryCep" placeholder="CEP" class="col-span-1 p-2 bg-white border border-stone-300 rounded text-xs">
                         <input type="text" id="deliveryCity" placeholder="Cidade / UF" class="col-span-2 p-2 bg-white border border-stone-300 rounded text-xs">
+                        <input type="text" id="deliveryNumber" placeholder="Número" class="col-span-1 p-2 bg-white border border-stone-300 rounded text-xs">
                     </div>
                     <input type="text" id="deliveryStreet" placeholder="Rua / Avenida" class="w-full p-2 bg-white border border-stone-300 rounded text-xs">
-                    <div class="grid grid-cols-3 gap-2">
-                        <input type="text" id="deliveryNumber" placeholder="Número" class="col-span-1 p-2 bg-white border border-stone-300 rounded text-xs">
-                        <input type="text" id="deliveryNeighborhood" placeholder="Bairro" class="col-span-2 p-2 bg-white border border-stone-300 rounded text-xs">
-                    </div>
-                    <input type="text" id="deliveryComplement" placeholder="Complemento" class="w-full p-2 bg-white border border-stone-300 rounded text-xs">
+                    <input type="text" id="deliveryNeighborhood" placeholder="Bairro" class="w-full p-2 bg-white border border-stone-300 rounded text-xs">
                 </div>
-                <div class="p-4 sm:p-6 border-t border-stone-200 bg-stone-50 space-y-3">
-                    <div class="flex justify-between text-xs text-stone-500"><span>Frete:</span><span class="text-emerald-600 font-bold">CORTESIA</span></div>
-                    <div class="flex justify-between text-base font-bold text-stone-900"><span>Subtotal:</span><span id="cartDrawerSubtotal" class="font-serif text-lg text-fabi-600">R$ 0,00</span></div>
-                    <button onclick="checkoutStoreOrder()" id="btnStoreCheckout" disabled class="w-full py-3.5 bg-stone-900 hover:bg-stone-800 disabled:opacity-40 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition shadow-md">Finalizar Pedido (Mercado Pago)</button>
+
+                <!-- TOTAIS E BOTÃO -->
+                <div class="p-4 sm:p-6 border-t border-stone-200 bg-stone-50 space-y-2">
+                    <div class="flex justify-between text-xs text-stone-600"><span>Subtotal dos Produtos:</span><span id="cartSubtotalOnly" class="font-bold">R$ 0,00</span></div>
+                    <div class="flex justify-between text-xs text-stone-600"><span>Frete:</span><span id="cartShippingCost" class="font-bold text-emerald-600">Digite o CEP</span></div>
+                    <div class="flex justify-between text-base font-bold text-stone-900 border-t pt-2"><span>Total Geral:</span><span id="cartDrawerSubtotal" class="font-serif text-lg text-fabi-600">R$ 0,00</span></div>
+                    <button onclick="checkoutStoreOrder()" id="btnStoreCheckout" disabled class="w-full py-3.5 bg-stone-900 hover:bg-stone-800 disabled:opacity-40 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition shadow-md mt-2">Finalizar Pedido (Mercado Pago)</button>
                 </div>
             </div>
         </div>
@@ -419,6 +425,7 @@
         let isAdminAuthenticated = localStorage.getItem('fabi_admin_auth') === 'true';
         let loggedCustomer = JSON.parse(localStorage.getItem('fabi_logged_customer')) || null;
         let pendingCustomerVerification = null, pendingResetVerification = null;
+        let currentShippingCost = 0;
 
         const DB = {
             perfumes: JSON.parse(localStorage.getItem('fabi_perfumes_local')) || [],
@@ -472,9 +479,47 @@
                 }
             }
 
-            // Limpa imediatamente a URL para evitar que o aviso volte ao dar F5
             if (window.location.search) {
                 window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+
+        // --- CÁLCULO DE FRETE AUTOMÁTICO ---
+        async function calcularFretePorCep() {
+            const cepInput = document.getElementById('deliveryCep').value.replace(/\D/g, '');
+            if (cepInput.length !== 8) {
+                if(cepInput.length > 0) showToast('Digite um CEP válido com 8 dígitos.', 'warning');
+                return;
+            }
+
+            try {
+                const res = await fetch(`https://viacep.com.br/ws/${cepInput}/json/`);
+                const data = await res.json();
+                if (data.erro) {
+                    showToast('CEP não encontrado.', 'error');
+                    return;
+                }
+
+                document.getElementById('deliveryStreet').value = data.logradouro || '';
+                document.getElementById('deliveryNeighborhood').value = data.bairro || '';
+                document.getElementById('deliveryCity').value = `${data.localidade} / ${data.uf}`;
+
+                // Regra de Frete: Grátis acima de R$ 199, senão calculado por região (Ex: Sudeste R$ 20, Outros R$ 35)
+                const subtotal = DB.carrinhoStore.reduce((a, b) => a + (b.preco_unitario * b.quantidade), 0);
+                
+                if (subtotal >= 199) {
+                    currentShippingCost = 0;
+                    document.getElementById('cartShippingCost').innerHTML = '<span class="text-emerald-600 font-bold">GRÁTIS (Acima de R$199)</span>';
+                } else {
+                    const uf = data.uf;
+                    currentShippingCost = ['SP', 'RJ', 'MG', 'ES'].includes(uf) ? 22.00 : 38.00;
+                    document.getElementById('cartShippingCost').innerText = `R$ ${currentShippingCost.toFixed(2).replace('.', ',')}`;
+                }
+
+                renderCartDrawer();
+                showToast('Frete calculado com sucesso!', 'success');
+            } catch(e) {
+                showToast('Erro ao consultar o CEP.', 'error');
             }
         }
 
@@ -521,8 +566,8 @@
             document.getElementById('deliveryStreet').value = addr.rua || '';
             document.getElementById('deliveryNumber').value = addr.numero || '';
             document.getElementById('deliveryNeighborhood').value = addr.bairro || '';
-            document.getElementById('deliveryComplement').value = addr.complemento || '';
             document.getElementById('savedAddressNotice').classList.remove('hidden');
+            calcularFretePorCep();
         }
 
         function handleSaveAddress(e) {
@@ -752,7 +797,10 @@
             cartCountBadge.innerText = DB.carrinhoStore.reduce((a, b) => a + b.quantidade, 0);
             if (!DB.carrinhoStore.length) {
                 cartDrawerItems.innerHTML = '<p class="text-xs text-stone-400 text-center py-10">Sacola vazia.</p>';
-                cartDrawerSubtotal.innerText = 'R$ 0,00'; btnStoreCheckout.disabled = true; return;
+                cartSubtotalOnly.innerText = 'R$ 0,00';
+                cartDrawerSubtotal.innerText = 'R$ 0,00'; 
+                btnStoreCheckout.disabled = true; 
+                return;
             }
             let sub = 0;
             cartDrawerItems.innerHTML = DB.carrinhoStore.map((i, idx) => {
@@ -766,19 +814,34 @@
                     </div>
                 `;
             }).join('');
-            cartDrawerSubtotal.innerText = `R$ ${sub.toFixed(2).replace('.', ',')}`;
+
+            cartSubtotalOnly.innerText = `R$ ${sub.toFixed(2).replace('.', ',')}`;
+            
+            // Se subtotal for maior que 199, frete é cortesia automático
+            if (sub >= 199) {
+                currentShippingCost = 0;
+                document.getElementById('cartShippingCost').innerHTML = '<span class="text-emerald-600 font-bold">GRÁTIS</span>';
+            }
+
+            const totalGeral = sub + currentShippingCost;
+            cartDrawerSubtotal.innerText = `R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
             btnStoreCheckout.disabled = false;
         }
 
         async function checkoutStoreOrder() {
             if (!loggedCustomer) { showToast('Faça login para continuar.', 'info'); openCustomerAuthModal(); return; }
-            const cep = deliveryCep.value, rua = deliveryStreet.value, num = deliveryNumber.value, bair = deliveryNeighborhood.value, cid = deliveryCity.value;
-            if (!cep || !rua || !num || !bair || !cid) { showToast('Preencha o endereço.', 'warning'); return; }
+            const cep = deliveryCep.value, rua = deliveryStreet.value, num = deliveryNumber.value, cid = deliveryCity.value;
+            if (!cep || !rua || !num || !cid) { showToast('Preencha o CEP e endereço completo.', 'warning'); return; }
             
             try {
                 const res = await fetch(`${API_URL}/pagamento/checkout`, {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ itens: DB.carrinhoStore, emailCliente: loggedCustomer.email, endereco: `${rua}, ${num} - ${bair}, ${cid} - CEP: ${cep}` })
+                    body: JSON.stringify({ 
+                        itens: DB.carrinhoStore, 
+                        emailCliente: loggedCustomer.email, 
+                        frete: currentShippingCost,
+                        endereco: `${rua}, ${num} - ${cid} - CEP: ${cep}` 
+                    })
                 });
                 const data = await res.json();
                 if (res.ok && data.init_point) window.location.href = data.init_point;
