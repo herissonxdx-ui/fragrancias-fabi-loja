@@ -537,9 +537,9 @@
             }
 
             if (cepInput.length !== 8) {
-                currentShippingCost = 0;
-                atualizarTotaisCarrinho(subtotal);
-                if (cepInput.length > 0) showToast('Digite um CEP válido com 8 dígitos.', 'warning');
+                if (cepInput.length > 0) {
+                    showToast('Digite um CEP válido com 8 dígitos.', 'warning');
+                }
                 return;
             }
 
@@ -942,11 +942,13 @@
                 document.getElementById('cartShippingCost').innerHTML = '<span class="text-emerald-600 font-bold">GRÁTIS</span>';
             } else {
                 const cepVal = document.getElementById('deliveryCep').value.replace(/\D/g, '');
-                if (cepVal.length === 8 && currentShippingCost === 0) {
-                    calcularFreteCorreios();
-                } else if (currentShippingCost > 0) {
+                if (cepVal.length === 8) {
+                    if (currentShippingCost === 0) {
+                        currentShippingCost = 28.00; // Valor padrão inicial caso o cálculo ainda não tenha ocorrido
+                    }
                     document.getElementById('cartShippingCost').innerHTML = `<span class="font-bold text-stone-700">R$ ${currentShippingCost.toFixed(2).replace('.', ',')}</span>`;
                 } else {
+                    currentShippingCost = 0;
                     document.getElementById('cartShippingCost').innerHTML = '<span class="text-stone-400">Informe o CEP</span>';
                 }
             }
