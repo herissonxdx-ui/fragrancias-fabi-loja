@@ -70,13 +70,14 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-16 sm:h-20">
                     <button onclick="toggleMobileNav()" class="lg:hidden text-stone-800 p-2 focus:outline-none"><i class="fa-solid fa-bars text-xl"></i></button>
-                    <div class="flex-shrink-0 cursor-pointer text-center lg:text-left" onclick="filterBrand('ALL')">
+                    <div class="flex-shrink-0 cursor-pointer text-center lg:text-left" onclick="filterCategory('ALL')">
                         <h1 class="font-serif text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-stone-900">FRAGRÂNCIAS <span class="italic text-fabi-500 font-normal">FABI</span></h1>
                     </div>
+                    <!-- MENU: PERFUMARIA, BRAND E NICHO -->
                     <nav class="hidden lg:flex space-x-6 xl:space-x-8 text-xs font-semibold text-stone-700 uppercase tracking-wider">
-                        <a href="#" onclick="event.preventDefault(); filterBrand('ALL')" class="hover:text-fabi-500 transition">Novidades</a>
-                        <a href="#" onclick="event.preventDefault(); filterBrand('Nicho')" class="hover:text-fabi-500 transition">Nicho</a>
-                        <a href="#" onclick="event.preventDefault(); filterBrand('ALL')" class="text-fabi-600 font-bold border-b-2 border-fabi-500 pb-1">Fragrâncias</a>
+                        <a href="#" onclick="event.preventDefault(); filterCategory('Perfumaria')" id="nav-perfumaria" class="hover:text-fabi-500 transition pb-1">Perfumaria</a>
+                        <a href="#" onclick="event.preventDefault(); filterCategory('Brand')" id="nav-brand" class="hover:text-fabi-500 transition pb-1">Brand</a>
+                        <a href="#" onclick="event.preventDefault(); filterCategory('Nicho')" id="nav-nicho" class="hover:text-fabi-500 transition pb-1">Nicho</a>
                     </nav>
                     <div class="flex items-center space-x-3 sm:space-x-4">
                         <button id="customerAuthBtn" onclick="openCustomerAuthModal()" class="text-stone-700 hover:text-fabi-600 text-xs font-semibold flex items-center gap-1.5 transition px-2 py-1 rounded-md hover:bg-stone-100">
@@ -95,13 +96,15 @@
                 </div>
             </div>
             <div id="mobileNav" class="hidden lg:hidden bg-white border-b border-stone-200 px-4 py-3 space-y-2 text-xs font-semibold uppercase tracking-wider border-t">
-                <a href="#" onclick="toggleMobileNav(); filterBrand('ALL');" class="block py-2 text-stone-800">Início</a>
-                <a href="#" onclick="toggleMobileNav(); openCustomerAuthModal();" class="block py-2 text-stone-700"><i class="fa-solid fa-user mr-1.5 text-fabi-500"></i> Minha Conta</a>
+                <a href="#" onclick="toggleMobileNav(); filterCategory('Perfumaria');" class="block py-2 text-stone-800">Perfumaria</a>
+                <a href="#" onclick="toggleMobileNav(); filterCategory('Brand');" class="block py-2 text-stone-800">Brand</a>
+                <a href="#" onclick="toggleMobileNav(); filterCategory('Nicho');" class="block py-2 text-stone-800">Nicho</a>
+                <a href="#" onclick="toggleMobileNav(); openCustomerAuthModal();" class="block py-2 text-stone-700 border-t pt-2"><i class="fa-solid fa-user mr-1.5 text-fabi-500"></i> Minha Conta</a>
                 <a href="#" onclick="toggleMobileNav(); openLoginModal();" class="block py-2 text-stone-500"><i class="fa-solid fa-lock mr-1.5 text-stone-400"></i> Área do Gestor</a>
             </div>
         </header>
 
-        <!-- Filtros por Marca -->
+        <!-- Filtros rápidos -->
         <div class="bg-white border-b border-stone-200 py-3 sm:py-4">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center space-x-2 overflow-x-auto hide-scrollbar py-1" id="brandPillsContainer"></div>
@@ -133,7 +136,7 @@
                     </div>
                 </div>
 
-                <!-- Seção de Política de Trocas no Rodapé -->
+                <!-- Política de Trocas -->
                 <div class="border-t border-stone-800 pt-8">
                     <button onclick="toggleFooterExchangePolicy()" class="w-full flex justify-between items-center text-left text-white font-bold uppercase tracking-wider text-[11px] group focus:outline-none">
                         <span class="flex items-center gap-2"><i class="fa-solid fa-rotate text-fabi-500"></i> Política de Trocas e Devoluções (CDC 7 Dias)</span>
@@ -436,7 +439,7 @@
             <h3 class="font-bold">Cadastrar Perfume</h3>
             <form onsubmit="handleCreateProduct(event)" class="space-y-3">
                 <input type="text" id="newProdName" required placeholder="Nome" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
-                <input type="text" id="newProdBrand" required placeholder="Marca" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
+                <input type="text" id="newProdBrand" required placeholder="Categoria/Marca (Perfumaria, Brand ou Nicho)" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
                 <div class="grid grid-cols-2 gap-2">
                     <input type="number" step="0.01" id="newProdPrice" required placeholder="Preço" class="p-2.5 bg-stone-50 border rounded text-xs">
                     <input type="number" id="newProdStock" required placeholder="Estoque" class="p-2.5 bg-stone-50 border rounded text-xs">
@@ -461,7 +464,7 @@
             carrinhoStore: JSON.parse(localStorage.getItem('fabi_carrinho_store')) || [], 
             carrinhoPdv: [],
             vendas: [],
-            activeBrandFilter: 'ALL'
+            activeCategoryFilter: 'ALL'
         };
 
         function validatePasswordRequirements(pwd) {
@@ -511,11 +514,32 @@
             }
         }
 
-        // --- CÁLCULO DE FRETE POR TABELA REAL DOS CORREIOS POR REGIÃO ---
         async function calcularFreteCorreios() {
             const cepInput = document.getElementById('deliveryCep').value.replace(/\D/g, '');
+            const subtotal = DB.carrinhoStore.reduce((a, b) => a + (b.preco_unitario * b.quantidade), 0);
+
+            if (subtotal > 300) {
+                currentShippingCost = 0;
+                document.getElementById('cartShippingCost').innerHTML = '<span class="text-emerald-600 font-bold">GRÁTIS (Acima de R$ 300)</span>';
+                atualizarTotaisCarrinho(subtotal);
+                if (cepInput.length === 8) {
+                    try {
+                        const resCep = await fetch(`https://viacep.com.br/ws/${cepInput}/json/`);
+                        const dataCep = await resCep.json();
+                        if (!dataCep.erro) {
+                            document.getElementById('deliveryStreet').value = dataCep.logradouro || '';
+                            document.getElementById('deliveryNeighborhood').value = dataCep.bairro || '';
+                            document.getElementById('deliveryCity').value = `${dataCep.localidade} / ${dataCep.uf}`;
+                        }
+                    } catch(e) {}
+                }
+                return;
+            }
+
             if (cepInput.length !== 8) {
-                if(cepInput.length > 0) showToast('Digite um CEP válido com 8 dígitos.', 'warning');
+                currentShippingCost = 0;
+                atualizarTotaisCarrinho(subtotal);
+                if (cepInput.length > 0) showToast('Digite um CEP válido com 8 dígitos.', 'warning');
                 return;
             }
 
@@ -531,36 +555,23 @@
                 document.getElementById('deliveryNeighborhood').value = dataCep.bairro || '';
                 document.getElementById('deliveryCity').value = `${dataCep.localidade} / ${dataCep.uf}`;
 
-                const subtotal = DB.carrinhoStore.reduce((a, b) => a + (b.preco_unitario * b.quantidade), 0);
-
-                // Regra de Frete Grátis estritamente acima de R$ 300,00
-                if (subtotal > 300) {
-                    currentShippingCost = 0;
-                    document.getElementById('cartShippingCost').innerHTML = '<span class="text-emerald-600 font-bold">GRÁTIS (Acima de R$ 300)</span>';
-                    atualizarTotaisCarrinho(subtotal);
-                    showToast('Frete Grátis aplicado!', 'success');
-                    return;
-                }
-
-                // Tabela base de custos reais dos Correios (PAC/Mini Envios) partindo de SP para cada Estado
                 const uf = dataCep.uf;
-                let valorFrete = 28.00; // Padrão nacional
+                let valorFrete = 28.00;
 
                 if (uf === 'SP') {
-                    valorFrete = 18.90; // Interior/Capital SP
+                    valorFrete = 18.90;
                 } else if (['RJ', 'MG', 'ES'].includes(uf)) {
-                    valorFrete = 26.50; // Sudeste
+                    valorFrete = 26.50;
                 } else if (['PR', 'SC', 'RS'].includes(uf)) {
-                    valorFrete = 29.80; // Sul
+                    valorFrete = 29.80;
                 } else if (['DF', 'GO', 'MS', 'MT'].includes(uf)) {
-                    valorFrete = 32.40; // Centro-Oeste
+                    valorFrete = 32.40;
                 } else if (['BA', 'PE', 'CE', 'AL', 'PB', 'RN', 'SE', 'PI', 'MA'].includes(uf)) {
-                    valorFrete = 38.50; // Nordeste (Ex: Bahia)
+                    valorFrete = 38.50;
                 } else {
-                    valorFrete = 46.00; // Norte
+                    valorFrete = 46.00;
                 }
 
-                // Acréscimo leve proporcional se houver mais de 1 item na sacola
                 const totalPecas = DB.carrinhoStore.reduce((a, b) => a + b.quantidade, 0);
                 if (totalPecas > 1) {
                     valorFrete += (totalPecas - 1) * 4.00;
@@ -575,7 +586,6 @@
             } catch(e) {
                 currentShippingCost = 28.00;
                 document.getElementById('cartShippingCost').innerHTML = '<span class="font-bold text-stone-700">R$ 28,00</span>';
-                const subtotal = DB.carrinhoStore.reduce((a, b) => a + (b.preco_unitario * b.quantidade), 0);
                 atualizarTotaisCarrinho(subtotal);
                 showToast('Frete calculado.', 'success');
             }
@@ -808,12 +818,12 @@
                 if (res.ok) {
                     const data = await res.json();
                     if (data?.length) {
-                        DB.perfumes = data.map(p => ({ id: p.id, marca: p.marca||'Importado', nome: p.nome, preco: parseFloat(p.preco), estoque: p.estoque_atual??0, codigo_barras: p.codigo_barras||'789'+p.id, imagem: p.imagem_url||'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400' }));
+                        DB.perfumes = data.map(p => ({ id: p.id, marca: p.marca||'Perfumaria', nome: p.nome, preco: parseFloat(p.preco), estoque: p.estoque_atual??0, codigo_barras: p.codigo_barras||'789'+p.id, imagem: p.imagem_url||'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400' }));
                         localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
                     }
                 }
             } catch(e) {}
-            renderStoreGrid(); renderPdvQuickGrid(); renderAdminInventory(); renderBrandPills();
+            renderStoreGrid(); renderPdvQuickGrid(); renderAdminInventory(); renderCategoryPills();
         }
 
         function setMode(mode) {
@@ -826,21 +836,32 @@
             if(isAdminAuthenticated) localStorage.setItem('fabi_active_mode', mode);
         }
 
-        function renderBrandPills() {
-            const brands = ['ALL', ...new Set(DB.perfumes.map(p => p.marca))];
-            brandPillsContainer.innerHTML = brands.map(b => `
-                <button onclick="filterBrand('${b}')" id="pill-${b}" class="brand-pill px-4 py-2 ${DB.activeBrandFilter===b?'bg-stone-900 text-white font-bold':'bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold'} text-xs rounded-md uppercase tracking-wider shrink-0 transition">${b==='ALL'?'Todos':b}</button>
+        function renderCategoryPills() {
+            const cats = ['ALL', 'Perfumaria', 'Brand', 'Nicho'];
+            brandPillsContainer.innerHTML = cats.map(c => `
+                <button onclick="filterCategory('${c}')" id="pill-${c}" class="brand-pill px-4 py-2 ${DB.activeCategoryFilter===c?'bg-stone-900 text-white font-bold':'bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold'} text-xs rounded-md uppercase tracking-wider shrink-0 transition">${c==='ALL'?'Todos':c}</button>
             `).join('');
+
+            ['Perfumaria', 'Brand', 'Nicho'].forEach(cat => {
+                const navEl = document.getElementById('nav-' + cat.toLowerCase());
+                if (navEl) {
+                    if (DB.activeCategoryFilter === cat) {
+                        navEl.className = 'text-fabi-600 font-bold border-b-2 border-fabi-500 pb-1 transition';
+                    } else {
+                        navEl.className = 'hover:text-fabi-500 transition pb-1 text-stone-700';
+                    }
+                }
+            });
         }
 
-        function filterBrand(brand) {
-            DB.activeBrandFilter = brand;
-            renderBrandPills();
+        function filterCategory(cat) {
+            DB.activeCategoryFilter = cat;
+            renderCategoryPills();
             renderStoreGrid();
         }
 
         function renderStoreGrid() {
-            const filtered = DB.perfumes.filter(p => DB.activeBrandFilter === 'ALL' || p.marca.toLowerCase().includes(DB.activeBrandFilter.toLowerCase()));
+            const filtered = DB.perfumes.filter(p => DB.activeCategoryFilter === 'ALL' || p.marca.toLowerCase().includes(DB.activeCategoryFilter.toLowerCase()));
             productGrid.innerHTML = filtered.map(p => `
                 <div class="bg-white rounded-xl border border-stone-200 overflow-hidden flex flex-col justify-between group hover:shadow-xl transition">
                     <div class="h-48 bg-stone-50 flex items-center justify-center p-4 relative overflow-hidden">
@@ -895,6 +916,8 @@
                 cartDrawerItems.innerHTML = '<p class="text-xs text-stone-400 text-center py-10">Sacola vazia.</p>';
                 cartSubtotalOnly.innerText = 'R$ 0,00';
                 cartDrawerSubtotal.innerText = 'R$ 0,00'; 
+                currentShippingCost = 0;
+                document.getElementById('cartShippingCost').innerHTML = '<span class="text-stone-400">Informe o CEP</span>';
                 btnStoreCheckout.disabled = true; 
                 return;
             }
@@ -913,13 +936,19 @@
             `).join('');
 
             const sub = DB.carrinhoStore.reduce((a, b) => a + (b.preco_unitario * b.quantidade), 0);
+            
             if (sub > 300) {
                 currentShippingCost = 0;
                 document.getElementById('cartShippingCost').innerHTML = '<span class="text-emerald-600 font-bold">GRÁTIS</span>';
-            } else if (document.getElementById('deliveryCep').value.replace(/\D/g, '').length === 8) {
-                calcularFreteCorreios();
             } else {
-                document.getElementById('cartShippingCost').innerHTML = '<span class="text-stone-400">Informe o CEP</span>';
+                const cepVal = document.getElementById('deliveryCep').value.replace(/\D/g, '');
+                if (cepVal.length === 8 && currentShippingCost === 0) {
+                    calcularFreteCorreios();
+                } else if (currentShippingCost > 0) {
+                    document.getElementById('cartShippingCost').innerHTML = `<span class="font-bold text-stone-700">R$ ${currentShippingCost.toFixed(2).replace('.', ',')}</span>`;
+                } else {
+                    document.getElementById('cartShippingCost').innerHTML = '<span class="text-stone-400">Informe o CEP</span>';
+                }
             }
             
             atualizarTotaisCarrinho(sub);
