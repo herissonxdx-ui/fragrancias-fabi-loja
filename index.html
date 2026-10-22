@@ -78,6 +78,8 @@
                         <a href="#" onclick="event.preventDefault(); filterCategory('Perfumaria')" class="hover:text-fabi-500 transition pb-1">Perfumaria</a>
                         <a href="#" onclick="event.preventDefault(); filterCategory('Brand')" class="hover:text-fabi-500 transition pb-1">Brand</a>
                         <a href="#" onclick="event.preventDefault(); filterCategory('Nicho')" class="hover:text-fabi-500 transition pb-1">Nicho</a>
+                        <a href="#" onclick="event.preventDefault(); filterCategory('Maquiagem')" class="hover:text-fabi-500 transition pb-1">Maquiagem</a>
+                        <a href="#" onclick="event.preventDefault(); filterCategory('Capilar')" class="hover:text-fabi-500 transition pb-1">Linha Capilar</a>
                     </nav>
                     <div class="flex items-center space-x-3 sm:space-x-4">
                         <button id="customerAuthBtn" onclick="openCustomerAuthModal()" class="text-stone-700 hover:text-fabi-600 text-xs font-semibold flex items-center gap-1.5 transition px-2 py-1 rounded-md hover:bg-stone-100">
@@ -100,12 +102,14 @@
                 <a href="#" onclick="toggleMobileNav(); filterCategory('Perfumaria');" class="block py-2 text-stone-800">Perfumaria</a>
                 <a href="#" onclick="toggleMobileNav(); filterCategory('Brand');" class="block py-2 text-stone-800">Brand</a>
                 <a href="#" onclick="toggleMobileNav(); filterCategory('Nicho');" class="block py-2 text-stone-800">Nicho</a>
+                <a href="#" onclick="toggleMobileNav(); filterCategory('Maquiagem');" class="block py-2 text-stone-800">Maquiagem</a>
+                <a href="#" onclick="toggleMobileNav(); filterCategory('Capilar');" class="block py-2 text-stone-800">Linha Capilar</a>
                 <a href="#" onclick="toggleMobileNav(); openCustomerAuthModal();" class="block py-2 text-stone-700 border-t pt-2"><i class="fa-solid fa-user mr-1.5 text-fabi-500"></i> Minha Conta</a>
                 <a href="#" onclick="toggleMobileNav(); openLoginModal();" class="block py-2 text-stone-500"><i class="fa-solid fa-lock mr-1.5 text-stone-400"></i> Área do Gestor</a>
             </div>
         </header>
 
-        <!-- BARRA DE PÍLULAS DE CATEGORIAS LIMPA -->
+        <!-- BARRA DE PÍLULAS DE CATEGORIAS -->
         <div class="bg-white border-b border-stone-200 py-3 sm:py-4">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center space-x-2 overflow-x-auto hide-scrollbar py-1" id="brandPillsContainer"></div>
@@ -121,7 +125,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
                     <div>
                         <h3 class="font-serif text-base font-bold text-white mb-2">Fragrâncias Fabi</h3>
-                        <p class="text-stone-400 leading-relaxed">Ateliê exclusivo de alta perfumaria importada e 100% original com criptografia SSL.</p>
+                        <p class="text-stone-400 leading-relaxed">Ateliê exclusivo de alta perfumaria e cosméticos importados com criptografia SSL.</p>
                     </div>
                     <div>
                         <h4 class="font-bold text-white uppercase mb-2 tracking-wider text-[11px]">Atendimento</h4>
@@ -143,9 +147,9 @@
                     </button>
                     <div id="footerExchangeContent" class="hidden mt-4 p-5 bg-stone-950/60 border border-stone-800 rounded-2xl text-stone-300 text-[11px] space-y-3 leading-relaxed">
                         <p><strong>1. Prazo de Arrependimento:</strong> Conforme o Código de Defesa do Consumidor, você tem até 7 (sete) dias corridos após o recebimento para solicitar a devolução de compras virtuais.</p>
-                        <p><strong>2. Condições do Produto:</strong> O perfume deve ser devolvido na embalagem original lacrada, sem violação do celofane ou sinais de uso, acompanhado da nota fiscal.</p>
-                        <p><strong>3. Defeitos ou Avarias:</strong> Em caso de frasco avariado no transporte, comunique em até 30 dias com fotos através do WhatsApp <a href="https://wa.me/5511948698377" target="_blank" class="text-emerald-400 underline font-semibold">(11) 94869-8377</a>.</p>
-                        <p><strong>4. Reembolso:</strong> Restituição via PIX ou estorno no cartão de crédito processados após a chegada e conferência do item em nosso ateliê.</p>
+                        <p><strong>2. Condições do Produto:</strong> O produto deve ser devolvido na embalagem original lacrada, sem violação ou sinais de uso, acompanhado da nota fiscal.</p>
+                        <p><strong>3. Defeitos ou Avarias:</strong> Em caso de avaria no transporte, comunique em até 30 dias com fotos através do WhatsApp <a href="https://wa.me/5511948698377" target="_blank" class="text-emerald-400 underline font-semibold">(11) 94869-8377</a>.</p>
+                        <p><strong>4. Reembolso:</strong> Restituição via PIX ou estorno no cartão de crédito processados após a conferência do item em nosso ateliê.</p>
                     </div>
                 </div>
                 <div class="border-t border-stone-800/60 pt-6 text-center text-stone-500 text-[10px]">
@@ -395,11 +399,13 @@
     <!-- 3. PAINEL ADMIN -->
     <div id="view-admin" class="flex-1 flex flex-col hidden bg-stone-100 p-4 sm:p-6 overflow-y-auto">
         <div class="max-w-7xl mx-auto w-full space-y-6">
-            <div class="flex justify-between items-center">
+            <div class="flex justify-between items-center flex-wrap gap-2">
                 <h1 class="font-serif text-xl font-bold">Gestão & Estoque</h1>
-                <div class="flex gap-2">
-                    <button onclick="openNewBrandModal()" class="px-4 py-2 bg-fabi-600 hover:bg-fabi-500 text-white font-bold text-xs rounded uppercase"><i class="fa-solid fa-tag mr-1"></i> Adicionar Brand (Produto)</button>
-                    <button onclick="openNewProductModal()" class="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs rounded uppercase"><i class="fa-solid fa-plus mr-1"></i> Novo Perfume</button>
+                <div class="flex gap-2 flex-wrap">
+                    <button onclick="openNewBrandModal()" class="px-3 py-2 bg-fabi-600 hover:bg-fabi-500 text-white font-bold text-xs rounded uppercase"><i class="fa-solid fa-tag mr-1"></i> + Brand</button>
+                    <button onclick="openNewMakeupModal()" class="px-3 py-2 bg-pink-700 hover:bg-pink-600 text-white font-bold text-xs rounded uppercase"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> + Maquiagem</button>
+                    <button onclick="openNewCapilarModal()" class="px-3 py-2 bg-amber-700 hover:bg-amber-600 text-white font-bold text-xs rounded uppercase"><i class="fa-solid fa-spray-can-sparkles mr-1"></i> + Linha Capilar</button>
+                    <button onclick="openNewProductModal()" class="px-3 py-2 bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs rounded uppercase"><i class="fa-solid fa-plus mr-1"></i> + Perfume</button>
                 </div>
             </div>
 
@@ -410,7 +416,7 @@
             </div>
 
             <div class="bg-white rounded-2xl border border-stone-200 p-4 shadow-xs overflow-x-auto">
-                <h3 class="font-bold text-sm mb-3">Estoque de Produtos / Perfumes / Brands</h3>
+                <h3 class="font-bold text-sm mb-3">Estoque Geral de Produtos (Com Opção de Exclusão)</h3>
                 <table class="w-full text-left text-xs"><tbody id="adminInventoryTable"></tbody></table>
             </div>
             
@@ -433,7 +439,7 @@
         </div>
     </div>
 
-    <!-- MODAL NOVO PRODUTO -->
+    <!-- MODAL NOVO PERFUME -->
     <div id="newProductModal" class="fixed inset-0 z-50 bg-stone-900/60 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4">
             <div class="flex justify-between items-center border-b pb-2">
@@ -465,8 +471,8 @@
                 <button onclick="closeNewBrandModal()" class="text-stone-400 hover:text-stone-700"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <form onsubmit="handleCreateBrand(event)" class="space-y-3">
-                <input type="text" id="newBrandName" required placeholder="Nome da Brand (Ex: InTheBox, Thera, Nuancier)" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
-                <input type="text" id="newBrandSubtitle" required placeholder="Subtítulo ou Fragrância Inspirada (Ex: Insp. Sauvage)" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
+                <input type="text" id="newBrandName" required placeholder="Nome da Brand (Ex: InTheBox, Thera)" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
+                <input type="text" id="newBrandSubtitle" required placeholder="Subtítulo ou Fragrância Inspirada" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
                 <div class="grid grid-cols-2 gap-2">
                     <input type="number" step="0.01" id="newBrandPrice" required placeholder="Preço (R$)" class="p-2.5 bg-stone-50 border rounded text-xs">
                     <input type="number" id="newBrandStock" required placeholder="Estoque Inicial" class="p-2.5 bg-stone-50 border rounded text-xs">
@@ -476,6 +482,54 @@
                 <div class="flex gap-2 pt-2">
                     <button type="button" onclick="closeNewBrandModal()" class="w-1/2 py-2.5 bg-stone-200 hover:bg-stone-300 text-stone-700 font-bold rounded text-xs uppercase">Cancelar</button>
                     <button type="submit" class="w-1/2 py-2.5 bg-fabi-600 hover:bg-fabi-500 text-white font-bold rounded text-xs uppercase">Salvar Brand</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL NOVA MAQUIAGEM -->
+    <div id="newMakeupModal" class="fixed inset-0 z-50 bg-stone-900/60 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="font-bold text-stone-900">Adicionar Maquiagem</h3>
+                <button onclick="closeNewMakeupModal()" class="text-stone-400 hover:text-stone-700"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="handleCreateMakeup(event)" class="space-y-3">
+                <input type="text" id="newMakeupName" required placeholder="Nome do Produto (Ex: Batom Matte Velvet)" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
+                <input type="text" id="newMakeupBrand" required placeholder="Marca (Ex: MAC, Dior, Bruna Tavares)" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" step="0.01" id="newMakeupPrice" required placeholder="Preço (R$)" class="p-2.5 bg-stone-50 border rounded text-xs">
+                    <input type="number" id="newMakeupStock" required placeholder="Estoque Inicial" class="p-2.5 bg-stone-50 border rounded text-xs">
+                </div>
+                <input type="text" id="newMakeupBarcode" required placeholder="Código de Barras" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
+                <input type="url" id="newMakeupImage" placeholder="URL da Imagem da Maquiagem" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="closeNewMakeupModal()" class="w-1/2 py-2.5 bg-stone-200 hover:bg-stone-300 text-stone-700 font-bold rounded text-xs uppercase">Cancelar</button>
+                    <button type="submit" class="w-1/2 py-2.5 bg-pink-700 hover:bg-pink-600 text-white font-bold rounded text-xs uppercase">Salvar Maquiagem</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL NOVA LINHA CAPILAR -->
+    <div id="newCapilarModal" class="fixed inset-0 z-50 bg-stone-900/60 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="font-bold text-stone-900">Adicionar Linha Capilar</h3>
+                <button onclick="closeNewCapilarModal()" class="text-stone-400 hover:text-stone-700"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="handleCreateCapilar(event)" class="space-y-3">
+                <input type="text" id="newCapilarName" required placeholder="Nome do Produto (Ex: Máscara Óleo de Argan)" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
+                <input type="text" id="newCapilarBrand" required placeholder="Marca / Linha (Ex: Kérastase, L'Oréal)" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" step="0.01" id="newCapilarPrice" required placeholder="Preço (R$)" class="p-2.5 bg-stone-50 border rounded text-xs">
+                    <input type="number" id="newCapilarStock" required placeholder="Estoque Inicial" class="p-2.5 bg-stone-50 border rounded text-xs">
+                </div>
+                <input type="text" id="newCapilarBarcode" required placeholder="Código de Barras" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
+                <input type="url" id="newCapilarImage" placeholder="URL da Imagem do Produto" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="closeNewCapilarModal()" class="w-1/2 py-2.5 bg-stone-200 hover:bg-stone-300 text-stone-700 font-bold rounded text-xs uppercase">Cancelar</button>
+                    <button type="submit" class="w-1/2 py-2.5 bg-amber-700 hover:bg-amber-600 text-white font-bold rounded text-xs uppercase">Salvar Capilar</button>
                 </div>
             </form>
         </div>
@@ -705,7 +759,7 @@
                     container.innerHTML = meus.length ? meus.map(p => {
                         let itensArr = [];
                         try { itensArr = typeof p.itens === 'string' ? JSON.parse(p.itens) : (p.itens || []); } catch(e) {}
-                        const desc = itensArr.map(i => `${i.quantidade || 1}x ${i.nome || i.marca || 'Perfume'}`).join(', ');
+                        const desc = itensArr.map(i => `${i.quantidade || 1}x ${i.nome || i.marca || 'Produto'}`).join(', ');
                         return `
                             <div class="p-3.5 bg-stone-50 border border-stone-200 rounded-xl space-y-1.5 text-xs">
                                 <div class="flex justify-between font-bold"><span>Pedido #${p.id}</span><span class="text-fabi-600">R$ ${parseFloat(p.total || 0).toFixed(2).replace('.', ',')}</span></div>
@@ -877,12 +931,13 @@
         }
 
         function renderCategoryPills() {
-            const staticCategories = ['ALL', 'PERFUMARIA', 'BRAND', 'NICHO'];
+            const staticCategories = ['ALL', 'PERFUMARIA', 'BRAND', 'NICHO', 'MAQUIAGEM', 'CAPILAR'];
             brandPillsContainer.innerHTML = staticCategories.map(c => {
                 const isSelected = DB.activeCategoryFilter.toUpperCase() === c;
                 let label = c;
                 if (c === 'ALL') label = 'TODOS OS PRODUTOS';
                 if (c === 'BRAND') label = 'TODAS AS BRANDS';
+                if (c === 'CAPILAR') label = 'LINHA CAPILAR';
                 return `
                     <button onclick="filterCategory('${c}')" id="pill-${c}" class="brand-pill px-4 py-2 ${isSelected ? 'bg-stone-900 text-white font-bold' : 'bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold'} text-xs rounded-md uppercase tracking-wider shrink-0 transition">${label}</button>
                 `;
@@ -915,11 +970,19 @@
                 }
 
                 if (filtro === 'PERFUMARIA') {
-                    return !isProductBrand(marcaProd) && !nomeProd.toUpperCase().includes('NICHO') && !marcaProd.toUpperCase().includes('NICHO');
+                    return !isProductBrand(marcaProd) && !nomeProd.toUpperCase().includes('NICHO') && !marcaProd.toUpperCase().includes('NICHO') && !marcaProd.toUpperCase().includes('MAQUIAGEM') && !marcaProd.toUpperCase().includes('CAPILAR');
                 }
 
                 if (filtro === 'NICHO') {
                     return nomeProd.toUpperCase().includes('NICHO') || marcaProd.toUpperCase().includes('NICHO');
+                }
+
+                if (filtro === 'MAQUIAGEM') {
+                    return marcaProd.toUpperCase().includes('MAQUIAGEM') || nomeProd.toUpperCase().includes('MAQUIAGEM') || ['MAC', 'DIOR', 'BRUNA TAVARES', 'MARY KAY', 'MARI SAAD'].some(m => marcaProd.toUpperCase().includes(m));
+                }
+
+                if (filtro === 'CAPILAR') {
+                    return marcaProd.toUpperCase().includes('CAPILAR') || nomeProd.toUpperCase().includes('CAPILAR') || ['KÉRASTASE', 'L\'ORÉAL', 'JOICO', 'WELA', 'BAMBOO'].some(m => marcaProd.toUpperCase().includes(m));
                 }
 
                 return marcaProd.toUpperCase() === filtro;
@@ -941,7 +1004,7 @@
                         </button>
                     </div>
                 </div>
-            `).join('') : '<div class="col-span-full py-12 text-center text-xs text-stone-400">Nenhum produto encontrado nesta categoria/brand.</div>';
+            `).join('') : '<div class="col-span-full py-12 text-center text-xs text-stone-400">Nenhum produto encontrado nesta categoria.</div>';
         }
 
         function addToStoreCart(id) {
@@ -1047,7 +1110,7 @@
             const totalComFrete = subtotal + currentShippingCost;
 
             const payloadItens = DB.carrinhoStore.map(i => ({
-                title: i.nome || i.marca || 'Perfume',
+                title: i.nome || i.marca || 'Produto',
                 unit_price: Number(i.preco_unitario),
                 quantity: Number(i.quantidade)
             }));
@@ -1169,9 +1232,32 @@
         }
 
         function renderAdminInventory() {
-            adminInventoryTable.innerHTML = DB.perfumes.map(p => `
-                <tr class="border-b"><td class="p-2 font-bold">${p.nome}</td><td class="p-2">${p.marca}</td><td class="p-2 text-right">R$ ${p.preco.toFixed(2)}</td><td class="p-2 text-center font-bold">${p.estoque} un</td><td class="p-2 text-center"><button onclick="changeStock(${p.id}, -1)" class="px-2 py-0.5 bg-rose-100 text-rose-700 font-bold rounded">-</button> <button onclick="changeStock(${p.id}, 1)" class="px-2 py-0.5 bg-emerald-100 text-emerald-700 font-bold rounded">+</button></td></tr>
-            `).join('');
+            adminInventoryTable.innerHTML = DB.perfumes.length ? DB.perfumes.map(p => `
+                <tr class="border-b">
+                    <td class="p-2 font-bold">${p.nome}</td>
+                    <td class="p-2">${p.marca}</td>
+                    <td class="p-2 text-right">R$ ${p.preco.toFixed(2)}</td>
+                    <td class="p-2 text-center font-bold">${p.estoque} un</td>
+                    <td class="p-2 text-center">
+                        <button onclick="changeStock(${p.id}, -1)" class="px-2 py-0.5 bg-rose-100 text-rose-700 font-bold rounded">-</button> 
+                        <button onclick="changeStock(${p.id}, 1)" class="px-2 py-0.5 bg-emerald-100 text-emerald-700 font-bold rounded">+</button>
+                    </td>
+                    <td class="p-2 text-right">
+                        <button onclick="deleteProduct(${p.id})" class="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded text-[10px] uppercase transition"><i class="fa-solid fa-trash mr-1"></i> Excluir</button>
+                    </td>
+                </tr>
+            `).join('') : '<tr><td colspan="6" class="p-4 text-center text-stone-400">Nenhum produto cadastrado.</td></tr>';
+        }
+
+        async function deleteProduct(id) {
+            if (!confirm('Tem certeza que deseja excluir este produto do sistema?')) return;
+            DB.perfumes = DB.perfumes.filter(x => x.id !== id);
+            localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
+            renderAdminInventory(); renderStoreGrid(); renderPdvQuickGrid();
+            try {
+                await fetch(`${API_URL}/perfumes/${id}`, { method: 'DELETE' });
+            } catch(e) {}
+            showToast('Produto excluído com sucesso!', 'success');
         }
 
         function renderAdminBrandsList() {
@@ -1207,7 +1293,7 @@
                     adminSalesTable.innerHTML = vendasServer.length ? vendasServer.map(v => {
                         let itensArray = [];
                         try { itensArray = typeof v.itens === 'string' ? JSON.parse(v.itens) : (v.itens || []); } catch(e) { itensArray = []; }
-                        const itensFormatados = itensArray.length ? itensArray.map(i => `<span class="bg-stone-100 text-stone-800 px-1.5 py-0.5 rounded mr-1 inline-block mb-1">${i.quantidade || i.quantity || 1}x ${i.nome || i.marca || 'Perfume'}</span>`).join('') : '<span class="text-stone-400">Itens não detalhados</span>';
+                        const itensFormatados = itensArray.length ? itensArray.map(i => `<span class="bg-stone-100 text-stone-800 px-1.5 py-0.5 rounded mr-1 inline-block mb-1">${i.quantidade || i.quantity || 1}x ${i.nome || i.marca || 'Produto'}</span>`).join('') : '<span class="text-stone-400">Itens não detalhados</span>';
                         const dataHora = new Date(v.created_at || v.id).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
                         return `
                             <tr class="border-b hover:bg-stone-50 transition">
@@ -1230,6 +1316,12 @@
         function openNewBrandModal() { newBrandModal.classList.remove('hidden'); }
         function closeNewBrandModal() { newBrandModal.classList.add('hidden'); }
 
+        function openNewMakeupModal() { newMakeupModal.classList.remove('hidden'); }
+        function closeNewMakeupModal() { newMakeupModal.classList.add('hidden'); }
+
+        function openNewCapilarModal() { newCapilarModal.classList.remove('hidden'); }
+        function closeNewCapilarModal() { newCapilarModal.classList.add('hidden'); }
+
         async function handleCreateBrand(e) {
             e.preventDefault();
             const brandName = document.getElementById('newBrandName').value.trim();
@@ -1246,16 +1338,7 @@
                 localStorage.setItem('fabi_brands_registry', JSON.stringify(DB.brandsList));
             }
 
-            const novoProduto = {
-                id: Date.now(),
-                marca: brandName,
-                nome: subtitle,
-                preco: price,
-                estoque: stock,
-                codigo_barras: barcode,
-                imagem: image
-            };
-
+            const novoProduto = { id: Date.now(), marca: brandName, nome: subtitle, preco: price, estoque: stock, codigo_barras: barcode, imagem: image };
             DB.perfumes.push(novoProduto);
             localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
 
@@ -1278,6 +1361,72 @@
             document.getElementById('newBrandStock').value = '';
             document.getElementById('newBrandBarcode').value = '';
             document.getElementById('newBrandImage').value = '';
+        }
+
+        async function handleCreateMakeup(e) {
+            e.preventDefault();
+            const name = document.getElementById('newMakeupName').value.trim();
+            const brand = document.getElementById('newMakeupBrand').value.trim();
+            const price = parseFloat(document.getElementById('newMakeupPrice').value);
+            const stock = parseInt(document.getElementById('newMakeupStock').value);
+            const barcode = document.getElementById('newMakeupBarcode').value.trim();
+            const image = document.getElementById('newMakeupImage').value.trim() || 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=400';
+
+            const novoProduto = { id: Date.now(), marca: `Maquiagem - ${brand}`, nome: name, preco: price, estoque: stock, codigo_barras: barcode, imagem: image };
+            DB.perfumes.push(novoProduto);
+            localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
+
+            try {
+                await fetch(`${API_URL}/perfumes`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ nome: novoProduto.nome, marca: novoProduto.marca, preco: novoProduto.preco, estoque_atual: novoProduto.estoque, codigo_barras: novoProduto.codigo_barras, imagem_url: novoProduto.imagem })
+                });
+            } catch(e) {}
+
+            closeNewMakeupModal();
+            fetchPerfumesFromApi();
+            renderCategoryPills();
+            showToast('Maquiagem cadastrada com sucesso!', 'success');
+
+            document.getElementById('newMakeupName').value = '';
+            document.getElementById('newMakeupBrand').value = '';
+            document.getElementById('newMakeupPrice').value = '';
+            document.getElementById('newMakeupStock').value = '';
+            document.getElementById('newMakeupBarcode').value = '';
+            document.getElementById('newMakeupImage').value = '';
+        }
+
+        async function handleCreateCapilar(e) {
+            e.preventDefault();
+            const name = document.getElementById('newCapilarName').value.trim();
+            const brand = document.getElementById('newCapilarBrand').value.trim();
+            const price = parseFloat(document.getElementById('newCapilarPrice').value);
+            const stock = parseInt(document.getElementById('newCapilarStock').value);
+            const barcode = document.getElementById('newCapilarBarcode').value.trim();
+            const image = document.getElementById('newCapilarImage').value.trim() || 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?w=400';
+
+            const novoProduto = { id: Date.now(), marca: `Capilar - ${brand}`, nome: name, preco: price, estoque: stock, codigo_barras: barcode, imagem: image };
+            DB.perfumes.push(novoProduto);
+            localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
+
+            try {
+                await fetch(`${API_URL}/perfumes`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ nome: novoProduto.nome, marca: novoProduto.marca, preco: novoProduto.preco, estoque_atual: novoProduto.estoque, codigo_barras: novoProduto.codigo_barras, imagem_url: novoProduto.imagem })
+                });
+            } catch(e) {}
+
+            closeNewCapilarModal();
+            fetchPerfumesFromApi();
+            renderCategoryPills();
+            showToast('Produto capilar cadastrado com sucesso!', 'success');
+
+            document.getElementById('newCapilarName').value = '';
+            document.getElementById('newCapilarBrand').value = '';
+            document.getElementById('newCapilarPrice').value = '';
+            document.getElementById('newCapilarStock').value = '';
+            document.getElementById('newCapilarBarcode').value = '';
+            document.getElementById('newCapilarImage').value = '';
         }
 
         async function handleCreateProduct(e) {
