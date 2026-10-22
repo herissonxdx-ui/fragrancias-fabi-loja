@@ -144,7 +144,7 @@
                     <div id="footerExchangeContent" class="hidden mt-4 p-5 bg-stone-950/60 border border-stone-800 rounded-2xl text-stone-300 text-[11px] space-y-3 leading-relaxed">
                         <p><strong>1. Prazo de Arrependimento:</strong> Conforme o Código de Defesa do Consumidor, você tem até 7 (sete) dias corridos após o recebimento para solicitar a devolução de compras virtuais.</p>
                         <p><strong>2. Condições do Produto:</strong> O perfume deve ser devolvido na embalagem original lacrada, sem violação do celofane ou sinais de uso, acompanhado da nota fiscal.</p>
-                        <p><strong>3. Defeitos ou Avarias:</strong> En caso de frasco avariado no transporte, comunique em até 30 dias com fotos através do WhatsApp <a href="https://wa.me/5511948698377" target="_blank" class="text-emerald-400 underline font-semibold">(11) 94869-8377</a>.</p>
+                        <p><strong>3. Defeitos ou Avarias:</strong> Em caso de frasco avariado no transporte, comunique em até 30 dias com fotos através do WhatsApp <a href="https://wa.me/5511948698377" target="_blank" class="text-emerald-400 underline font-semibold">(11) 94869-8377</a>.</p>
                         <p><strong>4. Reembolso:</strong> Restituição via PIX ou estorno no cartão de crédito processados após a chegada e conferência do item em nosso ateliê.</p>
                     </div>
                 </div>
@@ -491,7 +491,7 @@
 
         const DB = {
             perfumes: JSON.parse(localStorage.getItem('fabi_perfumes_local')) || [],
-            brandsList: ['InTheBox', 'Thera', 'Nuancier', 'Parfums Vintage', 'In The Box', 'Parfums-Vintage'],
+            brandsList: JSON.parse(localStorage.getItem('fabi_brands_registry')) || ['InTheBox', 'Thera', 'Nuancier', 'Parfums Vintage', 'In The Box', 'Parfums-Vintage'],
             carrinhoStore: JSON.parse(localStorage.getItem('fabi_carrinho_store')) || [], 
             carrinhoPdv: [],
             vendas: [],
@@ -911,12 +911,10 @@
                 if (filtro === 'ALL' || filtro === 'TODOS OS PRODUTOS') return true;
 
                 if (filtro === 'BRAND' || filtro === 'TODAS AS BRANDS') {
-                    // Retorna apenas se for uma brand cadastrada na lista específica
                     return isProductBrand(marcaProd);
                 }
 
                 if (filtro === 'PERFUMARIA') {
-                    // Retorna apenas se NÃO for brand e NÃO for nicho
                     return !isProductBrand(marcaProd) && !nomeProd.toUpperCase().includes('NICHO') && !marcaProd.toUpperCase().includes('NICHO');
                 }
 
@@ -1245,6 +1243,7 @@
 
             if (!DB.brandsList.map(b=>b.toLowerCase()).includes(brandName.toLowerCase())) {
                 DB.brandsList.push(brandName);
+                localStorage.setItem('fabi_brands_registry', JSON.stringify(DB.brandsList));
             }
 
             const novoProduto = {
