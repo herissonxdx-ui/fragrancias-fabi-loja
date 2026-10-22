@@ -74,9 +74,10 @@
                         <h1 class="font-serif text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-stone-900">FRAGRÂNCIAS <span class="italic text-fabi-500 font-normal">FABI</span></h1>
                     </div>
                     <nav class="hidden lg:flex space-x-6 xl:space-x-8 text-xs font-semibold text-stone-700 uppercase tracking-wider">
-                        <a href="#" onclick="event.preventDefault(); filterCategory('ALL')" class="hover:text-fabi-500 transition pb-1">Início</a>
-                        <a href="#" onclick="event.preventDefault(); filterCategory('Perfumaria')" class="hover:text-fabi-500 transition pb-1">Perfumaria</a>
-                        <a href="#" onclick="event.preventDefault(); filterCategory('Nicho')" class="hover:text-fabi-500 transition pb-1">Nicho</a>
+                        <a href="#" onclick="event.preventDefault(); filterCategory('ALL')" class="nav-link hover:text-fabi-500 transition pb-1">Início</a>
+                        <a href="#" onclick="event.preventDefault(); filterCategory('Perfumaria')" class="nav-link hover:text-fabi-500 transition pb-1">Perfumaria</a>
+                        <a href="#" onclick="event.preventDefault(); filterCategory('Brand')" class="nav-link hover:text-fabi-500 transition pb-1">Brand</a>
+                        <a href="#" onclick="event.preventDefault(); filterCategory('Nicho')" class="nav-link hover:text-fabi-500 transition pb-1">Nicho</a>
                     </nav>
                     <div class="flex items-center space-x-3 sm:space-x-4">
                         <button id="customerAuthBtn" onclick="openCustomerAuthModal()" class="text-stone-700 hover:text-fabi-600 text-xs font-semibold flex items-center gap-1.5 transition px-2 py-1 rounded-md hover:bg-stone-100">
@@ -97,6 +98,7 @@
             <div id="mobileNav" class="hidden lg:hidden bg-white border-b border-stone-200 px-4 py-3 space-y-2 text-xs font-semibold uppercase tracking-wider border-t">
                 <a href="#" onclick="toggleMobileNav(); filterCategory('ALL');" class="block py-2 text-stone-800">Início</a>
                 <a href="#" onclick="toggleMobileNav(); filterCategory('Perfumaria');" class="block py-2 text-stone-800">Perfumaria</a>
+                <a href="#" onclick="toggleMobileNav(); filterCategory('Brand');" class="block py-2 text-stone-800">Brand</a>
                 <a href="#" onclick="toggleMobileNav(); filterCategory('Nicho');" class="block py-2 text-stone-800">Nicho</a>
                 <a href="#" onclick="toggleMobileNav(); openCustomerAuthModal();" class="block py-2 text-stone-700 border-t pt-2"><i class="fa-solid fa-user mr-1.5 text-fabi-500"></i> Minha Conta</a>
                 <a href="#" onclick="toggleMobileNav(); openLoginModal();" class="block py-2 text-stone-500"><i class="fa-solid fa-lock mr-1.5 text-stone-400"></i> Área do Gestor</a>
@@ -402,7 +404,7 @@
 
             <!-- SEÇÃO DE BRANDS CADASTRADAS -->
             <div class="bg-white rounded-2xl border border-stone-200 p-4 shadow-xs">
-                <h3 class="font-bold text-sm mb-3">Brands / Marcas Cadastradas</h3>
+                <h3 class="font-bold text-sm mb-3">Brands Cadastradas</h3>
                 <div id="adminBrandsList" class="flex flex-wrap gap-2"></div>
             </div>
 
@@ -454,7 +456,7 @@
         </div>
     </div>
 
-    <!-- MODAL NOVA BRAND (IGUAL ADICIONAR PERFUME) -->
+    <!-- MODAL NOVA BRAND -->
     <div id="newBrandModal" class="fixed inset-0 z-50 bg-stone-900/60 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4">
             <div class="flex justify-between items-center border-b pb-2">
@@ -560,27 +562,7 @@
                 atualizarTotaisCarrinho(subtotal);
                 if (cepInput.length === 8) {
                     try {
-                        const resCep = await fetch(`https://viacep.com.br/ws/${cepInput}/json/`);
-                        const dataCep = await resCep.json();
-                        if (!dataCep.erro) {
-                            document.getElementById('deliveryStreet').value = dataCep.logradouro || '';
-                            document.getElementById('deliveryNeighborhood').value = dataCep.bairro || '';
-                            document.getElementById('deliveryCity').value = `${dataCep.localidade} / ${dataCep.uf}`;
-                        }
-                    } catch(e) {}
-                }
-                return;
-            }
-
-            if (cepInput.length !== 8) {
-                currentShippingCost = 0;
-                document.getElementById('cartShippingCost').innerHTML = '<span class="text-stone-400">Informe o CEP</span>';
-                atualizarTotaisCarrinho(subtotal);
-                return;
-            }
-
-            try {
-                const resCep = await fetch(`https://viacep.com.br/ws/${cepInput}/json/`);
+                        const resCep = await fetch(`https://viacep.com.br/ws/${cepInput}/json/`); const dataCep = await resCep.json(); if (!dataCep.erro) { document.getElementById('deliveryStreet').value = dataCep.logradouro \vert{}\vert{} ''; document.getElementById('deliveryNeighborhood').value = dataCep.bairro \vert{}\vert{} ''; document.getElementById('deliveryCity').value = `${dataCep.localidade} / ${dataCep.uf}`; } } catch(e) {} } return; }  if (cepInput.length !== 8) { currentShippingCost = 0; document.getElementById('cartShippingCost').innerHTML = '<span class="text-stone-400">Informe o CEP</span>'; atualizarTotaisCarrinho(subtotal); return; }  try { const resCep = await fetch(`https://viacep.com.br/ws/${cepInput}/json/`);
                 const dataCep = await resCep.json();
                 if (dataCep.erro) {
                     showToast('CEP não encontrado.', 'error');
@@ -589,7 +571,7 @@
 
                 document.getElementById('deliveryStreet').value = dataCep.logradouro || '';
                 document.getElementById('deliveryNeighborhood').value = dataCep.bairro || '';
-                document.getElementById('deliveryCity').value = `${dataCep.localidade} / ${dataCep.uf}`;
+                document.getElementById('deliveryCity').value = `${dataCep.localidade} /${dataCep.uf}`;
 
                 const uf = dataCep.uf;
                 let valorFrete = 28.00;
@@ -614,95 +596,15 @@
                 }
 
                 currentShippingCost = parseFloat(valorFrete.toFixed(2));
-                document.getElementById('cartShippingCost').innerHTML = `<span class="font-bold text-stone-700">R$ ${currentShippingCost.toFixed(2).replace('.', ',')}</span>`;
-                
-                atualizarTotaisCarrinho(subtotal);
-                showToast('Frete dos Correios calculado com sucesso!', 'success');
-
-            } catch(e) {
-                currentShippingCost = 28.00;
-                document.getElementById('cartShippingCost').innerHTML = '<span class="font-bold text-stone-700">R$ 28,00</span>';
-                atualizarTotaisCarrinho(subtotal);
-                showToast('Frete calculado.', 'success');
-            }
-        }
-
-        function atualizarTotaisCarrinho(subtotal) {
-            const totalGeral = subtotal + currentShippingCost;
-            document.getElementById('cartSubtotalOnly').innerText = `R$ ${subtotal.toFixed(2).replace('.', ',')}`;
-            document.getElementById('cartDrawerSubtotal').innerText = `R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
-        }
-
-        function openCustomerAuthModal() {
-            if (loggedCustomer) {
-                document.getElementById('loggedInUserName').innerText = loggedCustomer.nome;
-                document.getElementById('loggedInUserEmail').innerText = loggedCustomer.email;
-                ['custAuthStep1','custAuthStep2','forgotPasswordStep1','forgotPasswordStep2'].forEach(id => document.getElementById(id).classList.add('hidden'));
-                document.getElementById('customerLoggedInView').classList.remove('hidden');
-                loadSavedCustomerAddress();
-            } else {
-                document.getElementById('customerLoggedInView').classList.add('hidden');
-                backToStep1();
-            }
-            document.getElementById('customerAuthModal').classList.remove('hidden');
-        }
-        function closeCustomerAuthModal() { document.getElementById('customerAuthModal').classList.add('hidden'); }
-
-        async function switchCustomerPanelTab(tab) {
-            const isProf = tab === 'profile';
-            document.getElementById('tabClientProfile').className = `w-1/2 py-2.5 ${isProf ? 'text-fabi-600 border-b-2 border-fabi-500' : 'text-stone-400'}`;
-            document.getElementById('tabClientOrders').className = `w-1/2 py-2.5 ${!isProf ? 'text-fabi-600 border-b-2 border-fabi-500' : 'text-stone-400'}`;
-            document.getElementById('clientPanelProfile').classList.toggle('hidden', !isProf);
-            document.getElementById('clientPanelOrders').classList.toggle('hidden', isProf);
-            if (!isProf) await carregarHistoricoPedidosCliente();
-        }
-
-        function loadSavedCustomerAddress() {
-            if (!loggedCustomer) return;
-            const addr = (JSON.parse(localStorage.getItem('fabi_customer_addresses')) || {})[loggedCustomer.email.toLowerCase()];
-            if (addr) {
-                ['Cep','City','Street','Number','Neighborhood','Complement'].forEach(k => {
-                    const el = document.getElementById('user'+k);
-                    if(el) el.value = addr[k.toLowerCase()] || '';
-                });
-                fillCartAddressFromSaved(addr);
-            }
-        }
-
-        function fillCartAddressFromSaved(addr) {
-            if (!addr) return;
-            document.getElementById('deliveryCep').value = addr.cep || '';
-            document.getElementById('deliveryCity').value = addr.cidade || '';
-            document.getElementById('deliveryStreet').value = addr.rua || '';
-            document.getElementById('deliveryNumber').value = addr.numero || '';
-            document.getElementById('deliveryNeighborhood').value = addr.bairro || '';
-            document.getElementById('savedAddressNotice').classList.remove('hidden');
-            calcularFreteCorreios();
-        }
-
-        function handleSaveAddress(e) {
-            e.preventDefault();
-            if (!loggedCustomer) return;
-            const addr = { cep: userCep.value, cidade: userCity.value, rua: userStreet.value, numero: userNumber.value, bairro: userNeighborhood.value, complemento: userComplement.value };
-            let saved = JSON.parse(localStorage.getItem('fabi_customer_addresses')) || {};
-            saved[loggedCustomer.email.toLowerCase()] = addr;
-            localStorage.setItem('fabi_customer_addresses', JSON.stringify(saved));
-            fillCartAddressFromSaved(addr);
-            showToast('Endereço salvo!', 'success');
-        }
-
-        async function carregarHistoricoPedidosCliente() {
-            const container = document.getElementById('listaMeusPedidosContainer');
-            container.innerHTML = '<p class="text-xs text-stone-400 text-center py-4">A carregar pedidos...</p>';
-            try {
-                const res = await fetch(`${API_URL}/vendas`);
+                document.getElementById('cartShippingCost').innerHTML = `<span class="font-bold text-stone-700">R$ ${currentShippingCost.toFixed(2).replace('.', ',')}</span>`;  atualizarTotaisCarrinho(subtotal); showToast('Frete dos Correios calculado com sucesso!', 'success');  } catch(e) { currentShippingCost = 28.00; document.getElementById('cartShippingCost').innerHTML = '<span class="font-bold text-stone-700">R$ 28,00</span>'; atualizarTotaisCarrinho(subtotal); showToast('Frete calculado.', 'success'); } }  function atualizarTotaisCarrinho(subtotal) { const totalGeral = subtotal + currentShippingCost; document.getElementById('cartSubtotalOnly').innerText = `R$ ${subtotal.toFixed(2).replace('.', ',')}`; document.getElementById('cartDrawerSubtotal').innerText = `R$ ${totalGeral.toFixed(2).replace('.', ',')}`; }  function openCustomerAuthModal() { if (loggedCustomer) { document.getElementById('loggedInUserName').innerText = loggedCustomer.nome; document.getElementById('loggedInUserEmail').innerText = loggedCustomer.email; ['custAuthStep1','custAuthStep2','forgotPasswordStep1','forgotPasswordStep2'].forEach(id => document.getElementById(id).classList.add('hidden')); document.getElementById('customerLoggedInView').classList.remove('hidden'); loadSavedCustomerAddress(); } else { document.getElementById('customerLoggedInView').classList.add('hidden'); backToStep1(); } document.getElementById('customerAuthModal').classList.remove('hidden'); } function closeCustomerAuthModal() { document.getElementById('customerAuthModal').classList.add('hidden'); }  async function switchCustomerPanelTab(tab) { const isProf = tab === 'profile'; document.getElementById('tabClientProfile').className = `w-1/2 py-2.5 ${isProf ? 'text-fabi-600 border-b-2 border-fabi-500' : 'text-stone-400'}`;
+            document.getElementById('tabClientOrders').className = `w-1/2 py-2.5 ${!isProf ? 'text-fabi-600 border-b-2 border-fabi-500' : 'text-stone-400'}`; document.getElementById('clientPanelProfile').classList.toggle('hidden', !isProf); document.getElementById('clientPanelOrders').classList.toggle('hidden', isProf); if (!isProf) await carregarHistoricoPedidosCliente(); }  function loadSavedCustomerAddress() { if (!loggedCustomer) return; const addr = (JSON.parse(localStorage.getItem('fabi_customer_addresses')) \vert{}\vert{} {})[loggedCustomer.email.toLowerCase()]; if (addr) { ['Cep','City','Street','Number','Neighborhood','Complement'].forEach(k => { const el = document.getElementById('user'+k); if(el) el.value = addr[k.toLowerCase()] \vert{}\vert{} ''; }); fillCartAddressFromSaved(addr); } }  function fillCartAddressFromSaved(addr) { if (!addr) return; document.getElementById('deliveryCep').value = addr.cep \vert{}\vert{} ''; document.getElementById('deliveryCity').value = addr.cidade \vert{}\vert{} ''; document.getElementById('deliveryStreet').value = addr.rua \vert{}\vert{} ''; document.getElementById('deliveryNumber').value = addr.numero \vert{}\vert{} ''; document.getElementById('deliveryNeighborhood').value = addr.bairro \vert{}\vert{} ''; document.getElementById('savedAddressNotice').classList.remove('hidden'); calcularFreteCorreios(); }  function handleSaveAddress(e) { e.preventDefault(); if (!loggedCustomer) return; const addr = { cep: userCep.value, cidade: userCity.value, rua: userStreet.value, numero: userNumber.value, bairro: userNeighborhood.value, complemento: userComplement.value }; let saved = JSON.parse(localStorage.getItem('fabi_customer_addresses')) \vert{}\vert{} {}; saved[loggedCustomer.email.toLowerCase()] = addr; localStorage.setItem('fabi_customer_addresses', JSON.stringify(saved)); fillCartAddressFromSaved(addr); showToast('Endereço salvo!', 'success'); }  async function carregarHistoricoPedidosCliente() { const container = document.getElementById('listaMeusPedidosContainer'); container.innerHTML = '<p class="text-xs text-stone-400 text-center py-4">A carregar pedidos...</p>'; try { const res = await fetch(`${API_URL}/vendas`);
                 if (res.ok) {
                     const vendas = await res.json();
                     const meus = vendas.filter(p => (p.email_cliente || '').toLowerCase() === loggedCustomer.email.toLowerCase());
                     container.innerHTML = meus.length ? meus.map(p => {
                         let itensArr = [];
                         try { itensArr = typeof p.itens === 'string' ? JSON.parse(p.itens) : (p.itens || []); } catch(e) {}
-                        const desc = itensArr.map(i => `${i.quantidade || 1}x ${i.nome || i.marca || 'Perfume'}`).join(', ');
+                        const desc = itensArr.map(i => `${i.quantidade \vert{}\vert{} 1}x${i.nome || i.marca || 'Perfume'}`).join(', ');
                         return `
                             <div class="p-3.5 bg-stone-50 border border-stone-200 rounded-xl space-y-1.5 text-xs">
                                 <div class="flex justify-between font-bold"><span>Pedido #${p.id}</span><span class="text-fabi-600">R$ ${parseFloat(p.total || 0).toFixed(2).replace('.', ',')}</span></div>
@@ -724,23 +626,7 @@
         function switchCustomerTab(signup) {
             const isUp = signup === 'signup' || signup === true;
             document.getElementById('tabCustomerRegister').className = `w-1/2 py-2.5 rounded-xl ${isUp ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-500'}`;
-            document.getElementById('tabCustomerLogin').className = `w-1/2 py-2.5 rounded-xl ${!isUp ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-500'}`;
-            document.getElementById('formCustomerRegister').classList.toggle('hidden', !isUp);
-            document.getElementById('formCustomerLogin').classList.toggle('hidden', isUp);
-        }
-
-        async function handleCustomerRegister(e) {
-            e.preventDefault();
-            const name = custRegName.value.trim(), email = custRegEmail.value.trim(), pass = custRegPass.value.trim();
-            if (pass !== custRegPassConfirm.value.trim()) { showToast('As senhas não conferem.', 'warning'); return; }
-            const check = validatePasswordRequirements(pass);
-            if (!check.valid) { showToast(check.message, 'warning'); return; }
-
-            const code = Math.floor(100000 + Math.random() * 900000).toString();
-            pendingCustomerVerification = { nome: name, email, senha: pass, codigo: code };
-            
-            try {
-                const res = await fetch(`${API_URL}/clientes/enviar-codigo`, {
+            document.getElementById('tabCustomerLogin').className = `w-1/2 py-2.5 rounded-xl ${!isUp ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-500'}`; document.getElementById('formCustomerRegister').classList.toggle('hidden', !isUp); document.getElementById('formCustomerLogin').classList.toggle('hidden', isUp); }  async function handleCustomerRegister(e) { e.preventDefault(); const name = custRegName.value.trim(), email = custRegEmail.value.trim(), pass = custRegPass.value.trim(); if (pass !== custRegPassConfirm.value.trim()) { showToast('As senhas não conferem.', 'warning'); return; } const check = validatePasswordRequirements(pass); if (!check.valid) { showToast(check.message, 'warning'); return; }  const code = Math.floor(100000 + Math.random() * 900000).toString(); pendingCustomerVerification = { nome: name, email, senha: pass, codigo: code };  try { const res = await fetch(`${API_URL}/clientes/enviar-codigo`, {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ email, nome: name, codigo: code, tipo: 'cadastro' })
                 });
@@ -824,37 +710,11 @@
         function updateCustomerHeaderUI() {
             const btn = document.getElementById('customerAuthName');
             if (loggedCustomer) {
-                btn.innerHTML = `<span class="text-emerald-600 font-bold">${loggedCustomer.nome.split(' ')[0]}</span>`;
-                const addr = (JSON.parse(localStorage.getItem('fabi_customer_addresses')) || {})[loggedCustomer.email.toLowerCase()];
-                if (addr) fillCartAddressFromSaved(addr);
-            } else { btn.innerText = "Entrar / Criar Conta"; }
-        }
-
-        function toggleMobileNav() { mobileNav.classList.toggle('hidden'); }
-        function openLoginModal() { loginModal.classList.remove('hidden'); }
-        function closeLoginModal() { loginModal.classList.add('hidden'); }
-
-        function handleAdminLogin(e) {
-            e.preventDefault();
-            if (loginUser.value === 'admin' && loginPass.value === 'fabi2026') {
-                isAdminAuthenticated = true; localStorage.setItem('fabi_admin_auth', 'true');
-                closeLoginModal(); adminTopBar.classList.remove('hidden'); adminTopBar.classList.add('flex');
-                setMode('admin'); showToast('Gestor autenticado com segurança!', 'success');
-            } else { showToast('Credenciais inválidas.', 'error'); }
-        }
-
-        function logoutAdmin() {
-            isAdminAuthenticated = false; localStorage.removeItem('fabi_admin_auth'); localStorage.removeItem('fabi_active_mode');
-            adminTopBar.classList.add('hidden'); setMode('ecommerce'); showToast('Sessão encerrada.', 'info');
-        }
-
-        async function fetchPerfumesFromApi() {
-            try {
-                const res = await fetch(`${API_URL}/perfumes`);
+                btn.innerHTML = `<span class="text-emerald-600 font-bold">${loggedCustomer.nome.split(' ')[0]}</span>`; const addr = (JSON.parse(localStorage.getItem('fabi_customer_addresses')) \vert{}\vert{} {})[loggedCustomer.email.toLowerCase()]; if (addr) fillCartAddressFromSaved(addr); } else { btn.innerText = "Entrar / Criar Conta"; } }  function toggleMobileNav() { mobileNav.classList.toggle('hidden'); } function openLoginModal() { loginModal.classList.remove('hidden'); } function closeLoginModal() { loginModal.classList.add('hidden'); }  function handleAdminLogin(e) { e.preventDefault(); if (loginUser.value === 'admin' && loginPass.value === 'fabi2026') { isAdminAuthenticated = true; localStorage.setItem('fabi_admin_auth', 'true'); closeLoginModal(); adminTopBar.classList.remove('hidden'); adminTopBar.classList.add('flex'); setMode('admin'); showToast('Gestor autenticado com segurança!', 'success'); } else { showToast('Credenciais inválidas.', 'error'); } }  function logoutAdmin() { isAdminAuthenticated = false; localStorage.removeItem('fabi_admin_auth'); localStorage.removeItem('fabi_active_mode'); adminTopBar.classList.add('hidden'); setMode('ecommerce'); showToast('Sessão encerrada.', 'info'); }  async function fetchPerfumesFromApi() { try { const res = await fetch(`${API_URL}/perfumes`);
                 if (res.ok) {
                     const data = await res.json();
                     if (data?.length) {
-                        DB.perfumes = data.map(p => ({ id: p.id, marca: p.marca||'Perfumaria', nome: p.nome, preco: parseFloat(p.preco), estoque: p.estoque_atual??0, codigo_barras: p.codigo_barras||'789'+p.id, imagem: p.imagem_url||'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400' }));
+                        DB.perfumes = data.map(p => ({ id: p.id, marca: p.marca||'InTheBox', nome: p.nome, preco: parseFloat(p.preco), estoque: p.estoque_atual??0, codigo_barras: p.codigo_barras||'789'+p.id, imagem: p.imagem_url||'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400' }));
                         localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
                     }
                 }
@@ -873,9 +733,9 @@
         }
 
         function renderCategoryPills() {
-            const cats = ['ALL', ...DB.brands];
-            brandPillsContainer.innerHTML = cats.map(c => `
-                <button onclick="filterCategory('${c}')" id="pill-${c}" class="brand-pill px-4 py-2 ${DB.activeCategoryFilter===c?'bg-stone-900 text-white font-bold':'bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold'} text-xs rounded-md uppercase tracking-wider shrink-0 transition">${c==='ALL'?'Todos':c}</button>
+            const categories = ['ALL', 'Perfumaria', 'Brand', 'Nicho'];
+            brandPillsContainer.innerHTML = categories.map(c => `
+                <button onclick="filterCategory('${c}')" id="pill-${c}" class="brand-pill px-4 py-2 ${DB.activeCategoryFilter===c?'bg-stone-900 text-white font-bold':'bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold'} text-xs rounded-md uppercase tracking-wider shrink-0 transition">${c==='ALL'?'Todos os Produtos':c}</button>
             `).join('');
         }
 
@@ -888,7 +748,9 @@
         function renderStoreGrid() {
             const filtered = DB.perfumes.filter(p => {
                 if (DB.activeCategoryFilter === 'ALL') return true;
-                return (p.marca || '').trim().toLowerCase() === DB.activeCategoryFilter.trim().toLowerCase();
+                const marcaProd = (p.marca || '').trim().toLowerCase();
+                const filtro = DB.activeCategoryFilter.trim().toLowerCase();
+                return marcaProd === filtro || marcaProd.includes(filtro);
             });
 
             productGrid.innerHTML = filtered.length ? filtered.map(p => `
@@ -907,7 +769,7 @@
                         </button>
                     </div>
                 </div>
-            `).join('') : '<div class="col-span-full py-12 text-center text-xs text-stone-400">Nenhum produto encontrado nesta brand.</div>';
+            `).join('') : '<div class="col-span-full py-12 text-center text-xs text-stone-400">Nenhum produto encontrado nesta categoria/brand.</div>';
         }
 
         function addToStoreCart(id) {
@@ -921,20 +783,7 @@
             const qtdAtual = item ? item.quantidade : 0;
 
             if (qtdAtual + 1 > p.estoque) {
-                showToast(`Quantidade máxima em estoque atingida (${p.estoque} un).`, 'warning');
-                return;
-            }
-
-            if (item) {
-                item.quantidade++;
-            } else {
-                DB.carrinhoStore.push({ perfume_id: p.id, marca: p.marca, nome: p.nome, preco_unitario: p.preco, quantidade: 1, imagem: p.imagem });
-            }
-
-            localStorage.setItem('fabi_carrinho_store', JSON.stringify(DB.carrinhoStore));
-            renderCartDrawer(); 
-            toggleCartDrawer(true);
-            showToast(`${p.nome} adicionado!`, 'success');
+                showToast(`Quantidade máxima em estoque atingida (${p.estoque} un).`, 'warning'); return; }  if (item) { item.quantidade++; } else { DB.carrinhoStore.push({ perfume_id: p.id, marca: p.marca, nome: p.nome, preco_unitario: p.preco, quantidade: 1, imagem: p.imagem }); }  localStorage.setItem('fabi_carrinho_store', JSON.stringify(DB.carrinhoStore)); renderCartDrawer(); toggleCartDrawer(true); showToast(`${p.nome} adicionado!`, 'success');
         }
 
         function toggleCartDrawer(open) { cartDrawer.classList.toggle('hidden', !open); }
@@ -1008,26 +857,7 @@
             const cep = deliveryCep.value, rua = deliveryStreet.value, num = deliveryNumber.value, cid = deliveryCity.value, bairro = deliveryNeighborhood.value;
             if (!cep || !rua || !num || !cid) { showToast('Preencha o CEP e endereço completo.', 'warning'); return; }
             
-            const enderecoCompleto = `${rua}, ${num} - ${bairro} - ${cid} - CEP: ${cep}`;
-            const subtotal = DB.carrinhoStore.reduce((a, b) => a + (b.preco_unitario * b.quantidade), 0);
-            const totalComFrete = subtotal + currentShippingCost;
-
-            const payloadItens = DB.carrinhoStore.map(i => ({
-                title: i.nome || i.marca || 'Perfume',
-                unit_price: Number(i.preco_unitario),
-                quantity: Number(i.quantidade)
-            }));
-
-            if (currentShippingCost > 0) {
-                payloadItens.push({
-                    title: 'Frete Correios',
-                    unit_price: Number(currentShippingCost),
-                    quantity: 1
-                });
-            }
-
-            try {
-                const res = await fetch(`${API_URL}/pagamento/checkout`, {
+            const enderecoCompleto = `${rua},${num} - ${bairro} -${cid} - CEP: ${cep}`; const subtotal = DB.carrinhoStore.reduce((a, b) => a + (b.preco_unitario * b.quantidade), 0); const totalComFrete = subtotal + currentShippingCost;  const payloadItens = DB.carrinhoStore.map(i => ({ title: i.nome \vert{}\vert{} i.marca \vert{}\vert{} 'Perfume', unit_price: Number(i.preco_unitario), quantity: Number(i.quantidade) }));  if (currentShippingCost > 0) { payloadItens.push({ title: 'Frete Correios', unit_price: Number(currentShippingCost), quantity: 1 }); }  try { const res = await fetch(`${API_URL}/pagamento/checkout`, {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ 
                         itens: payloadItens, 
@@ -1045,222 +875,4 @@
 
         function renderPdvQuickGrid() {
             pdvQuickGrid.innerHTML = DB.perfumes.map(p => `
-                <button onclick="addToPdvCart(${p.id})" ${p.estoque===0?'disabled':''} class="p-2.5 bg-stone-900 hover:bg-stone-950 disabled:opacity-30 border border-stone-700 text-left rounded-xl flex flex-col justify-between h-20">
-                    <div><p class="text-[9px] uppercase font-bold text-fabi-400">${p.marca}</p><p class="text-[11px] font-bold text-stone-200 truncate">${p.nome}</p></div>
-                    <div class="flex justify-between items-center text-xs"><span class="font-bold text-stone-100">R$ ${p.preco.toFixed(2)}</span><span class="text-[9px] bg-stone-800 text-stone-300 px-1 rounded">${p.estoque} un</span></div>
-                </button>
-            `).join('');
-        }
-
-        function handlePdvBarcodeScan(e) {
-            if (e.key === 'Enter') {
-                const term = e.target.value.toLowerCase();
-                const p = DB.perfumes.find(x => x.codigo_barras === term || x.nome.toLowerCase().includes(term));
-                if (p) { addToPdvCart(p.id); e.target.value = ''; } else showToast('Não encontrado.', 'warning');
-            }
-        }
-
-        function addToPdvCart(id) {
-            const p = DB.perfumes.find(x => x.id === id);
-            if (!p) return;
-            const item = DB.carrinhoPdv.find(x => x.id === id);
-            const qtdAtual = item ? item.quantidade : 0;
-            
-            if (qtdAtual + 1 > p.estoque) {
-                showToast(`Estoque insuficiente! Disponível: ${p.estoque} un.`, 'error');
-                return;
-            }
-
-            if (item) item.quantidade++; 
-            else DB.carrinhoPdv.push({ id: p.id, marca: p.marca, nome: p.nome, preco: p.preco, quantidade: 1 });
-            renderPdvCart();
-        }
-
-        function renderPdvCart() {
-            const total = DB.carrinhoPdv.reduce((a, b) => a + (b.preco * b.quantidade), 0);
-            pdvCartItems.innerHTML = DB.carrinhoPdv.length ? DB.carrinhoPdv.map((i, idx) => `
-                <div class="py-2 flex justify-between items-center text-xs">
-                    <div><p class="font-bold text-stone-100">${i.marca}</p><p class="text-[10px] text-stone-400">${i.nome}</p></div>
-                    <div class="flex items-center space-x-2"><span class="font-mono text-fabi-300">R$ ${(i.preco*i.quantidade).toFixed(2)} (${i.quantidade}x)</span><button onclick="DB.carrinhoPdv.splice(${idx},1); renderPdvCart();" class="text-rose-400"><i class="fa-solid fa-xmark"></i></button></div>
-                </div>
-            `).join('') : '<p class="text-xs text-stone-500 text-center py-10">Caixa vazio.</p>';
-            pdvTotal.innerText = `R$ ${total.toFixed(2)}`;
-            ['btnPdvCash','btnPdvPix','btnPdvCard'].forEach(id => document.getElementById(id).disabled = !DB.carrinhoPdv.length);
-        }
-
-        function openPdvCashModal() {
-            pdvCashTotalText.innerText = pdvTotal.innerText;
-            pdvCashReceivedInput.value = ''; pdvChangeDisplay.innerText = 'Troco: R$ 0,00';
-            pdvCashModal.classList.remove('hidden');
-        }
-        function closePdvCashModal() { pdvCashModal.classList.add('hidden'); }
-        function calculatePdvChange() {
-            const tot = DB.carrinhoPdv.reduce((a, b) => a + (b.preco * b.quantidade), 0);
-            const troco = (parseFloat(pdvCashReceivedInput.value) || 0) - tot;
-            pdvChangeDisplay.innerText = troco >= 0 ? `Troco: R$ ${troco.toFixed(2)}` : `Faltam: R$ ${Math.abs(troco).toFixed(2)}`;
-        }
-        function confirmCashPdvSale() { closePdvCashModal(); finishPdvSale('DINHEIRO'); }
-
-        function openPdvCardModal() { 
-            pdvCardTotalText.innerText = pdvTotal.innerText; 
-            pdvCardModal.classList.remove('hidden'); 
-        }
-        function closePdvCardModal() { pdvCardModal.classList.add('hidden'); }
-        function confirmCardPdvSale() { closePdvCardModal(); finishPdvSale('CARTÃO'); }
-
-        function openPdvPixModal() { 
-            pdvPixTotalText.innerText = pdvTotal.innerText; 
-            document.getElementById('pdvPixSuccessOverlay').classList.add('hidden');
-            pdvPixModal.classList.remove('hidden'); 
-        }
-        function closePdvPixModal() { pdvPixModal.classList.add('hidden'); }
-        function confirmPixPdvSale() { 
-            document.getElementById('pdvPixSuccessOverlay').classList.remove('hidden');
-            setTimeout(() => {
-                closePdvPixModal();
-                finishPdvSale('PIX');
-            }, 1800);
-        }
-
-        async function finishPdvSale(metodo) {
-            const tot = DB.carrinhoPdv.reduce((a, b) => a + (b.preco * b.quantidade), 0);
-            try {
-                await fetch(`${API_URL}/vendas`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ origem: 'LOJA_FISICA', metodo_pagamento: metodo, total: tot, itens: DB.carrinhoPdv, endereco_entrega: 'Retirada no Balcão' })
-                });
-            } catch(e) {}
-            DB.carrinhoPdv = []; renderPdvCart(); fetchPerfumesFromApi(); renderSalesLog();
-            showToast('Venda concluída e registrada no painel!', 'success');
-        }
-
-        function renderAdminInventory() {
-            adminInventoryTable.innerHTML = DB.perfumes.map(p => `
-                <tr class="border-b"><td class="p-2 font-bold">${p.nome}</td><td class="p-2">${p.marca}</td><td class="p-2 text-right">R$ ${p.preco.toFixed(2)}</td><td class="p-2 text-center font-bold">${p.estoque} un</td><td class="p-2 text-center"><button onclick="changeStock(${p.id}, -1)" class="px-2 py-0.5 bg-rose-100 text-rose-700 font-bold rounded">-</button> <button onclick="changeStock(${p.id}, 1)" class="px-2 py-0.5 bg-emerald-100 text-emerald-700 font-bold rounded">+</button></td></tr>
-            `).join('');
-        }
-
-        function renderAdminBrandsList() {
-            const container = document.getElementById('adminBrandsList');
-            if (!container) return;
-            container.innerHTML = DB.brands.map(b => `
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-stone-100 border border-stone-200 text-stone-800 rounded-lg text-xs font-semibold">
-                    <i class="fa-solid fa-tag text-fabi-500"></i> ${b}
-                </span>
-            `).join('');
-        }
-
-        async function changeStock(id, delta) {
-            const p = DB.perfumes.find(x => x.id === id);
-            if (!p || p.estoque + delta < 0) return;
-            p.estoque += delta;
-            renderAdminInventory(); renderStoreGrid(); renderPdvQuickGrid();
-            try {
-                await fetch(`${API_URL}/perfumes/${id}`, { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ estoque_atual: p.estoque }) });
-            } catch(e) {}
-            localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
-        }
-
-        async function renderSalesLog() {
-            const adminSalesTable = document.getElementById('adminSalesTable');
-            if (!adminSalesTable) return;
-            adminSalesTable.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-stone-400">A carregar vendas...</td></tr>';
-            try {
-                const res = await fetch(`${API_URL}/vendas`);
-                if (res.ok) {
-                    const vendasServer = await res.json();
-                    DB.vendas = vendasServer;
-                    adminSalesTable.innerHTML = vendasServer.length ? vendasServer.map(v => {
-                        let itensArray = [];
-                        try { itensArray = typeof v.itens === 'string' ? JSON.parse(v.itens) : (v.itens || []); } catch(e) { itensArray = []; }
-                        const itensFormatados = itensArray.length ? itensArray.map(i => `<span class="bg-stone-100 text-stone-800 px-1.5 py-0.5 rounded mr-1 inline-block mb-1">${i.quantidade || i.quantity || 1}x ${i.nome || i.marca || 'Perfume'}</span>`).join('') : '<span class="text-stone-400">Itens não detalhados</span>';
-                        const dataHora = new Date(v.created_at || v.id).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                        return `
-                            <tr class="border-b hover:bg-stone-50 transition">
-                                <td class="p-2 font-mono text-[11px] text-stone-600">${dataHora}</td>
-                                <td class="p-2 font-bold">${v.origem || 'E-COMMERCE'}</td>
-                                <td class="p-2">${v.metodo_pagamento || 'MERCADO_PAGO'}</td>
-                                <td class="p-2 text-stone-700"><i class="fa-solid fa-location-dot text-fabi-500 mr-1"></i> ${v.endereco_entrega || 'Balcão / Retirada'}</td>
-                                <td class="p-2 max-w-xs">${itensFormatados}</td>
-                                <td class="p-2 text-right font-bold text-stone-900">R$ ${parseFloat(v.total || v.valor_total || 0).toFixed(2).replace('.', ',')}</td>
-                            </tr>
-                        `;
-                    }).join('') : '<tr><td colspan="6" class="p-4 text-center text-stone-400">Nenhuma venda registrada.</td></tr>';
-                }
-            } catch(e) { adminSalesTable.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-rose-500">Erro ao carregar vendas.</td></tr>'; }
-        }
-
-        function openNewProductModal() { newProductModal.classList.remove('hidden'); }
-        function closeNewProductModal() { newProductModal.classList.add('hidden'); }
-
-        function openNewBrandModal() { newBrandModal.classList.remove('hidden'); }
-        function closeNewBrandModal() { newBrandModal.classList.add('hidden'); }
-
-        async function handleCreateBrand(e) {
-            e.preventDefault();
-            const brandName = document.getElementById('newBrandName').value.trim();
-            const subtitle = document.getElementById('newBrandSubtitle').value.trim();
-            const price = parseFloat(document.getElementById('newBrandPrice').value);
-            const stock = parseInt(document.getElementById('newBrandStock').value);
-            const barcode = document.getElementById('newBrandBarcode').value.trim();
-            const image = document.getElementById('newBrandImage').value.trim() || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400';
-
-            if (!brandName) return;
-
-            // Salva na lista de marcas/brands se não existir
-            if (!DB.brands.includes(brandName)) {
-                DB.brands.push(brandName);
-                localStorage.setItem('fabi_brands_local', JSON.stringify(DB.brands));
-            }
-
-            // Cria o produto associado à brand para exibição e venda
-            const novoProduto = {
-                id: Date.now(),
-                marca: brandName,
-                nome: subtitle,
-                preco: price,
-                estoque: stock,
-                codigo_barras: barcode,
-                imagem: image
-            };
-
-            DB.perfumes.push(novoProduto);
-            localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
-
-            try {
-                await fetch(`${API_URL}/perfumes`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ nome: novoProduto.nome, marca: novoProduto.marca, preco: novoProduto.preco, estoque_atual: novoProduto.estoque, codigo_barras: novoProduto.codigo_barras, imagem_url: novoProduto.imagem })
-                });
-            } catch(e) {}
-
-            closeNewBrandModal();
-            fetchPerfumesFromApi();
-            renderAdminBrandsList();
-            showToast(`Brand "${brandName}" cadastrada com sucesso!`, 'success');
-            
-            // Limpa o formulário
-            document.getElementById('newBrandName').value = '';
-            document.getElementById('newBrandSubtitle').value = '';
-            document.getElementById('newBrandPrice').value = '';
-            document.getElementById('newBrandStock').value = '';
-            document.getElementById('newBrandBarcode').value = '';
-            document.getElementById('newBrandImage').value = '';
-        }
-
-        async function handleCreateProduct(e) {
-            e.preventDefault();
-            const novo = { id: Date.now(), nome: newProdName.value, marca: newProdBrand.value, preco: parseFloat(newProdPrice.value), estoque: parseInt(newProdStock.value), codigo_barras: newProdBarcode.value, imagem: newProdImage.value || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400' };
-            DB.perfumes.push(novo);
-            localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
-            try {
-                await fetch(`${API_URL}/perfumes`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ nome: novo.nome, marca: novo.marca, preco: novo.preco, estoque_atual: novo.estoque, codigo_barras: novo.codigo_barras, imagem_url: novo.imagem })
-                });
-            } catch(e) {}
-            closeNewProductModal(); fetchPerfumesFromApi(); showToast('Perfume cadastrado!', 'success');
-        }
-    </script>
-</body>
-</html>
+                <button onclick="addToPdvCart(${p.id})" ${p.estoque===0?'disabled':''} class="p-2.5 bg-stone-900 hover:bg-stone-950 disabled:opacity-3
