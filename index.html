@@ -863,7 +863,6 @@
                 }
             } catch(e) {}
             
-            // Sincroniza brands com as marcas existentes nos produtos se houver novas
             DB.perfumes.forEach(p => {
                 if (p.marca && !DB.brands.includes(p.marca)) {
                     DB.brands.push(p.marca);
@@ -885,16 +884,12 @@
         }
 
         function renderCategoryPills() {
-            // Unifica categorias padrão com todas as brands cadastradas dinamicamente
-            const baseCategories = ['ALL', 'Perfumaria', 'Nicho'];
-            let allCategories = [...baseCategories, ...DB.brands];
-            // Remove duplicadas caso alguma brand repita
-            allCategories = [...new Set(allCategories)];
-
-            brandPillsContainer.innerHTML = allCategories.map(c => {
+            const baseCategories = ['ALL', 'Perfumaria', 'Brand', 'Nicho'];
+            brandPillsContainer.innerHTML = baseCategories.map(c => {
                 const isSelected = DB.activeCategoryFilter === c;
                 let label = c;
                 if (c === 'ALL') label = 'Todos os Produtos';
+                if (c === 'Brand') label = 'Todas as Brands';
                 return `
                     <button onclick="filterCategory('${c}')" id="pill-${c}" class="brand-pill px-4 py-2 ${isSelected ? 'bg-stone-900 text-white font-bold' : 'bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold'} text-xs rounded-md uppercase tracking-wider shrink-0 transition">${label}</button>
                 `;
@@ -912,6 +907,12 @@
                 if (DB.activeCategoryFilter === 'ALL') return true;
                 const marcaProd = (p.marca || '').trim().toLowerCase();
                 const filtro = DB.activeCategoryFilter.trim().toLowerCase();
+                
+                if (filtro === 'brand') {
+                    // Exibe qualquer item cuja marca esteja listada nas brands cadastradas
+                    return DB.brands.map(b => b.toLowerCase()).includes(marcaProd);
+                }
+
                 return marcaProd === filtro || marcaProd.includes(filtro);
             });
 
@@ -1275,7 +1276,6 @@
             const novo = { id: Date.now(), nome: newProdName.value, marca: newProdBrand.value, preco: parseFloat(newProdPrice.value), estoque: parseInt(newProdStock.value), codigo_barras: newProdBarcode.value, imagem: newProdImage.value || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400' };
             DB.perfumes.push(novo);
             
-            // Adiciona a marca automaticamente nas brands caso ainda não exista
             if (novo.marca && !DB.brands.includes(novo.marca)) {
                 DB.brands.push(novo.marca);
                 localStorage.setItem('fabi_brands_local', JSON.stringify(DB.brands));
