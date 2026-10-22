@@ -105,7 +105,7 @@
             </div>
         </header>
 
-        <!-- BARRA DE PÍLULAS DE BRANDS E CATEGORIAS DINÂMICAS -->
+        <!-- BARRA DE PÍLULAS DE CATEGORIAS LIMPA -->
         <div class="bg-white border-b border-stone-200 py-3 sm:py-4">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center space-x-2 overflow-x-auto hide-scrollbar py-1" id="brandPillsContainer"></div>
@@ -885,12 +885,7 @@
 
         function renderCategoryPills() {
             const staticCategories = ['ALL', 'PERFUMARIA', 'BRAND', 'NICHO'];
-            const dynamicBrands = DB.brands;
-            const allPills = [...staticCategories, ...dynamicBrands];
-            // Remove duplicados mantendo a ordem única
-            const uniquePills = Array.from(new Set(allPills.map(p => p.toUpperCase())));
-
-            brandPillsContainer.innerHTML = uniquePills.map(c => {
+            brandPillsContainer.innerHTML = staticCategories.map(c => {
                 const isSelected = DB.activeCategoryFilter.toUpperCase() === c;
                 let label = c;
                 if (c === 'ALL') label = 'TODOS OS PRODUTOS';
@@ -915,11 +910,19 @@
                 const nomeProd = (p.nome || '').trim().toLowerCase();
 
                 if (filtro === 'brand') {
-                    // Mostra itens que pertençam a qualquer brand cadastrada
+                    // Retorna apenas produtos cuja marca está cadastrada na lista de Brands
                     return DB.brands.map(b => b.toLowerCase()).includes(marcaProd);
                 }
 
-                // Verifica correspondência exata ou parcial com a marca ou nome
+                if (filtro === 'perfumaria') {
+                    // Retorna apenas produtos que NÃO sejam das brands (ou seja, perfumaria tradicional/importada)
+                    return !DB.brands.map(b => b.toLowerCase()).includes(marcaProd) && !nomeProd.includes('nicho');
+                }
+
+                if (filtro === 'nicho') {
+                    return nomeProd.includes('nicho') || marcaProd.includes('nicho');
+                }
+
                 return marcaProd === filtro || marcaProd.includes(filtro) || nomeProd.includes(filtro);
             });
 
