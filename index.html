@@ -868,8 +868,19 @@
         }
 
         function renderStoreGrid() {
-            const filtered = DB.perfumes.filter(p => DB.activeCategoryFilter === 'ALL' || p.marca.toLowerCase().includes(DB.activeCategoryFilter.toLowerCase()));
-            productGrid.innerHTML = filtered.map(p => `
+            const filtered = DB.perfumes.filter(p => {
+                if (DB.activeCategoryFilter === 'ALL') return true;
+                const marcaProd = (p.marca || '').trim().toLowerCase();
+                const catFiltro = DB.activeCategoryFilter.trim().toLowerCase();
+                
+                // Se a categoria selecionada for Perfumaria, exibe todos os itens gerais caso não tenham marca específica, ou faz correspondência flexível
+                if (catFiltro === 'perfumaria') {
+                    return marcaProd === 'perfumaria' || marcaProd === 'importados' || (!marcaProd.includes('brand') && !marcaProd.includes('nicho'));
+                }
+                return marcaProd.includes(catFiltro);
+            });
+
+            productGrid.innerHTML = filtered.length ? filtered.map(p => `
                 <div class="bg-white rounded-xl border border-stone-200 overflow-hidden flex flex-col justify-between group hover:shadow-xl transition">
                     <div class="h-48 bg-stone-50 flex items-center justify-center p-4 relative overflow-hidden">
                         <img src="${p.imagem}" class="max-h-full object-contain group-hover:scale-105 transition">
@@ -885,7 +896,7 @@
                         </button>
                     </div>
                 </div>
-            `).join('');
+            `).join('') : '<div class="col-span-full py-12 text-center text-xs text-stone-400">Nenhum perfume encontrado nesta categoria.</div>';
         }
 
         function addToStoreCart(id) {
@@ -990,14 +1001,12 @@
             const subtotal = DB.carrinhoStore.reduce((a, b) => a + (b.preco_unitario * b.quantidade), 0);
             const totalComFrete = subtotal + currentShippingCost;
 
-            // Garantimos que enviamos os dados formatados corretamente para o backend no Render
             const payloadItens = DB.carrinhoStore.map(i => ({
                 title: i.nome || i.marca || 'Perfume',
                 unit_price: Number(i.preco_unitario),
                 quantity: Number(i.quantidade)
             }));
 
-            // Se houver frete > 0, adicionamos como um item extra na preference do Mercado Pago para não zerar o total
             if (currentShippingCost > 0) {
                 payloadItens.push({
                     title: 'Frete Correios',
@@ -1164,7 +1173,7 @@
         async function handleCreateProduct(e) {
             e.preventDefault();
             const novo = { id: Date.now(), nome: newProdName.value, marca: newProdBrand.value, preco: parseFloat(newProdPrice.value), estoque: parseInt(newProdStock.value), codigo_barras: newProdBarcode.value, imagem: newProdImage.value || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400' };
-            DB.perfumes.payloadItenssh(novo);
+            DB.perfumes.push(novo);
             localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
             try {
                 await fetch(`${API_URL}/perfumes`, {
