@@ -105,6 +105,7 @@
             </div>
         </header>
 
+        <!-- BARRA DE PÍLULAS DE BRANDS E CATEGORIAS DINÂMICAS -->
         <div class="bg-white border-b border-stone-200 py-3 sm:py-4">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center space-x-2 overflow-x-auto hide-scrollbar py-1" id="brandPillsContainer"></div>
@@ -856,11 +857,20 @@
                 if (res.ok) {
                     const data = await res.json();
                     if (data?.length) {
-                        DB.perfumes = data.map(p => ({ id: p.id, marca: p.marca||'Perfumaria', nome: p.nome, preco: parseFloat(p.preco), estoque: p.estoque_atual??0, codigo_barras: p.codigo_barras||'789'+p.id, imagem: p.imagem_url||'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400' }));
+                        DB.perfumes = data.map(p => ({ id: p.id, marca: p.marca||'InTheBox', nome: p.nome, preco: parseFloat(p.preco), estoque: p.estoque_atual??0, codigo_barras: p.codigo_barras||'789'+p.id, imagem: p.imagem_url||'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400' }));
                         localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
                     }
                 }
             } catch(e) {}
+            
+            // Sincroniza brands com as marcas existentes nos produtos se houver novas
+            DB.perfumes.forEach(p => {
+                if (p.marca && !DB.brands.includes(p.marca)) {
+                    DB.brands.push(p.marca);
+                }
+            });
+            localStorage.setItem('fabi_brands_local', JSON.stringify(DB.brands));
+
             renderStoreGrid(); renderPdvQuickGrid(); renderAdminInventory(); renderCategoryPills();
         }
 
@@ -875,10 +885,20 @@
         }
 
         function renderCategoryPills() {
-            const categories = ['ALL', 'Perfumaria', 'Brand', 'Nicho'];
-            brandPillsContainer.innerHTML = categories.map(c => `
-                <button onclick="filterCategory('${c}')" id="pill-${c}" class="brand-pill px-4 py-2 ${DB.activeCategoryFilter===c?'bg-stone-900 text-white font-bold':'bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold'} text-xs rounded-md uppercase tracking-wider shrink-0 transition">${c==='ALL'?'Todos os Produtos':c}</button>
-            `).join('');
+            // Unifica categorias padrão com todas as brands cadastradas dinamicamente
+            const baseCategories = ['ALL', 'Perfumaria', 'Nicho'];
+            let allCategories = [...baseCategories, ...DB.brands];
+            // Remove duplicadas caso alguma brand repita
+            allCategories = [...new Set(allCategories)];
+
+            brandPillsContainer.innerHTML = allCategories.map(c => {
+                const isSelected = DB.activeCategoryFilter === c;
+                let label = c;
+                if (c === 'ALL') label = 'Todos os Produtos';
+                return `
+                    <button onclick="filterCategory('${c}')" id="pill-${c}" class="brand-pill px-4 py-2 ${isSelected ? 'bg-stone-900 text-white font-bold' : 'bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold'} text-xs rounded-md uppercase tracking-wider shrink-0 transition">${label}</button>
+                `;
+            }).join('');
         }
 
         function filterCategory(cat) {
@@ -1254,6 +1274,13 @@
             e.preventDefault();
             const novo = { id: Date.now(), nome: newProdName.value, marca: newProdBrand.value, preco: parseFloat(newProdPrice.value), estoque: parseInt(newProdStock.value), codigo_barras: newProdBarcode.value, imagem: newProdImage.value || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400' };
             DB.perfumes.push(novo);
+            
+            // Adiciona a marca automaticamente nas brands caso ainda não exista
+            if (novo.marca && !DB.brands.includes(novo.marca)) {
+                DB.brands.push(novo.marca);
+                localStorage.setItem('fabi_brands_local', JSON.stringify(DB.brands));
+            }
+
             localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
             try {
                 await fetch(`${API_URL}/perfumes`, {
@@ -1261,7 +1288,7 @@
                     body: JSON.stringify({ nome: novo.nome, marca: novo.marca, preco: novo.preco, estoque_atual: novo.estoque, codigo_barras: novo.codigo_barras, imagem_url: novo.imagem })
                 });
             } catch(e) {}
-            closeNewProductModal(); fetchPerfumesFromApi(); showToast('Perfume cadastrado!', 'success');
+            closeNewProductModal(); fetchPerfumesFromApi(); renderCategoryPills(); showToast('Perfume cadastrado!', 'success');
         }
     </script>
 </body>
