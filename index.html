@@ -969,20 +969,20 @@
                     return isProductBrand(marcaProd);
                 }
 
-                if (filtro === 'PERFUMARIA') {
-                    return !isProductBrand(marcaProd) && !nomeProd.toUpperCase().includes('NICHO') && !marcaProd.toUpperCase().includes('NICHO') && !marcaProd.toUpperCase().includes('MAQUIAGEM') && !marcaProd.toUpperCase().includes('CAPILAR');
+                if (filtro === 'MAQUIAGEM') {
+                    return marcaProd.toUpperCase().includes('MAQUIAGEM');
+                }
+
+                if (filtro === 'CAPILAR') {
+                    return marcaProd.toUpperCase().includes('CAPILAR');
                 }
 
                 if (filtro === 'NICHO') {
                     return nomeProd.toUpperCase().includes('NICHO') || marcaProd.toUpperCase().includes('NICHO');
                 }
 
-                if (filtro === 'MAQUIAGEM') {
-                    return marcaProd.toUpperCase().includes('MAQUIAGEM') || nomeProd.toUpperCase().includes('MAQUIAGEM') || ['MAC', 'DIOR', 'BRUNA TAVARES', 'MARY KAY', 'MARI SAAD'].some(m => marcaProd.toUpperCase().includes(m));
-                }
-
-                if (filtro === 'CAPILAR') {
-                    return marcaProd.toUpperCase().includes('CAPILAR') || nomeProd.toUpperCase().includes('CAPILAR') || ['KÉRASTASE', 'L\'ORÉAL', 'JOICO', 'WELA', 'BAMBOO'].some(m => marcaProd.toUpperCase().includes(m));
+                if (filtro === 'PERFUMARIA') {
+                    return !isProductBrand(marcaProd) && !marcaProd.toUpperCase().includes('MAQUIAGEM') && !marcaProd.toUpperCase().includes('CAPILAR') && !nomeProd.toUpperCase().includes('NICHO') && !marcaProd.toUpperCase().includes('NICHO');
                 }
 
                 return marcaProd.toUpperCase() === filtro;
@@ -1372,7 +1372,7 @@
             const barcode = document.getElementById('newMakeupBarcode').value.trim();
             const image = document.getElementById('newMakeupImage').value.trim() || 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=400';
 
-            const novoProduto = { id: Date.now(), marca: `Maquiagem - ${brand}`, nome: name, preco: price, estoque: stock, codigo_barras: barcode, imagem: image };
+            const novoProduto = { id: Date.now(), marca: `Maquiagem: ${brand}`, nome: name, preco: price, estoque: stock, codigo_barras: barcode, imagem: image };
             DB.perfumes.push(novoProduto);
             localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
 
@@ -1405,7 +1405,7 @@
             const barcode = document.getElementById('newCapilarBarcode').value.trim();
             const image = document.getElementById('newCapilarImage').value.trim() || 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?w=400';
 
-            const novoProduto = { id: Date.now(), marca: `Capilar - ${brand}`, nome: name, preco: price, estoque: stock, codigo_barras: barcode, imagem: image };
+            const novoProduto = { id: Date.now(), marca: `Capilar: ${brand}`, nome: name, preco: price, estoque: stock, codigo_barras: barcode, imagem: image };
             DB.perfumes.push(novoProduto);
             localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
 
