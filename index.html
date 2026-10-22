@@ -990,14 +990,30 @@
             const subtotal = DB.carrinhoStore.reduce((a, b) => a + (b.preco_unitario * b.quantidade), 0);
             const totalComFrete = subtotal + currentShippingCost;
 
+            // Garantimos que enviamos os dados formatados corretamente para o backend no Render
+            const payloadItens = DB.carrinhoStore.map(i => ({
+                title: i.nome || i.marca || 'Perfume',
+                unit_price: Number(i.preco_unitario),
+                quantity: Number(i.quantidade)
+            }));
+
+            // Se houver frete > 0, adicionamos como um item extra na preference do Mercado Pago para não zerar o total
+            if (currentShippingCost > 0) {
+                payloadItens.push({
+                    title: 'Frete Correios',
+                    unit_price: Number(currentShippingCost),
+                    quantity: 1
+                });
+            }
+
             try {
                 const res = await fetch(`${API_URL}/pagamento/checkout`, {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ 
-                        itens: DB.carrinhoStore, 
+                        itens: payloadItens, 
                         emailCliente: loggedCustomer.email, 
-                        frete: currentShippingCost,
-                        valorTotal: totalComFrete,
+                        frete: Number(currentShippingCost),
+                        valorTotal: Number(totalComFrete.toFixed(2)),
                         endereco: enderecoCompleto 
                     })
                 });
@@ -1148,7 +1164,7 @@
         async function handleCreateProduct(e) {
             e.preventDefault();
             const novo = { id: Date.now(), nome: newProdName.value, marca: newProdBrand.value, preco: parseFloat(newProdPrice.value), estoque: parseInt(newProdStock.value), codigo_barras: newProdBarcode.value, imagem: newProdImage.value || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400' };
-            DB.perfumes.push(novo);
+            DB.perfumes.payloadItenssh(novo);
             localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
             try {
                 await fetch(`${API_URL}/perfumes`, {
