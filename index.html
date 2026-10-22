@@ -74,9 +74,9 @@
                         <h1 class="font-serif text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-stone-900">FRAGRÂNCIAS <span class="italic text-fabi-500 font-normal">FABI</span></h1>
                     </div>
                     <nav class="hidden lg:flex space-x-6 xl:space-x-8 text-xs font-semibold text-stone-700 uppercase tracking-wider">
-                        <a href="#" onclick="event.preventDefault(); filterCategory('Perfumaria')" id="nav-perfumaria" class="hover:text-fabi-500 transition pb-1">Perfumaria</a>
-                        <a href="#" onclick="event.preventDefault(); filterCategory('Brand')" id="nav-brand" class="hover:text-fabi-500 transition pb-1">Brand</a>
-                        <a href="#" onclick="event.preventDefault(); filterCategory('Nicho')" id="nav-nicho" class="hover:text-fabi-500 transition pb-1">Nicho</a>
+                        <a href="#" onclick="event.preventDefault(); filterCategory('ALL')" class="hover:text-fabi-500 transition pb-1">Início</a>
+                        <a href="#" onclick="event.preventDefault(); filterCategory('Perfumaria')" class="hover:text-fabi-500 transition pb-1">Perfumaria</a>
+                        <a href="#" onclick="event.preventDefault(); filterCategory('Nicho')" class="hover:text-fabi-500 transition pb-1">Nicho</a>
                     </nav>
                     <div class="flex items-center space-x-3 sm:space-x-4">
                         <button id="customerAuthBtn" onclick="openCustomerAuthModal()" class="text-stone-700 hover:text-fabi-600 text-xs font-semibold flex items-center gap-1.5 transition px-2 py-1 rounded-md hover:bg-stone-100">
@@ -95,8 +95,8 @@
                 </div>
             </div>
             <div id="mobileNav" class="hidden lg:hidden bg-white border-b border-stone-200 px-4 py-3 space-y-2 text-xs font-semibold uppercase tracking-wider border-t">
+                <a href="#" onclick="toggleMobileNav(); filterCategory('ALL');" class="block py-2 text-stone-800">Início</a>
                 <a href="#" onclick="toggleMobileNav(); filterCategory('Perfumaria');" class="block py-2 text-stone-800">Perfumaria</a>
-                <a href="#" onclick="toggleMobileNav(); filterCategory('Brand');" class="block py-2 text-stone-800">Brand</a>
                 <a href="#" onclick="toggleMobileNav(); filterCategory('Nicho');" class="block py-2 text-stone-800">Nicho</a>
                 <a href="#" onclick="toggleMobileNav(); openCustomerAuthModal();" class="block py-2 text-stone-700 border-t pt-2"><i class="fa-solid fa-user mr-1.5 text-fabi-500"></i> Minha Conta</a>
                 <a href="#" onclick="toggleMobileNav(); openLoginModal();" class="block py-2 text-stone-500"><i class="fa-solid fa-lock mr-1.5 text-stone-400"></i> Área do Gestor</a>
@@ -395,19 +395,19 @@
             <div class="flex justify-between items-center">
                 <h1 class="font-serif text-xl font-bold">Gestão & Estoque</h1>
                 <div class="flex gap-2">
-                    <button onclick="openNewBrandModal()" class="px-4 py-2 bg-fabi-600 hover:bg-fabi-500 text-white font-bold text-xs rounded uppercase"><i class="fa-solid fa-tag mr-1"></i> Adicionar Brand</button>
+                    <button onclick="openNewBrandModal()" class="px-4 py-2 bg-fabi-600 hover:bg-fabi-500 text-white font-bold text-xs rounded uppercase"><i class="fa-solid fa-tag mr-1"></i> Adicionar Brand (Produto)</button>
                     <button onclick="openNewProductModal()" class="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs rounded uppercase"><i class="fa-solid fa-plus mr-1"></i> Novo Perfume</button>
                 </div>
             </div>
 
             <!-- SEÇÃO DE BRANDS CADASTRADAS -->
             <div class="bg-white rounded-2xl border border-stone-200 p-4 shadow-xs">
-                <h3 class="font-bold text-sm mb-3">Brands Cadastradas</h3>
+                <h3 class="font-bold text-sm mb-3">Brands / Marcas Cadastradas</h3>
                 <div id="adminBrandsList" class="flex flex-wrap gap-2"></div>
             </div>
 
             <div class="bg-white rounded-2xl border border-stone-200 p-4 shadow-xs overflow-x-auto">
-                <h3 class="font-bold text-sm mb-3">Estoque de Perfumes</h3>
+                <h3 class="font-bold text-sm mb-3">Estoque de Produtos / Perfumes / Brands</h3>
                 <table class="w-full text-left text-xs"><tbody id="adminInventoryTable"></tbody></table>
             </div>
             
@@ -438,13 +438,8 @@
                 <button onclick="closeNewProductModal()" class="text-stone-400 hover:text-stone-700"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <form onsubmit="handleCreateProduct(event)" class="space-y-3">
-                <input type="text" id="newProdName" required placeholder="Nome do Perfume" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
-                <select id="newProdBrand" required class="w-full p-2.5 bg-stone-50 border rounded text-xs">
-                    <option value="">Selecione a Brand / Categoria</option>
-                    <option value="Perfumaria">Perfumaria</option>
-                    <option value="Brand">Brand</option>
-                    <option value="Nicho">Nicho</option>
-                </select>
+                <input type="text" id="newProdName" required placeholder="Nome do Perfume (Ex: Sauvage)" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
+                <input type="text" id="newProdBrand" required placeholder="Marca / Fornecedor (Ex: Dior)" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
                 <div class="grid grid-cols-2 gap-2">
                     <input type="number" step="0.01" id="newProdPrice" required placeholder="Preço (R$)" class="p-2.5 bg-stone-50 border rounded text-xs">
                     <input type="number" id="newProdStock" required placeholder="Estoque Inicial" class="p-2.5 bg-stone-50 border rounded text-xs">
@@ -459,15 +454,22 @@
         </div>
     </div>
 
-    <!-- MODAL NOVA BRAND -->
+    <!-- MODAL NOVA BRAND (IGUAL ADICIONAR PERFUME) -->
     <div id="newBrandModal" class="fixed inset-0 z-50 bg-stone-900/60 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4">
             <div class="flex justify-between items-center border-b pb-2">
-                <h3 class="font-bold text-stone-900">Adicionar Nova Brand</h3>
+                <h3 class="font-bold text-stone-900">Adicionar Nova Brand (Produto)</h3>
                 <button onclick="closeNewBrandModal()" class="text-stone-400 hover:text-stone-700"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <form onsubmit="handleCreateBrand(event)" class="space-y-3">
-                <input type="text" id="newBrandName" required placeholder="Nome da Brand (Ex: Dior, Lattafa)" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
+                <input type="text" id="newBrandName" required placeholder="Nome da Brand (Ex: InTheBox, Thera, Nuancier)" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
+                <input type="text" id="newBrandSubtitle" required placeholder="Subtítulo ou Fragrância Inspirada (Ex: Insp. Sauvage)" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" step="0.01" id="newBrandPrice" required placeholder="Preço (R$)" class="p-2.5 bg-stone-50 border rounded text-xs">
+                    <input type="number" id="newBrandStock" required placeholder="Estoque Inicial" class="p-2.5 bg-stone-50 border rounded text-xs">
+                </div>
+                <input type="text" id="newBrandBarcode" required placeholder="Código de Barras" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
+                <input type="url" id="newBrandImage" placeholder="URL da Imagem do Frasco" class="w-full p-2.5 bg-stone-50 border rounded text-xs">
                 <div class="flex gap-2 pt-2">
                     <button type="button" onclick="closeNewBrandModal()" class="w-1/2 py-2.5 bg-stone-200 hover:bg-stone-300 text-stone-700 font-bold rounded text-xs uppercase">Cancelar</button>
                     <button type="submit" class="w-1/2 py-2.5 bg-fabi-600 hover:bg-fabi-500 text-white font-bold rounded text-xs uppercase">Salvar Brand</button>
@@ -486,7 +488,7 @@
 
         const DB = {
             perfumes: JSON.parse(localStorage.getItem('fabi_perfumes_local')) || [],
-            brands: JSON.parse(localStorage.getItem('fabi_brands_local')) || ['Perfumaria', 'Brand', 'Nicho'],
+            brands: JSON.parse(localStorage.getItem('fabi_brands_local')) || ['InTheBox', 'Thera', 'Nuancier', 'Parfums Vintage'],
             carrinhoStore: JSON.parse(localStorage.getItem('fabi_carrinho_store')) || [], 
             carrinhoPdv: [],
             vendas: [],
@@ -875,17 +877,6 @@
             brandPillsContainer.innerHTML = cats.map(c => `
                 <button onclick="filterCategory('${c}')" id="pill-${c}" class="brand-pill px-4 py-2 ${DB.activeCategoryFilter===c?'bg-stone-900 text-white font-bold':'bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold'} text-xs rounded-md uppercase tracking-wider shrink-0 transition">${c==='ALL'?'Todos':c}</button>
             `).join('');
-
-            ['Perfumaria', 'Brand', 'Nicho'].forEach(cat => {
-                const navEl = document.getElementById('nav-' + cat.toLowerCase());
-                if (navEl) {
-                    if (DB.activeCategoryFilter === cat) {
-                        navEl.className = 'text-fabi-600 font-bold border-b-2 border-fabi-500 pb-1 transition';
-                    } else {
-                        navEl.className = 'hover:text-fabi-500 transition pb-1 text-stone-700';
-                    }
-                }
-            });
         }
 
         function filterCategory(cat) {
@@ -897,9 +888,7 @@
         function renderStoreGrid() {
             const filtered = DB.perfumes.filter(p => {
                 if (DB.activeCategoryFilter === 'ALL') return true;
-                const marcaProd = (p.marca || '').trim().toLowerCase();
-                const catFiltro = DB.activeCategoryFilter.trim().toLowerCase();
-                return marcaProd.includes(catFiltro);
+                return (p.marca || '').trim().toLowerCase() === DB.activeCategoryFilter.trim().toLowerCase();
             });
 
             productGrid.innerHTML = filtered.length ? filtered.map(p => `
@@ -908,8 +897,8 @@
                         <img src="${p.imagem}" class="max-h-full object-contain group-hover:scale-105 transition">
                     </div>
                     <div class="p-3 space-y-1">
-                        <h3 class="font-bold text-[11px] uppercase text-stone-900">${p.marca}</h3>
-                        <p class="text-xs text-stone-500 line-clamp-2">${p.nome}</p>
+                        <h3 class="font-bold text-[11px] uppercase text-fabi-600">${p.marca}</h3>
+                        <p class="text-xs text-stone-700 font-medium line-clamp-2">${p.nome}</p>
                     </div>
                     <div class="p-3 pt-0 space-y-2">
                         <span class="text-sm font-bold text-stone-900">R$ ${p.preco.toFixed(2).replace('.', ',')}</span>
@@ -918,7 +907,7 @@
                         </button>
                     </div>
                 </div>
-            `).join('') : '<div class="col-span-full py-12 text-center text-xs text-stone-400">Nenhum perfume encontrado nesta categoria.</div>';
+            `).join('') : '<div class="col-span-full py-12 text-center text-xs text-stone-400">Nenhum produto encontrado nesta brand.</div>';
         }
 
         function addToStoreCart(id) {
@@ -1159,12 +1148,6 @@
                     <i class="fa-solid fa-tag text-fabi-500"></i> ${b}
                 </span>
             `).join('');
-            
-            // Atualizar também o select do modal de produtos
-            const select = document.getElementById('newProdBrand');
-            if (select) {
-                select.innerHTML = '<option value="">Selecione a Brand / Categoria</option>' + DB.brands.map(b => `<option value="${b}">${b}</option>`).join('');
-            }
         }
 
         async function changeStock(id, delta) {
@@ -1213,21 +1196,56 @@
         function openNewBrandModal() { newBrandModal.classList.remove('hidden'); }
         function closeNewBrandModal() { newBrandModal.classList.add('hidden'); }
 
-        function handleCreateBrand(e) {
+        async function handleCreateBrand(e) {
             e.preventDefault();
             const brandName = document.getElementById('newBrandName').value.trim();
+            const subtitle = document.getElementById('newBrandSubtitle').value.trim();
+            const price = parseFloat(document.getElementById('newBrandPrice').value);
+            const stock = parseInt(document.getElementById('newBrandStock').value);
+            const barcode = document.getElementById('newBrandBarcode').value.trim();
+            const image = document.getElementById('newBrandImage').value.trim() || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400';
+
             if (!brandName) return;
+
+            // Salva na lista de marcas/brands se não existir
             if (!DB.brands.includes(brandName)) {
                 DB.brands.push(brandName);
                 localStorage.setItem('fabi_brands_local', JSON.stringify(DB.brands));
-                renderAdminBrandsList();
-                renderCategoryPills();
-                showToast(`Brand "${brandName}" cadastrada com sucesso!`, 'success');
-            } else {
-                showToast('Esta brand já está cadastrada.', 'warning');
             }
-            document.getElementById('newBrandName').value = '';
+
+            // Cria o produto associado à brand para exibição e venda
+            const novoProduto = {
+                id: Date.now(),
+                marca: brandName,
+                nome: subtitle,
+                preco: price,
+                estoque: stock,
+                codigo_barras: barcode,
+                imagem: image
+            };
+
+            DB.perfumes.push(novoProduto);
+            localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
+
+            try {
+                await fetch(`${API_URL}/perfumes`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ nome: novoProduto.nome, marca: novoProduto.marca, preco: novoProduto.preco, estoque_atual: novoProduto.estoque, codigo_barras: novoProduto.codigo_barras, imagem_url: novoProduto.imagem })
+                });
+            } catch(e) {}
+
             closeNewBrandModal();
+            fetchPerfumesFromApi();
+            renderAdminBrandsList();
+            showToast(`Brand "${brandName}" cadastrada com sucesso!`, 'success');
+            
+            // Limpa o formulário
+            document.getElementById('newBrandName').value = '';
+            document.getElementById('newBrandSubtitle').value = '';
+            document.getElementById('newBrandPrice').value = '';
+            document.getElementById('newBrandStock').value = '';
+            document.getElementById('newBrandBarcode').value = '';
+            document.getElementById('newBrandImage').value = '';
         }
 
         async function handleCreateProduct(e) {
