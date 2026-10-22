@@ -144,7 +144,7 @@
                     <div id="footerExchangeContent" class="hidden mt-4 p-5 bg-stone-950/60 border border-stone-800 rounded-2xl text-stone-300 text-[11px] space-y-3 leading-relaxed">
                         <p><strong>1. Prazo de Arrependimento:</strong> Conforme o Código de Defesa do Consumidor, você tem até 7 (sete) dias corridos após o recebimento para solicitar a devolução de compras virtuais.</p>
                         <p><strong>2. Condições do Produto:</strong> O perfume deve ser devolvido na embalagem original lacrada, sem violação do celofane ou sinais de uso, acompanhado da nota fiscal.</p>
-                        <p><strong>3. Defeitos ou Avarias:</strong> Em caso de frasco avariado no transporte, comunique em até 30 dias com fotos através do WhatsApp <a href="https://wa.me/5511948698377" target="_blank" class="text-emerald-400 underline font-semibold">(11) 94869-8377</a>.</p>
+                        <p><strong>3. Defeitos ou Avarias:</strong> En caso de frasco avariado no transporte, comunique em até 30 dias com fotos através do WhatsApp <a href="https://wa.me/5511948698377" target="_blank" class="text-emerald-400 underline font-semibold">(11) 94869-8377</a>.</p>
                         <p><strong>4. Reembolso:</strong> Restituição via PIX ou estorno no cartão de crédito processados após a chegada e conferência do item em nosso ateliê.</p>
                     </div>
                 </div>
@@ -491,7 +491,7 @@
 
         const DB = {
             perfumes: JSON.parse(localStorage.getItem('fabi_perfumes_local')) || [],
-            brands: JSON.parse(localStorage.getItem('fabi_brands_local')) || ['InTheBox', 'Thera', 'Nuancier', 'Parfums Vintage'],
+            brandsList: ['InTheBox', 'Thera', 'Nuancier', 'Parfums Vintage', 'In The Box', 'Parfums-Vintage'],
             carrinhoStore: JSON.parse(localStorage.getItem('fabi_carrinho_store')) || [], 
             carrinhoPdv: [],
             vendas: [],
@@ -863,13 +863,6 @@
                 }
             } catch(e) {}
             
-            DB.perfumes.forEach(p => {
-                if (p.marca && !DB.brands.map(b=>b.toLowerCase()).includes(p.marca.toLowerCase())) {
-                    DB.brands.push(p.marca);
-                }
-            });
-            localStorage.setItem('fabi_brands_local', JSON.stringify(DB.brands));
-
             renderStoreGrid(); renderPdvQuickGrid(); renderAdminInventory(); renderCategoryPills();
         }
 
@@ -889,6 +882,7 @@
                 const isSelected = DB.activeCategoryFilter.toUpperCase() === c;
                 let label = c;
                 if (c === 'ALL') label = 'TODOS OS PRODUTOS';
+                if (c === 'BRAND') label = 'TODAS AS BRANDS';
                 return `
                     <button onclick="filterCategory('${c}')" id="pill-${c}" class="brand-pill px-4 py-2 ${isSelected ? 'bg-stone-900 text-white font-bold' : 'bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold'} text-xs rounded-md uppercase tracking-wider shrink-0 transition">${label}</button>
                 `;
@@ -901,29 +895,36 @@
             renderStoreGrid();
         }
 
+        function isProductBrand(marca) {
+            if (!marca) return false;
+            const m = marca.trim().toLowerCase();
+            return DB.brandsList.some(b => b.toLowerCase() === m);
+        }
+
         function renderStoreGrid() {
-            const filtro = (DB.activeCategoryFilter || 'ALL').trim().toLowerCase();
+            const filtro = (DB.activeCategoryFilter || 'ALL').trim().toUpperCase();
 
             const filtered = DB.perfumes.filter(p => {
-                if (filtro === 'all' || filtro === 'todos os produtos') return true;
-                const marcaProd = (p.marca || '').trim().toLowerCase();
-                const nomeProd = (p.nome || '').trim().toLowerCase();
+                const marcaProd = p.marca || '';
+                const nomeProd = p.nome || '';
 
-                if (filtro === 'brand') {
-                    // Retorna apenas produtos cuja marca está cadastrada na lista de Brands
-                    return DB.brands.map(b => b.toLowerCase()).includes(marcaProd);
+                if (filtro === 'ALL' || filtro === 'TODOS OS PRODUTOS') return true;
+
+                if (filtro === 'BRAND' || filtro === 'TODAS AS BRANDS') {
+                    // Retorna apenas se for uma brand cadastrada na lista específica
+                    return isProductBrand(marcaProd);
                 }
 
-                if (filtro === 'perfumaria') {
-                    // Retorna apenas produtos que NÃO sejam das brands (ou seja, perfumaria tradicional/importada)
-                    return !DB.brands.map(b => b.toLowerCase()).includes(marcaProd) && !nomeProd.includes('nicho');
+                if (filtro === 'PERFUMARIA') {
+                    // Retorna apenas se NÃO for brand e NÃO for nicho
+                    return !isProductBrand(marcaProd) && !nomeProd.toUpperCase().includes('NICHO') && !marcaProd.toUpperCase().includes('NICHO');
                 }
 
-                if (filtro === 'nicho') {
-                    return nomeProd.includes('nicho') || marcaProd.includes('nicho');
+                if (filtro === 'NICHO') {
+                    return nomeProd.toUpperCase().includes('NICHO') || marcaProd.toUpperCase().includes('NICHO');
                 }
 
-                return marcaProd === filtro || marcaProd.includes(filtro) || nomeProd.includes(filtro);
+                return marcaProd.toUpperCase() === filtro;
             });
 
             productGrid.innerHTML = filtered.length ? filtered.map(p => `
@@ -1178,7 +1179,7 @@
         function renderAdminBrandsList() {
             const container = document.getElementById('adminBrandsList');
             if (!container) return;
-            container.innerHTML = DB.brands.map(b => `
+            container.innerHTML = DB.brandsList.map(b => `
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-stone-100 border border-stone-200 text-stone-800 rounded-lg text-xs font-semibold">
                     <i class="fa-solid fa-tag text-fabi-500"></i> ${b}
                 </span>
@@ -1242,9 +1243,8 @@
 
             if (!brandName) return;
 
-            if (!DB.brands.map(b=>b.toLowerCase()).includes(brandName.toLowerCase())) {
-                DB.brands.push(brandName);
-                localStorage.setItem('fabi_brands_local', JSON.stringify(DB.brands));
+            if (!DB.brandsList.map(b=>b.toLowerCase()).includes(brandName.toLowerCase())) {
+                DB.brandsList.push(brandName);
             }
 
             const novoProduto = {
@@ -1286,11 +1286,6 @@
             const novo = { id: Date.now(), nome: newProdName.value, marca: newProdBrand.value, preco: parseFloat(newProdPrice.value), estoque: parseInt(newProdStock.value), codigo_barras: newProdBarcode.value, imagem: newProdImage.value || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400' };
             DB.perfumes.push(novo);
             
-            if (novo.marca && !DB.brands.map(b=>b.toLowerCase()).includes(novo.marca.toLowerCase())) {
-                DB.brands.push(novo.marca);
-                localStorage.setItem('fabi_brands_local', JSON.stringify(DB.brands));
-            }
-
             localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
             try {
                 await fetch(`${API_URL}/perfumes`, {
