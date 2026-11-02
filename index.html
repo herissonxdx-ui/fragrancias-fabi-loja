@@ -1251,13 +1251,27 @@
 
         async function deleteProduct(id) {
             if (!confirm('Tem certeza que deseja excluir este produto do sistema?')) return;
+            
             DB.perfumes = DB.perfumes.filter(x => x.id !== id);
             localStorage.setItem('fabi_perfumes_local', JSON.stringify(DB.perfumes));
-            renderAdminInventory(); renderStoreGrid(); renderPdvQuickGrid();
+            
+            renderAdminInventory(); 
+            renderStoreGrid(); 
+            renderPdvQuickGrid();
+            
             try {
-                await fetch(`${API_URL}/perfumes/${id}`, { method: 'DELETE' });
-            } catch(e) {}
-            showToast('Produto excluído com sucesso!', 'success');
+                const response = await fetch(`${API_URL}/perfumes/${id}`, { 
+                    method: 'DELETE' 
+                });
+                
+                if (response.ok) {
+                    showToast('Produto excluído com sucesso do servidor!', 'success');
+                } else {
+                    showToast('Item removido localmente, mas houve um aviso no servidor.', 'warning');
+                }
+            } catch(e) {
+                showToast('Erro de conexão com o servidor ao excluir.', 'error');
+            }
         }
 
         function renderAdminBrandsList() {
